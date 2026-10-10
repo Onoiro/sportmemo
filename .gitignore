@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+/staticfiles/
+/media/
+.env
+.env.local
+
+# Тесты и покрытие
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Линтер
+.ruff_cache/
+
+# Редакторы и ОС
+.idea/
+.vscode/
+.DS_Store
+
+# Koda CLI (сессионные данные; KODA.md и .koda/plans отслеживаются в git)
+.kodacli/
+
+# Временное окружение для проверки на другой версии Python
+.venv313/

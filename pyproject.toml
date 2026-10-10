@@ -1,0 +1,67 @@
+[project]
+name = "sportmemo"
+version = "0.1.1"
+description = "SportMemo — публичный архив спортивных фотографий"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [{ name = "Andrey Bogatyrev", email = "donoriono@gmail.com" }]
+classifiers = [
+    "Environment :: Web Environment",
+    "Framework :: Django :: 5.2",
+    "Natural Language :: Russian",
+    "Natural Language :: English",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+]
+
+dependencies = [
+    "django>=5.2,<6.0",
+    "psycopg[binary]>=3.2",
+    "django-environ>=0.12",
+    "django-simple-history>=3.8",
+    "django-storages[s3]>=1.14",
+    "django-imagekit>=5.0",
+    "pillow>=11.0",
+    "celery[redis]>=5.5",
+    "django-allauth>=64.0",
+    "gunicorn>=23.0",
+    "whitenoise>=6.8",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-django>=4.9",
+    "factory-boy>=3.3",
+    "ruff>=0.15",
+]
+
+[tool.uv]
+# Проект не собирается как пакет: это Django-сайт, а не библиотека.
+package = false
+
+[tool.ruff]
+target-version = "py312"
+# 88 для кода — как в black и в самом Django.
+line-length = 88
+extend-exclude = ["**/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "C4", "DJ"]
+
+[tool.ruff.lint.pycodestyle]
+# Комментарии и docstrings — 79, как требует PEP 8 и Django.
+# Настройка включает правило W505.
+max-doc-length = 79
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint.per-file-ignores]
+"config/settings.py" = ["F403", "F405"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py"]
+testpaths = ["tests"]
+addopts = "-ra"

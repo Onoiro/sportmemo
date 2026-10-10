@@ -1,0 +1,119 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: sportmemo_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sportmemo}
+      POSTGRES_USER: ${POSTGRES_USER:-sportmemo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sportmemo}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sportmemo} -d ${POSTGRES_DB:-sportmemo}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    logging: &default_logging
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  redis:
+    image: redis:7-alpine
+    container_name: sportmemo_redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    logging: *default_logging
+
+  # MinIO в сентябре 2026 убрал образы из Docker Hub (docker.io/minio/minio → not found),
+  # закрыл анонимный доступ к quay.io/minio/minio (401) и прекратил раздачу с dl.min.io (410).
+  # elestio/minio — переупаковка официального бинарника MinIO
+  # (RELEASE.2025-09-07T16-13-09Z, maintainer MinIO Inc, AGPL-3.0).
+  # Digest на 2026-10-10: sha256:25348a257f1ece1b192f25f6cd9854618fa86422ac87b494b5d4e629c556d4bd
+  minio:
+    image: elestio/minio:latest
+    container_name: sportmemo_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # веб-консоль
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    logging: *default_logging
+
+  web:
+    build: .
+    container_name: sportmemo_web
+    command: python manage.py runserver 0.0.0.0:8000
+    environment: &django_env
+      DEBUG: ${DEBUG:-True}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-me}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
+      DATABASE_URL: postgres://${POSTGRES_USER:-sportmemo}:${POSTGRES_PASSWORD:-sportmemo}@db:5432/${POSTGRES_DB:-sportmemo}
+      REDIS_URL: redis://redis:6379/0
+      USE_S3: ${USE_S3:-True}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-sportmemo}
+      MINIO_USE_SSL: "False"
+      EMAIL_HOST: ${EMAIL_HOST:-}
+      EMAIL_PORT: ${EMAIL_PORT:-465}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-noreply@sportmemo.ru}
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+    logging: *default_logging
+
+  worker:
+    build: .
+    container_name: sportmemo_worker
+    command: celery -A config worker -l info
+    environment: *django_env
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    logging: *default_logging
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:

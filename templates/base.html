@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+{% load i18n %}
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{{ SPORTMEMO_SITE_NAME }}{% endblock %}</title>
+    <meta name="description" content="{% block description %}{% trans "Публичный архив спортивных фотографий" %}{% endblock %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header>
+        <a href="/">{{ SPORTMEMO_SITE_NAME }}</a>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <span>{{ SPORTMEMO_SITE_NAME }} v{{ SPORTMEMO_VERSION }}</span>
+    </footer>
+</body>
+</html>

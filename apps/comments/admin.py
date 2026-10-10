@@ -1,0 +1,44 @@
+"""Админка комментариев."""
+
+from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
+
+from apps.comments.models import Comment
+from apps.core.admin_mixins import (
+    MODERATION_ACTIONS,
+    BaseHistoryAdmin,
+    ModerationActionsMixin,
+)
+
+
+@admin.register(Comment)
+class CommentAdmin(ModerationActionsMixin, BaseHistoryAdmin):
+    list_display = (
+        "__str__",
+        "author",
+        "content_type",
+        "object_id",
+        "status",
+        "created_at",
+        "deleted_at",
+    )
+    list_filter = ("status", "content_type", "deleted_at", "created_at")
+    search_fields = ("text", "author__email")
+    autocomplete_fields = ("author", "parent")
+    readonly_fields = (
+        "content_type",
+        "object_id",
+        "created_at",
+        "updated_at",
+        "deleted_at",
+    )
+    actions = MODERATION_ACTIONS
+    fieldsets = (
+        (None, {"fields": ("author", "text", "parent")}),
+        (_("Объект"), {"fields": ("content_type", "object_id")}),
+        (
+            _("Публикация"),
+            {"fields": ("status", "moderated_by", "moderated_at", "moderation_reason")},
+        ),
+        (_("Служебное"), {"fields": ("deleted_at", "created_at", "updated_at")}),
+    )

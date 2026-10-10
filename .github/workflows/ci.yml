@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SECRET_KEY: ci-secret-key-not-for-production
+  DEBUG: "True"
+  DATABASE_URL: postgres://sportmemo:sportmemo@localhost:5432/sportmemo
+  USE_S3: "False"
+  DJANGO_LANGUAGE_CODE: ru
+
+jobs:
+  lint:
+    name: Линтер (ruff)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Установить uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Установить зависимости
+        run: uv sync --frozen
+
+      - name: Проверить код
+        run: uv run ruff check .
+
+      - name: Проверить форматирование
+        run: uv run ruff format --check .
+
+      - name: Проверить миграции (нет неприменённых изменений)
+        run: uv run python manage.py makemigrations --check --dry-run
+
+  test:
+    name: Тесты (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: sportmemo
+          POSTGRES_USER: sportmemo
+          POSTGRES_PASSWORD: sportmemo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sportmemo -d sportmemo"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Установить uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Установить Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Установить зависимости
+        run: uv sync --frozen --python ${{ matrix.python-version }}
+
+      - name: Проверить конфигурацию Django
+        run: uv run --python ${{ matrix.python-version }} python manage.py check
+
+      - name: Применить миграции
+        run: uv run --python ${{ matrix.python-version }} python manage.py migrate
+
+      - name: Запустить тесты
+        run: uv run --python ${{ matrix.python-version }} pytest -q

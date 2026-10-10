@@ -1,0 +1,50 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate "Home" %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="../">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; {% translate "Слияние дубликатов" %}
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>{% translate "Слияние дубликатов" %}</h1>
+
+<p>
+    {% blocktranslate with count=sources|length %}Будет слито объектов: {{ count }}. Связи (фото, состав, события) будут перенесены в целевой объект, а источники помечены как удалённые. Операция обратима через историю изменений.{% endblocktranslate %}
+</p>
+
+<h2>{% translate "Объекты к слиянию" %}</h2>
+<ul>
+    {% for source in sources %}
+    <li>{{ source }} <span class="help">(#{{ source.pk }})</span></li>
+    {% empty %}
+    <li>{% translate "Ничего не выбрано" %}</li>
+    {% endfor %}
+</ul>
+
+{% if sources %}
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="ids" value="{{ ids }}">
+
+    <h2>{% translate "Целевой объект" %}</h2>
+    <p>
+        <select name="target" required>
+            <option value="">{% translate "— выберите —" %}</option>
+            {% for candidate in candidates %}
+            <option value="{{ candidate.pk }}">{{ candidate }} (#{{ candidate.pk }})</option>
+            {% endfor %}
+        </select>
+    </p>
+
+    <div class="submit-row">
+        <input type="submit" value="{% translate 'Слить' %}" class="default">
+        <a href="../" class="button cancel-link">{% translate "Отмена" %}</a>
+    </div>
+</form>
+{% endif %}
+{% endblock %}
