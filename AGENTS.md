@@ -120,6 +120,9 @@ Bad subject: `feat: flesh out the photo bits` — it is not clear what was done.
 2. Stage plans live in `.koda/plans/`. Plan steps are marked `[ ]` → `[x]` as they are completed.
 3. Significant work starts with a plan approved by the owner.
 
+Small changes — documentation, texts, comments, config files — may be committed straight
+to `master`, without a branch. A branch is needed when code or the data schema changes.
+
 After a squash-merge, `git branch -d` will refuse to delete the branch: git does not treat
 such a branch as merged. Check `git diff --stat <branch> master` first (empty means the trees
 match), then delete with `git branch -D`.
