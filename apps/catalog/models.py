@@ -200,6 +200,21 @@ class TeamMembership(TimeStampedModel):
             years = f" ({self.year_from or '?'}–{self.year_to or '?'})"
         return f"{self.person} — {self.team}{years}"
 
+    @property
+    def years_label(self) -> str:
+        """Годы в команде подписью: «1994 — 1998», «с 1994», «до 1998».
+
+        Живёт в модели: тем же свойством пользуются страница человека
+        и состав команды, а форматов подписи не должно быть два.
+        """
+        if self.year_from and self.year_to:
+            return f"{self.year_from} — {self.year_to}"
+        if self.year_from:
+            return str(_("с %(year)s") % {"year": self.year_from})
+        if self.year_to:
+            return str(_("до %(year)s") % {"year": self.year_to})
+        return str(_("год не указан"))
+
 
 class NameVisibility(models.TextChoices):
     """Публичность имени: защита несовершеннолетних."""

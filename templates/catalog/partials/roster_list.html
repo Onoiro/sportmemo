@@ -1,0 +1,25 @@
+{% load i18n %}
+{% comment %}
+Список людей в команде. Один партиал на оба режима страницы: превью
+(без фильтра) и полный список выбранного года.
+
+Человек уже отфильтрован по публичности в представлении, поэтому ссылка
+создаётся всегда: черновик человека в список не попадает.
+{% endcomment %}
+<ul class="entity-list">
+    {% for membership in roster %}
+        <li class="entity-list__item">
+            <a class="entity-list__name" href="{{ membership.person.get_absolute_url }}">{{ membership.person.public_name }}</a>
+            <span class="entity-list__note">
+                {{ membership.get_role_display }}
+                · {{ membership.years_label }}
+                {% if membership.position %}
+                    · {{ membership.position }}
+                {% endif %}
+                {% if membership.number %}
+                    · № {{ membership.number }}
+                {% endif %}
+            </span>
+        </li>
+    {% endfor %}
+</ul>

@@ -66,23 +66,27 @@
 
     {% if roster %}
         <section class="detail-section">
-            <h2 class="section-title h5">{% trans "Состав" %}</h2>
-            <ul class="entity-list">
-                {% for membership in roster %}
-                    <li class="entity-list__item">
-                        <a class="entity-list__name" href="{{ membership.person.get_absolute_url }}">{{ membership.person.public_name }}</a>
-                        <span class="entity-list__note">
-                            {{ membership.get_role_display }}
-                            {% if membership.year_from or membership.year_to %}
-                                — {{ membership.year_from|default:"?" }}–{{ membership.year_to|default:"…" }}
-                            {% endif %}
-                            {% if membership.position %}
-                                · {{ membership.position }}
-                            {% endif %}
-                        </span>
-                    </li>
-                {% endfor %}
-            </ul>
+            {% comment %}
+            Формулировка не обещает полноты: архив наполняется по чужим
+            альбомам, и за конкретный год известны далеко не все.
+            {% endcomment %}
+            <h2 class="section-title h5">
+                {% if selected_year %}
+                    {% blocktranslate with year=selected_year %}Люди в команде, {{ year }} год{% endblocktranslate %}
+                {% else %}
+                    {% trans "Состав" %}
+                {% endif %}
+            </h2>
+            {% if roster_years %}
+                {% include "catalog/partials/roster_form.html" %}
+            {% endif %}
+            {% include "catalog/partials/roster_list.html" %}
+            <p class="roster-filter__hint">
+                {% if selected_year %}
+                    {% blocktranslate count counter=roster_total %}В команде известен {{ counter }} человек{% plural %}В команде известны {{ counter }} человек{% endblocktranslate %}.
+                {% endif %}
+                {% trans "В архиве указаны не все, кто играл." %}
+            </p>
         </section>
     {% endif %}
 </div>

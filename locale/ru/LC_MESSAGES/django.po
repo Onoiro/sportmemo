@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-11 18:53+0300\n"
+"POT-Creation-Date: 2026-10-11 22:31+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -131,7 +131,7 @@ msgstr "Служебное"
 msgid "Приватность"
 msgstr "Приватность"
 
-#: apps/catalog/admin.py:127 templates/catalog/person_detail.html:51
+#: apps/catalog/admin.py:127 templates/catalog/person_detail.html:56
 msgid "Биография"
 msgstr "Биография"
 
@@ -155,17 +155,17 @@ msgstr "руководитель"
 msgid "персонал"
 msgstr "персонал"
 
-#: apps/catalog/models.py:88 apps/catalog/models.py:389 apps/core/models.py:261
+#: apps/catalog/models.py:88 apps/catalog/models.py:404 apps/core/models.py:261
 #: apps/photos/models.py:96
 msgid "вид спорта"
 msgstr "вид спорта"
 
-#: apps/catalog/models.py:92 apps/catalog/models.py:393 apps/core/models.py:255
+#: apps/catalog/models.py:92 apps/catalog/models.py:408 apps/core/models.py:255
 #: apps/photos/models.py:46
 msgid "название"
 msgstr "название"
 
-#: apps/catalog/models.py:93 apps/catalog/models.py:404
+#: apps/catalog/models.py:93 apps/catalog/models.py:419
 msgid "город"
 msgstr "город"
 
@@ -173,7 +173,7 @@ msgstr "город"
 msgid "год основания"
 msgstr "год основания"
 
-#: apps/catalog/models.py:95 apps/catalog/models.py:409
+#: apps/catalog/models.py:95 apps/catalog/models.py:424
 msgid "описание"
 msgstr "описание"
 
@@ -182,18 +182,18 @@ msgid "эмблема"
 msgstr "эмблема"
 
 #: apps/catalog/models.py:101 apps/catalog/models.py:173
-#: apps/catalog/models.py:247 apps/catalog/models.py:412
-#: apps/catalog/models.py:507
+#: apps/catalog/models.py:262 apps/catalog/models.py:427
+#: apps/catalog/models.py:522
 msgid "создатель"
 msgstr "создатель"
 
-#: apps/catalog/models.py:108 apps/catalog/models.py:254
-#: apps/catalog/models.py:407
+#: apps/catalog/models.py:108 apps/catalog/models.py:269
+#: apps/catalog/models.py:422
 msgid "дополнительные атрибуты"
 msgstr "дополнительные атрибуты"
 
 #: apps/catalog/models.py:114 apps/catalog/models.py:153
-#: apps/catalog/models.py:500 apps/photos/models.py:118
+#: apps/catalog/models.py:515 apps/photos/models.py:118
 msgid "команда"
 msgstr "команда"
 
@@ -201,8 +201,8 @@ msgstr "команда"
 msgid "команды"
 msgstr "команды"
 
-#: apps/catalog/models.py:159 apps/catalog/models.py:260
-#: apps/catalog/models.py:337 apps/photos/models.py:269
+#: apps/catalog/models.py:159 apps/catalog/models.py:275
+#: apps/catalog/models.py:352 apps/photos/models.py:269
 msgid "человек"
 msgstr "человек"
 
@@ -222,7 +222,7 @@ msgstr "номер"
 msgid "амплуа"
 msgstr "амплуа"
 
-#: apps/catalog/models.py:170 apps/catalog/models.py:348
+#: apps/catalog/models.py:170 apps/catalog/models.py:363
 #: apps/photos/models.py:285
 msgid "примечание"
 msgstr "примечание"
@@ -235,207 +235,222 @@ msgstr "членство в команде"
 msgid "членство в командах"
 msgstr "членство в командах"
 
-#: apps/catalog/models.py:207
+#: apps/catalog/models.py:213
+#, python-format
+msgid "с %(year)s"
+msgstr "с %(year)s"
+
+#: apps/catalog/models.py:215
+#, python-format
+msgid "до %(year)s"
+msgstr "до %(year)s"
+
+#: apps/catalog/models.py:216 templates/photos/partials/card.html:20
+msgid "год не указан"
+msgstr "год не указан"
+
+#: apps/catalog/models.py:222
 msgid "полное имя"
 msgstr "полное имя"
 
-#: apps/catalog/models.py:208
+#: apps/catalog/models.py:223
 msgid "только имя"
 msgstr "только имя"
 
-#: apps/catalog/models.py:209 apps/core/models.py:44
+#: apps/catalog/models.py:224 apps/core/models.py:44
 msgid "скрыто"
 msgstr "скрыто"
 
-#: apps/catalog/models.py:222
+#: apps/catalog/models.py:237
 msgid "имя"
 msgstr "имя"
 
-#: apps/catalog/models.py:223
+#: apps/catalog/models.py:238
 msgid "фамилия"
 msgstr "фамилия"
 
-#: apps/catalog/models.py:224
+#: apps/catalog/models.py:239
 msgid "отчество"
 msgstr "отчество"
 
-#: apps/catalog/models.py:225
+#: apps/catalog/models.py:240
 msgid "отображаемое имя"
 msgstr "отображаемое имя"
 
-#: apps/catalog/models.py:226
+#: apps/catalog/models.py:241
 msgid "год рождения"
 msgstr "год рождения"
 
-#: apps/catalog/models.py:227
+#: apps/catalog/models.py:242
 msgid "год смерти"
 msgstr "год смерти"
 
-#: apps/catalog/models.py:229
+#: apps/catalog/models.py:244
 msgid "видимость имени"
 msgstr "видимость имени"
 
-#: apps/catalog/models.py:235
+#: apps/catalog/models.py:250
 msgid "биография"
 msgstr "биография"
 
-#: apps/catalog/models.py:238
+#: apps/catalog/models.py:253
 msgid "главное фото"
 msgstr "главное фото"
 
-#: apps/catalog/models.py:244
+#: apps/catalog/models.py:259
 msgid "«это я» подтверждено"
 msgstr "«это я» подтверждено"
 
-#: apps/catalog/models.py:261
+#: apps/catalog/models.py:276
 msgid "люди"
 msgstr "люди"
 
-#: apps/catalog/models.py:289
+#: apps/catalog/models.py:304
 msgid "Имя не указано"
 msgstr "Имя не указано"
 
-#: apps/catalog/models.py:326
+#: apps/catalog/models.py:341
 msgid "фамилия при рождении"
 msgstr "фамилия при рождении"
 
-#: apps/catalog/models.py:327
+#: apps/catalog/models.py:342
 msgid "фамилия в браке"
 msgstr "фамилия в браке"
 
-#: apps/catalog/models.py:328
+#: apps/catalog/models.py:343
 msgid "прозвище"
 msgstr "прозвище"
 
-#: apps/catalog/models.py:329
+#: apps/catalog/models.py:344
 msgid "другое написание"
 msgstr "другое написание"
 
-#: apps/catalog/models.py:341 apps/catalog/models.py:353
+#: apps/catalog/models.py:356 apps/catalog/models.py:368
 msgid "вариант имени"
 msgstr "вариант имени"
 
-#: apps/catalog/models.py:343
+#: apps/catalog/models.py:358
 msgid "вид варианта"
 msgstr "вид варианта"
 
-#: apps/catalog/models.py:354
+#: apps/catalog/models.py:369
 msgid "варианты имён"
 msgstr "варианты имён"
 
-#: apps/catalog/models.py:369
+#: apps/catalog/models.py:384
 msgid "турнир"
 msgstr "турнир"
 
-#: apps/catalog/models.py:370
+#: apps/catalog/models.py:385
 msgid "серия"
 msgstr "серия"
 
-#: apps/catalog/models.py:371
+#: apps/catalog/models.py:386
 msgid "товарищеская встреча"
 msgstr "товарищеская встреча"
 
-#: apps/catalog/models.py:372
+#: apps/catalog/models.py:387
 msgid "тренировка"
 msgstr "тренировка"
 
-#: apps/catalog/models.py:373
+#: apps/catalog/models.py:388
 msgid "поездка"
 msgstr "поездка"
 
-#: apps/catalog/models.py:374
+#: apps/catalog/models.py:389
 msgid "церемония"
 msgstr "церемония"
 
-#: apps/catalog/models.py:375 apps/moderation/models.py:21
+#: apps/catalog/models.py:390 apps/moderation/models.py:21
 #: apps/photos/models.py:29 apps/photos/models.py:251
 msgid "другое"
 msgstr "другое"
 
-#: apps/catalog/models.py:395
+#: apps/catalog/models.py:410
 msgid "тип события"
 msgstr "тип события"
 
-#: apps/catalog/models.py:401
+#: apps/catalog/models.py:416
 msgid "дата начала"
 msgstr "дата начала"
 
-#: apps/catalog/models.py:402
+#: apps/catalog/models.py:417
 msgid "дата окончания"
 msgstr "дата окончания"
 
-#: apps/catalog/models.py:403 apps/photos/models.py:124
+#: apps/catalog/models.py:418 apps/photos/models.py:124
 msgid "год"
 msgstr "год"
 
-#: apps/catalog/models.py:405
+#: apps/catalog/models.py:420
 msgid "страна"
 msgstr "страна"
 
-#: apps/catalog/models.py:422 apps/catalog/models.py:494
+#: apps/catalog/models.py:437 apps/catalog/models.py:509
 #: apps/photos/models.py:110
 msgid "событие"
 msgstr "событие"
 
-#: apps/catalog/models.py:423
+#: apps/catalog/models.py:438
 msgid "события"
 msgstr "события"
 
-#: apps/catalog/models.py:474
+#: apps/catalog/models.py:489
 msgid "дата не указана"
 msgstr "дата не указана"
 
-#: apps/catalog/models.py:481
+#: apps/catalog/models.py:496
 msgid "Дата окончания раньше даты начала"
 msgstr "Дата окончания раньше даты начала"
 
-#: apps/catalog/models.py:504
+#: apps/catalog/models.py:519
 msgid "результат"
 msgstr "результат"
 
-#: apps/catalog/models.py:517
+#: apps/catalog/models.py:532
 msgid "участие команды"
 msgstr "участие команды"
 
-#: apps/catalog/models.py:518
+#: apps/catalog/models.py:533
 msgid "участие команд"
 msgstr "участие команд"
 
-#: apps/catalog/views.py:29
+#: apps/catalog/views.py:34
 msgid "Этап"
 msgstr "Этап"
 
-#: apps/catalog/views.py:30
+#: apps/catalog/views.py:35
 msgid "Счёт"
 msgstr "Счёт"
 
-#: apps/catalog/views.py:31
+#: apps/catalog/views.py:36
 msgid "Результат"
 msgstr "Результат"
 
-#: apps/catalog/views.py:32
+#: apps/catalog/views.py:37
 msgid "Иннингов"
 msgstr "Иннингов"
 
-#: apps/catalog/views.py:33
+#: apps/catalog/views.py:38
 msgid "Команд"
 msgstr "Команд"
 
-#: apps/catalog/views.py:79 apps/catalog/views.py:101 apps/catalog/views.py:154
-#: apps/catalog/views.py:182 apps/catalog/views.py:232 apps/core/views.py:83
-#: apps/core/views.py:125 apps/photos/views.py:42
-#: templates/core/placeholder.html:9 templates/partials/footer.html:20
+#: apps/catalog/views.py:138 apps/catalog/views.py:160
+#: apps/catalog/views.py:222 apps/catalog/views.py:250
+#: apps/catalog/views.py:300 apps/core/views.py:83 apps/core/views.py:125
+#: apps/photos/views.py:42 templates/core/placeholder.html:9
+#: templates/partials/footer.html:20
 msgid "Главная"
 msgstr "Главная"
 
-#: apps/catalog/views.py:80 apps/catalog/views.py:155
+#: apps/catalog/views.py:139 apps/catalog/views.py:223
 #: templates/catalog/team_list.html:4 templates/catalog/team_list.html:14
 #: templates/core/home.html:48 templates/partials/footer.html:12
 #: templates/partials/navbar.html:14
 msgid "Команды"
 msgstr "Команды"
 
-#: apps/catalog/views.py:102 apps/catalog/views.py:183
+#: apps/catalog/views.py:161 apps/catalog/views.py:251
 #: templates/catalog/event_list.html:4 templates/catalog/event_list.html:14
 #: templates/partials/footer.html:13 templates/partials/navbar.html:17
 msgid "События"
@@ -1042,7 +1057,7 @@ msgstr "Слить"
 msgid "Отмена"
 msgstr "Отмена"
 
-#: templates/base.html:27
+#: templates/base.html:27 templates/catalog/person_detail.html:10
 msgid "Публичный архив спортивных фотографий: команды, события, люди"
 msgstr "Публичный архив спортивных фотографий: команды, события, люди"
 
@@ -1095,59 +1110,61 @@ msgstr[1] "%(counter)s фото"
 msgstr[2] "%(counter)s фото"
 msgstr[3] "%(counter)s фото"
 
+#: templates/catalog/partials/roster_form.html:11
+#: templates/photos/photo_detail.html:47
+msgid "Год"
+msgstr "Год"
+
+#: templates/catalog/partials/roster_form.html:13
+msgid "Все годы"
+msgstr "Все годы"
+
+#: templates/catalog/partials/roster_form.html:18
+msgid "Показать"
+msgstr "Показать"
+
+#: templates/catalog/partials/roster_form.html:20
+msgid "Показать все годы"
+msgstr "Показать все годы"
+
 #: templates/catalog/partials/team_card.html:14
 #, python-format
 msgid "осн. %(year)s"
 msgstr "осн. %(year)s"
 
-#: templates/catalog/person_detail.html:5
+#: templates/catalog/person_detail.html:10
 #, python-format
 msgid "Человек %(name)s в архиве SportMemo."
 msgstr "Человек %(name)s в архиве SportMemo."
 
-#: templates/catalog/person_detail.html:22
+#: templates/catalog/person_detail.html:27
 msgid "Главное фото"
 msgstr "Главное фото"
 
-#: templates/catalog/person_detail.html:37
+#: templates/catalog/person_detail.html:42
 #, python-format
 msgid "род. %(year)s"
 msgstr "род. %(year)s"
 
-#: templates/catalog/person_detail.html:41
+#: templates/catalog/person_detail.html:46
 #, python-format
 msgid "ум. %(year)s"
 msgstr "ум. %(year)s"
 
-#: templates/catalog/person_detail.html:58
+#: templates/catalog/person_detail.html:63
 #: templates/catalog/team_detail.html:44
 msgid "Дополнительно"
 msgstr "Дополнительно"
 
-#: templates/catalog/person_detail.html:65
+#: templates/catalog/person_detail.html:70
 msgid "Команды и роли"
 msgstr "Команды и роли"
 
-#: templates/catalog/person_detail.html:84
-#, python-format
-msgid "с %(year)s"
-msgstr "с %(year)s"
-
-#: templates/catalog/person_detail.html:86
-#, python-format
-msgid "до %(year)s"
-msgstr "до %(year)s"
-
-#: templates/catalog/person_detail.html:88
-#: templates/photos/partials/card.html:20
-msgid "год не указан"
-msgstr "год не указан"
-
-#: templates/catalog/person_detail.html:105
+#: templates/catalog/person_detail.html:102
 msgid "Фотографии"
 msgstr "Фотографии"
 
-#: templates/catalog/person_detail.html:118
+#: templates/catalog/person_detail.html:115
 msgid "Также известен как"
 msgstr "Также известен как"
 
@@ -1169,9 +1186,27 @@ msgstr "Фотографии команды"
 msgid "События команды"
 msgstr "События команды"
 
-#: templates/catalog/team_detail.html:69
+#: templates/catalog/team_detail.html:76
+#, python-format
+msgid "Люди в команде, %(year)s год"
+msgstr "Люди в команде, %(year)s год"
+
+#: templates/catalog/team_detail.html:78
 msgid "Состав"
 msgstr "Состав"
+
+#: templates/catalog/team_detail.html:87
+#, python-format
+msgid "В команде известен %(counter)s человек"
+msgid_plural "В команде известны %(counter)s человек"
+msgstr[0] "В команде известен %(counter)s человек"
+msgstr[1] "В команде известны %(counter)s человека"
+msgstr[2] "В команде известны %(counter)s человек"
+msgstr[3] "В команде известны %(counter)s человек"
+
+#: templates/catalog/team_detail.html:89
+msgid "В архиве указаны не все, кто играл."
+msgstr "В архиве указаны не все, кто играл."
 
 #: templates/catalog/team_list.html:5
 msgid "Команды архива SportMemo: города, годы основания и фотографии."
@@ -1384,10 +1419,6 @@ msgstr "Показать ещё"
 #: templates/photos/photo_detail.html:5
 msgid "Фотография из архива SportMemo"
 msgstr "Фотография из архива SportMemo"
-
-#: templates/photos/photo_detail.html:47
-msgid "Год"
-msgstr "Год"
 
 #: templates/photos/photo_detail.html:53
 msgid "Дата съёмки"

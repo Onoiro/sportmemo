@@ -280,6 +280,28 @@ class TestTeamRoster:
 
         assert "Состав" not in html
 
+    def test_year_filter_and_total_are_shown(self, client, team, user):
+        """Фильтр по годам живёт на этой странице: см. test_team_roster.py."""
+        team.publish()
+        for index in range(3):
+            person = make_person(user, f"Имя{index}", f"Фамилия{index}")
+            TeamMembership.objects.create(
+                team=team, person=person, year_from=1994 + index
+            )
+
+        response = client.get(team.get_absolute_url())
+
+        assert response.context["roster_total"] == 3
+        assert response.context["roster_years"] == [1996, 1995, 1994]
+        assert 'name="year"' in response.content.decode()
+
+    def test_year_filter_is_hidden_when_roster_is_empty(self, client, team):
+        team.publish()
+
+        html = client.get(team.get_absolute_url()).content.decode()
+
+        assert 'name="year"' not in html
+
 
 class TestTeamAttributes:
     def test_known_key_is_translated(self, client, team):

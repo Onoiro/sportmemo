@@ -647,6 +647,36 @@ html[data-bs-theme="dark"] {
     font-size: 0.875rem;
 }
 
+/* --- Фильтр состава по годам --- */
+
+.roster-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-size: 0.9375rem;
+}
+
+.roster-filter__label {
+    color: var(--bs-secondary-color);
+}
+
+.roster-filter__select {
+    width: auto;
+    min-width: 9rem;
+}
+
+.roster-filter__reset {
+    font-size: 0.875rem;
+}
+
+.roster-filter__hint {
+    margin: 0.75rem 0 0;
+    font-size: 0.875rem;
+    color: var(--bs-secondary-color);
+}
+
 /* --- Страница человека --- */
 
 .person-header {
@@ -976,5 +1006,10 @@ html[data-bs-theme="dark"] {
     .search-form {
         max-width: none;
         margin-top: 0.5rem;
+    }
+
+    .roster-filter__select {
+        flex: 1 1 auto;
+        width: 100%;
     }
 }

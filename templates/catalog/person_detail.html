@@ -81,15 +81,7 @@
                         {% endif %}
                         <span class="entity-list__note">
                             {{ membership.get_role_display }}
-                            {% if membership.year_from and membership.year_to %}
-                                · {{ membership.year_from }} — {{ membership.year_to }}
-                            {% elif membership.year_from %}
-                                · {% blocktranslate with year=membership.year_from %}с {{ year }}{% endblocktranslate %}
-                            {% elif membership.year_to %}
-                                · {% blocktranslate with year=membership.year_to %}до {{ year }}{% endblocktranslate %}
-                            {% else %}
-                                · {% trans "год не указан" %}
-                            {% endif %}
+                            · {{ membership.years_label }}
                             {% if membership.position %}
                                 · {{ membership.position }}
                             {% endif %}

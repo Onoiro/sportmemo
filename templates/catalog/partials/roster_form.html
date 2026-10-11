@@ -1,0 +1,22 @@
+{% load i18n %}
+{% comment %}
+Фильтр состава по годам. Обычная форма GET: состояние живёт в URL,
+ссылку с годом можно переслать, JavaScript не нужен.
+
+Список годов приходит из представления — только те годы, в которые известен
+хотя бы один человек. Пустой год в фильтре выглядел бы обещанием данных,
+которых нет.
+{% endcomment %}
+<form class="roster-filter" method="get" role="search">
+    <label class="roster-filter__label" for="roster-year">{% trans "Год" %}</label>
+    <select class="form-select roster-filter__select" id="roster-year" name="year">
+        <option value="">{% trans "Все годы" %}</option>
+        {% for year in roster_years %}
+            <option value="{{ year }}"{% if year == selected_year %} selected{% endif %}>{{ year }}</option>
+        {% endfor %}
+    </select>
+    <button class="btn btn-outline-primary" type="submit">{% trans "Показать" %}</button>
+    {% if selected_year %}
+        <a class="roster-filter__reset" href="{{ team.get_absolute_url }}">{% trans "Показать все годы" %}</a>
+    {% endif %}
+</form>

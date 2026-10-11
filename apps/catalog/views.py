@@ -11,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_GET
 
 from apps.catalog.models import Event, Person, Team
+from apps.catalog.roster import memberships_in_year, roster_years
 from apps.core.shortcuts import (
     PHOTO_ORDERING,
     PHOTO_PAGE_SIZE,
@@ -22,8 +23,9 @@ from apps.core.shortcuts import (
 
 TEAM_PAGE_SIZE = 24
 EVENT_PAGE_SIZE = 20
-# Сколько человек показываем на странице команды. Полный состав по годам —
-# отдельная страница, она появится позже.
+# Сколько человек показываем на странице команды без фильтра по году.
+# Выбранный год показывается целиком: иначе фильтр отсекал бы людей,
+# ради которых его и применили.
 TEAM_ROSTER_PREVIEW = 12
 
 # Подписи известных ключей `attributes`. Ключ, которого здесь нет, выводится
@@ -68,6 +70,58 @@ def gallery_filter(**params):
     return query
 
 
+def team_memberships(team):
+    """Состав команды из опубликованных людей.
+
+    Черновик человека в публичную выдачу не попадает, даже если он записан
+    в команду. Срез здесь не делается: режимов показа два, и какой применить,
+    решает представление.
+    """
+    return (
+        team.memberships.filter(person__in=Person.public.published())
+        .select_related("person")
+        .order_by(
+            F("year_from").desc(nulls_last=True),
+            "person__last_name",
+            "person__first_name",
+        )
+    )
+
+
+def roster_fallback_year(team):
+    """Последний год, известный по команде.
+
+    Нужен незакрытым периодам: человек с `year_from` и пустым `year_to`
+    числится в команде до этого года. Считается по членствам и событиям
+    команды: у молодой команды без событий верхней границей останется
+    год начала членства, и это лучше, чем «до сегодняшнего дня».
+    """
+    years = [
+        year
+        for year in team.memberships.values_list("year_from", "year_to")
+        for year in year
+        if year
+    ]
+    years += [
+        year for year in team.event_teams.values_list("event__year", flat=True) if year
+    ]
+    return max(years) if years else None
+
+
+def roster_year(request, years):
+    """Год фильтра состава, если он есть в списке доступных.
+
+    Неизвестный или нечисловой параметр считается неприменённым фильтром:
+    опечатка в ссылке не должна давать пустую страницу.
+    """
+    value = request.GET.get("year")
+    try:
+        year = int(value)
+    except (TypeError, ValueError):
+        return None
+    return year if year in years else None
+
+
 def team_list(request):
     """Список опубликованных команд, по алфавиту."""
     teams = (
@@ -110,7 +164,12 @@ def event_list(request):
 
 @require_GET
 def team_detail(request, slug):
-    """Страница команды: визитка, фотографии, события и краткий состав.
+    """Страница команды: визитка, фотографии, события и состав.
+
+    Состав можно отфильтровать по году (`?year=1994`): архив наполняется
+    по чужим альбомам, и состав за конкретный год заведомо неполный, поэтому
+    фильтр отвечает на вопрос «кто известен по этому году», а не показывает
+    полный состав.
 
     Черновик, скрытое, отклонённое, удалённое и слитое отсеивает
     `get_visible_or_404`: автор и модератор видят страницу с плашкой,
@@ -132,15 +191,16 @@ def team_detail(request, slug):
     )
     # Состав — только из опубликованных людей: черновик человека в публичную
     # выдачу не попадает, даже если он записан в команду.
-    roster = (
-        team.memberships.filter(person__in=Person.public.published())
-        .select_related("person")
-        .order_by(
-            F("year_from").desc(nulls_last=True),
-            "person__last_name",
-            "person__first_name",
-        )[:TEAM_ROSTER_PREVIEW]
-    )
+    memberships = list(team_memberships(team))
+    fallback_year = roster_fallback_year(team)
+    years = roster_years(memberships, fallback_year)
+    selected_year = roster_year(request, years)
+    if selected_year:
+        # Выбранный год показываем целиком: срез отсекал бы людей, ради
+        # которых фильтр и применили.
+        roster = memberships_in_year(memberships, selected_year, fallback_year)
+    else:
+        roster = memberships[:TEAM_ROSTER_PREVIEW]
 
     context = {
         "team": team,
@@ -152,6 +212,9 @@ def team_detail(request, slug):
         "gallery_query": gallery_filter(team=team.slug),
         "events": events,
         "roster": roster,
+        "roster_total": len(memberships),
+        "roster_years": years,
+        "selected_year": selected_year,
         "attribute_items": attribute_items(team.attributes),
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},
