@@ -112,10 +112,17 @@ Bad subject: `feat: flesh out the photo bits` — it is not clear what was done.
 
 ## Workflow
 
-1. Task → GitHub issue → branch `feature/<short-name>` → commits → PR → squash-merge into `master`.
-   Branches are deleted after merging. The owner merges PRs.
+1. A task comes from `.koda/backlog.md` → branch `feature/<short-name>` → commits →
+   `make lint && make test` → squash-merge into `master` → delete the branch.
+   Pull requests and GitHub issues are not used: one person runs the project, and the backlog
+   and the plans live in the repository, versioned together with the code. Issues make sense
+   once a second contributor appears.
 2. Stage plans live in `.koda/plans/`. Plan steps are marked `[ ]` → `[x]` as they are completed.
 3. Significant work starts with a plan approved by the owner.
+
+After a squash-merge, `git branch -d` will refuse to delete the branch: git does not treat
+such a branch as merged. Check `git diff --stat <branch> master` first (empty means the trees
+match), then delete with `git branch -D`.
 
 ## Roadmap
 
