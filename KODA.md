@@ -141,7 +141,8 @@ Docker Compose + Nginx (инфраструктура).
 
 **Этап 2 разбит на 15 подэтапов** — по одной сессии на каждый. Детальный план подэтапа
 создаётся отдельным файлом при старте работы (`plans/public-archive-2.N-<имя>.md`).
-Порядок и состав подэтапов — в мастер-плане.
+Порядок и состав подэтапов — в мастер-плане. Подэтап 2.1 (демо-данные) завершён;
+следующий — 2.2 (каркас публичного UI).
 
 ## Отложено осознанно
 
@@ -150,17 +151,17 @@ UI, «конструктор видов спорта». Обработка фо�
 
 ## Текущее состояние
 
-- Версия: 0.1.1
+- Версия: 0.1.2
 - Ветка разработки: `master`
 - Этап: 1 (фундамент репозитория и модель данных) — **завершён**;
-  этап 2 (публичный архив) — **в работе**, подэтап 2.1 (демо-данные)
-- Тесты: 117, проходят на Python 3.12 и 3.13 (`make test`), линтер чист (`make lint`)
+  этап 2 (публичный архив) — **в работе**, подэтап 2.1 (демо-данные) завершён
+- Тесты: 137, проходят на Python 3.12 и 3.13 (`make test`), линтер чист (`make lint`)
 
 ### Что уже есть
 
 | Приложение | Содержимое |
 |---|---|
-| `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, миксины админки (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/` |
+| `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, миксины админки (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, команда `seed_demo` |
 | `apps/accounts` | `User` по email, `UserManager`, согласия (terms/privacy/152-ФЗ + версия), роли, связь `User.person`, форма регистрации с согласиями, адаптер allauth |
 | `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam` |
 | `apps/photos` | `Source`, `Photo` (права, `processing_status`, `phash`, `duplicate_of`), `PhotoPerson`, превью через `ImageSpecField` |
@@ -187,4 +188,7 @@ CI (`.github/workflows/ci.yml`: ruff, проверка миграций, pytest 
   data-миграцией.
 - Новые поля FK на `User` в `catalog`/`photos` не создают цикла: `accounts` мигрирует первым,
   а обратные связи на `catalog` идут отдельной миграцией (`accounts/0002_...`).
+- Демо-данные создаются командой `seed_demo` (`make seed-demo`) и помечаются
+  `attributes={"demo": true}`; удаляются `make seed-demo-flush`. Это инструмент разработки:
+  на боевую базу их не переносим, в чек-лист деплоя входит «демо-данные не переносить».
 

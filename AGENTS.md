@@ -141,7 +141,8 @@ Details in `.koda/plans/foundation-and-data-model.md` (stage 1),
 
 **Stage 2 is split into 15 sub-stages**, one session each. A sub-stage plan is created as a
 separate file when work on it starts (`plans/public-archive-2.N-<name>.md`). The order and the
-list of sub-stages are in the master plan.
+list of sub-stages are in the master plan. Sub-stage 2.1 (demo data) is complete; the next one
+is 2.2 (public UI skeleton).
 
 ## Deliberately deferred
 
@@ -150,17 +151,17 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.1.1
+- Version: 0.1.2
 - Development branch: `master`
 - Stage: 1 (repository foundation and data model) — **complete**;
-  stage 2 (public archive) — **in progress**, sub-stage 2.1 (demo data)
-- Tests: 117, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
+  stage 2 (public archive) — **in progress**, sub-stage 2.1 (demo data) complete
+- Tests: 137, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
 
 ### What exists now
 
 | App | Contents |
 |---|---|
-| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/` |
+| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command |
 | `apps/accounts` | email-based `User`, `UserManager`, consents (terms/privacy/PD law + version), roles, `User.person` link, signup form with consents, allauth adapter |
 | `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam` |
 | `apps/photos` | `Source`, `Photo` (rights, `processing_status`, `phash`, `duplicate_of`), `PhotoPerson`, thumbnails via `ImageSpecField` |
@@ -187,4 +188,8 @@ and the `.agents/skills/semver-checker/` skill.
   migration.
 - New FK fields pointing at `User` in `catalog`/`photos` create no cycle: `accounts` migrates
   first, and reverse links into `catalog` go into a separate migration (`accounts/0002_...`).
+- Demo data is created by the `seed_demo` command (`make seed-demo`) and marked with
+  `attributes={"demo": true}`; `make seed-demo-flush` removes it. This is a development tool:
+  demo data is never moved to production, and the deploy checklist includes "do not move demo
+  data".
 

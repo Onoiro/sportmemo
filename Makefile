@@ -2,7 +2,8 @@ MANAGE := uv run python manage.py
 DC := docker compose
 
 .PHONY: help install lint format format-check test test-cov migrate migrations shell superuser \
-        collectstatic messages compile i18n up down down-clean restart build rebuild logs ps
+        collectstatic messages compile i18n seed-demo seed-demo-flush \
+        up down down-clean restart build rebuild logs ps
 
 help: ## Показать доступные команды
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -41,6 +42,16 @@ superuser: ## Создать суперпользователя
 
 collectstatic: ## Собрать статику
 	$(MANAGE) collectstatic --noinput
+
+# ======================================================================
+# Демо-данные (только для разработки)
+# ======================================================================
+
+seed-demo: ## Создать демонстрационный архив для разработки
+	$(MANAGE) seed_demo
+
+seed-demo-flush: ## Удалить демо-данные и их файлы
+	$(MANAGE) seed_demo --flush
 
 # ======================================================================
 # Локализация
