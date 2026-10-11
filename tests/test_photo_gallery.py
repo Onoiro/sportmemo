@@ -260,6 +260,23 @@ class TestPhotoDetail:
 
         assert "Секретная" not in html
 
+    def test_published_person_name_links_to_person_page(self, client, photo, person):
+        person.publish()
+        PhotoPerson.objects.create(photo=photo, person=person)
+
+        html = client.get(photo.get_absolute_url()).content.decode()
+
+        assert person.get_absolute_url() in html
+
+    def test_draft_person_name_is_shown_without_link(self, client, photo, person):
+        """Имя черновика на фото уже показано: ссылки на страницу нет."""
+        PhotoPerson.objects.create(photo=photo, person=person)
+
+        html = client.get(photo.get_absolute_url()).content.decode()
+
+        assert person.public_name in html
+        assert person.get_absolute_url() not in html
+
 
 class TestPhotoViewsCounter:
     def test_views_grow_by_one_per_open(self, client, photo):

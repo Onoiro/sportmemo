@@ -263,15 +263,15 @@ class TestTeamRoster:
 
         assert len(response.context["roster"]) == 12
 
-    def test_no_person_links(self, client, team, user):
-        """Страницы человека ещё нет: ссылок на неё быть не должно."""
+    def test_roster_names_link_to_person_pages(self, client, team, user):
+        """Человек в составе уже отфильтрован по публичности: ссылка есть."""
         team.publish()
         person = make_person(user)
         TeamMembership.objects.create(team=team, person=person, year_from=1994)
 
         html = client.get(team.get_absolute_url()).content.decode()
 
-        assert "/people/" not in html
+        assert person.get_absolute_url() in html
 
     def test_no_roster_section_when_empty(self, client, team):
         team.publish()

@@ -108,7 +108,17 @@
                     <ul class="person-list">
                         {% for link in photo_persons %}
                             <li class="person-list__item">
-                                <span class="person-list__name">{{ link.person.public_name }}</span>
+                                {% comment %}
+                                Ссылка ведёт на человека, только если он
+                                опубликован: черновик выводится текстом.
+                                Список не фильтруется по публичности
+                                осознанно — имя уже показано на фото.
+                                {% endcomment %}
+                                {% if link.person.is_published %}
+                                    <a class="person-list__name" href="{{ link.person.get_absolute_url }}">{{ link.person.public_name }}</a>
+                                {% else %}
+                                    <span class="person-list__name">{{ link.person.public_name }}</span>
+                                {% endif %}
                                 <span class="person-list__role">{{ link.get_role_display }}</span>
                                 {% if link.position %}
                                     <span class="person-list__position">{{ link.position }}</span>

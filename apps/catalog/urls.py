@@ -1,4 +1,4 @@
-"""Маршруты каталога: команды и события."""
+"""Маршруты каталога: команды, события и люди."""
 
 from django.urls import path
 
@@ -15,4 +15,7 @@ urlpatterns = [
     path("teams/<uslug:slug>/", views.team_detail, name="team_detail"),
     path("events/", views.event_list, name="event_list"),
     path("events/<uslug:slug>/", views.event_detail, name="event_detail"),
+    # Список людей не создаём: попасть на страницу человека можно только
+    # с фото или из состава команды (решение мастер-плана).
+    path("people/<uslug:slug>/", views.person_detail, name="person_detail"),
 ]

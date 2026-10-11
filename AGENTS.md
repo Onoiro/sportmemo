@@ -60,7 +60,7 @@ stays tidy.
 |---|---|
 | `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public query helpers (`shortcuts.py`), public views (home page, years, search), the `uslug` URL converter (`converters.py`), the pagination tag, `core/urls.py` |
 | `apps/accounts` | custom `User` (email as `USERNAME_FIELD`), consents, roles, link to `Person` |
-| `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, list views and team/event detail pages |
+| `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, list views and team, event and person detail pages |
 | `apps/photos` | `Source`, `Photo`, `PhotoPerson`, public views (`photo_detail`, the `grid` fragment), `photos/urls.py` |
 | `apps/comments` | `Comment` (generic FK, replies) |
 | `apps/moderation` | `Report`, `ModerationAction` |
@@ -142,8 +142,8 @@ Details in `.koda/plans/foundation-and-data-model.md` (stage 1),
 **Stage 2 is split into 15 sub-stages**, one session each. A sub-stage plan is created as a
 separate file when work on it starts (`plans/public-archive-2.N-<name>.md`). The order and the
 list of sub-stages are in the master plan. Sub-stages 2.1 (demo data), 2.2 (public UI skeleton),
-2.3 (public queries and lists), 2.4 (gallery component) and 2.5 (team and event pages) are
-complete; the next one is 2.6 (person and photo pages).
+2.3 (public queries and lists), 2.4 (gallery component), 2.5 (team and event pages) and
+2.6 (person and photo pages) are complete; the next one is 2.7 (team roster by year).
 
 ## Deliberately deferred
 
@@ -152,13 +152,13 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.5.0
+- Version: 0.6.0
 - Development branch: `master`
 - Stage: 1 (repository foundation and data model) — **complete**;
   stage 2 (public archive) — **in progress**, sub-stages 2.1 (demo data), 2.2
-  (public UI skeleton), 2.3 (public queries and lists), 2.4 (gallery component) and 2.5
-  (team and event pages) complete
-- Tests: 365, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
+  (public UI skeleton), 2.3 (public queries and lists), 2.4 (gallery component), 2.5
+  (team and event pages) and 2.6 (person and photo pages) complete
+- Tests: 419, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
 
 ### What exists now
 
@@ -166,7 +166,7 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 |---|---|
 | `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public views (home page, years, search), `core/urls.py` |
 | `apps/accounts` | email-based `User`, `UserManager`, consents (terms/privacy/PD law + version), roles, `User.person` link, signup form with consents, allauth adapter |
-| `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, list views and team/event detail pages |
+| `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, list views and team, event and person detail pages |
 | `apps/photos` | `Source`, `Photo` (rights, `processing_status`, `phash`, `duplicate_of`), `PhotoPerson`, thumbnails via `ImageSpecField`, the photo page and the gallery fragment |
 | `apps/comments` | `Comment` (generic FK, replies, statuses) |
 | `apps/moderation` | `Report`, `ModerationAction` (moderator decision log) |
@@ -214,13 +214,30 @@ and the `.agents/skills/semver-checker/` skill.
 - `/photos/<pk>/` opens anonymously for a published photo with confirmed rights. A draft or a
   photo without confirmed rights is shown only to its author (`uploaded_by`) and to a moderator;
   `get_visible_or_404` does the filtering. Links to the team and the event appear only when they
-  are published; the person link arrives in 2.6. The view counter grows on every open through an
-  atomic `update(views_count=F("views_count") + 1)` instead of `save()`, so no
+  are published. In the "People on the photo" block a person's name links to their page when the
+  person is published; a draft person's name stays plain text. The view counter grows on every
+  open through an atomic `update(views_count=F("views_count") + 1)` instead of `save()`, so no
   `django-simple-history` record is created.
 - `/teams/<slug>/` and `/events/<slug>/` are the "visiting card" pages: a header with facts,
   a description, attributes, a gallery and relations. A team shows its events and a short roster
   (up to 12 people, `TEAM_ROSTER_PREVIEW`); an event shows its participating teams with results.
   The full roster by year arrives in 2.7.
+- `/people/<slug>/` is the person page: a main photo, the public name, life years, a biography,
+  attributes, "Teams and roles", "Photos" and "Also known as". There is deliberately no
+  `/people/` list: the page is reachable from a photo or from a team roster only.
+- The heading, `<title>`, description and breadcrumbs of the person page are built from
+  `Person.public_name` only: `display_name` holds the full last name and never reaches the
+  markup. With `hidden` visibility the page shows the neutral label "Name not stated" and still
+  opens — otherwise photos and teams would lose the link to the person.
+- Name variants (`PersonName`) are shown only when `name_visibility = full` (the
+  `Person.is_full_name_public` property) and are hidden in the view, not in the template: a
+  nickname or a birth name would reveal the hidden last name. When hidden,
+  `context["name_variants"]` is an empty list.
+- The main photo of the person page is `Person.avatar` when it is visible (`Photo.is_public`);
+  otherwise the newest visible photo of that person (`PHOTO_ORDERING`). When there is nothing,
+  a placeholder icon is shown. A draft avatar or an avatar without confirmed rights is ignored.
+- The biography is rendered as is: the author and the moderator are responsible for last names
+  in the text. The text is not checked — a known limitation of the sub-stage.
 - A link to a team or an event is created only when the object is published (`is_published`);
   otherwise the name is plain text. The rule applies to lists, the photo page, participating
   teams and the "Events of the year" block.
@@ -271,6 +288,15 @@ and the `.agents/skills/semver-checker/` skill.
 - People in public context are rendered through `Person.public_name`, and a team roster is
   filtered by `Person.public.published()`: a draft person never appears publicly, even when
   listed in a team.
+- The name privacy rule lives in the view, not in the template: name variants (`PersonName`)
+  go into the context only when `Person.is_full_name_public` is true. A template change must
+  not be able to reveal a hidden last name.
+- `display_name` never reaches public markup — `public_name` does: `Person.save()` fills
+  `display_name` with the full name, last name included. A page that needs the full name on
+  purpose must ask for it explicitly.
+- The main photo of the person page follows one rule: the avatar when it is visible, otherwise
+  the first visible photo. Visibility is checked through `Photo.is_public`, not by comparing
+  statuses inside a template.
 - The photo counter in team and event cards comes from the shared `photos_count()` annotation
   (`apps/core/shortcuts.py`): a local copy would drift from the counter on another page.
 - Slugs are Cyrillic, so routes built on `SlugModel` use the `uslug` converter

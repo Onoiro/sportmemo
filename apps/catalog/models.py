@@ -291,6 +291,16 @@ class Person(TimeStampedModel, SlugModel, StatusModel, SoftDeleteModel, Mergeabl
             return self.first_name
         return self.display_name or self.full_name or self.first_name
 
+    @property
+    def is_full_name_public(self) -> bool:
+        """Можно ли раскрывать полное имя и варианты имён.
+
+        Варианты имён (прозвище, фамилия при рождении) раскрыли бы скрытую
+        фамилию, поэтому правило живёт рядом с `public_name`, а не сравнением
+        строк в разметке.
+        """
+        return self.name_visibility == NameVisibility.FULL
+
     def save(self, *args, **kwargs):
         if not self.display_name:
             self.display_name = self.full_name

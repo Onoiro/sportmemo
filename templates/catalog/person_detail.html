@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ person.public_name }} — {{ SPORTMEMO_SITE_NAME }}{% endblock %}
+{% comment %}
+Описание строится из `public_name`. При скрытом имени именная фраза
+читалась бы как ошибка («Человек Имя не указано…»), поэтому берём
+общее описание сайта — та же строка, что в `base.html`.
+{% endcomment %}
+{% block description %}{% if person.is_full_name_public %}{% blocktranslate with name=person.public_name %}Человек {{ name }} в архиве SportMemo.{% endblocktranslate %}{% else %}{% trans "Публичный архив спортивных фотографий: команды, события, люди" %}{% endif %}{% endblock %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% comment %}
+    Заголовок и крошки строятся только из `public_name`: `display_name`
+    содержит полную фамилию и в разметку не попадает ни при какой
+    видимости имени.
+    {% endcomment %}
+    <header class="person-header">
+        {% if hero_photo %}
+            <img class="person-header__photo" src="{{ hero_photo.thumbnail.url }}"
+                 alt="{% trans "Главное фото" %}"
+                 width="200" height="200" decoding="async">
+        {% else %}
+            <div class="person-header__placeholder">
+                <i class="bi bi-person" aria-hidden="true"></i>
+            </div>
+        {% endif %}
+        <div class="person-header__body">
+            <h1 class="person-header__title">{{ person.public_name }}</h1>
+            {% if person.birth_year and person.death_year %}
+                <p class="person-header__lifespan">
+                    {{ person.birth_year }} — {{ person.death_year }}
+                </p>
+            {% elif person.birth_year %}
+                <p class="person-header__lifespan">
+                    {% blocktranslate with year=person.birth_year %}род. {{ year }}{% endblocktranslate %}
+                </p>
+            {% elif person.death_year %}
+                <p class="person-header__lifespan">
+                    {% blocktranslate with year=person.death_year %}ум. {{ year }}{% endblocktranslate %}
+                </p>
+            {% endif %}
+        </div>
+    </header>
+
+    {% include "partials/moderation_notice.html" with obj=person %}
+
+    {% if person.bio %}
+        <section class="detail-section">
+            <h2 class="section-title h5">{% trans "Биография" %}</h2>
+            <p class="detail-section__text">{{ person.bio }}</p>
+        </section>
+    {% endif %}
+
+    {% if attribute_items %}
+        <section class="detail-section">
+            <h2 class="section-title h5">{% trans "Дополнительно" %}</h2>
+            {% include "catalog/partials/attributes.html" with items=attribute_items %}
+        </section>
+    {% endif %}
+
+    {% if memberships %}
+        <section class="detail-section">
+            <h2 class="section-title h5">{% trans "Команды и роли" %}</h2>
+            <ul class="entity-list">
+                {% for membership in memberships %}
+                    <li class="entity-list__item">
+                        {% comment %}
+                        Ссылка ведёт на команду, только если та опубликована:
+                        неопубликованная выводится текстом.
+                        {% endcomment %}
+                        {% if membership.team.is_published %}
+                            <a class="entity-list__name" href="{{ membership.team.get_absolute_url }}">{{ membership.team.name }}</a>
+                        {% else %}
+                            <span class="entity-list__name">{{ membership.team.name }}</span>
+                        {% endif %}
+                        <span class="entity-list__note">
+                            {{ membership.get_role_display }}
+                            {% if membership.year_from and membership.year_to %}
+                                · {{ membership.year_from }} — {{ membership.year_to }}
+                            {% elif membership.year_from %}
+                                · {% blocktranslate with year=membership.year_from %}с {{ year }}{% endblocktranslate %}
+                            {% elif membership.year_to %}
+                                · {% blocktranslate with year=membership.year_to %}до {{ year }}{% endblocktranslate %}
+                            {% else %}
+                                · {% trans "год не указан" %}
+                            {% endif %}
+                            {% if membership.position %}
+                                · {{ membership.position }}
+                            {% endif %}
+                            {% if membership.number %}
+                                · № {{ membership.number }}
+                            {% endif %}
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+
+    {% if page_obj.object_list %}
+        <section class="detail-section">
+            <h2 class="section-title h5">{% trans "Фотографии" %}</h2>
+            {% include "photos/partials/grid.html" with photos=page_obj page_obj=page_obj gallery_query=gallery_query %}
+        </section>
+    {% endif %}
+
+    {% comment %}
+    Варианты имён приходят из представления пустым списком, если полное имя
+    не публикуется: прозвище или фамилия при рождении раскрыли бы скрытую
+    фамилию.
+    {% endcomment %}
+    {% if name_variants %}
+        <section class="detail-section">
+            <h2 class="section-title h5">{% trans "Также известен как" %}</h2>
+            <ul class="name-variants">
+                {% for variant in name_variants %}
+                    <li class="name-variants__item">
+                        <span class="name-variants__value">{{ variant.value }}</span>
+                        <span class="name-variants__kind">{{ variant.get_kind_display }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+</div>
+{% endblock %}

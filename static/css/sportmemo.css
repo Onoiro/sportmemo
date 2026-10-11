@@ -647,6 +647,79 @@ html[data-bs-theme="dark"] {
     font-size: 0.875rem;
 }
 
+/* --- Страница человека --- */
+
+.person-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: flex-start;
+    padding: 2rem 0 1rem;
+}
+
+.person-header__photo,
+.person-header__placeholder {
+    width: 12.5rem;
+    height: 12.5rem;
+    border-radius: var(--sm-radius);
+    background-color: var(--sm-photo-bg, var(--bs-secondary-bg));
+    border: 1px solid var(--sm-photo-border, var(--bs-border-color));
+    box-shadow: var(--sm-photo-shadow, none);
+}
+
+.person-header__photo {
+    object-fit: cover;
+}
+
+.person-header__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bs-secondary-color);
+    font-size: 4rem;
+}
+
+.person-header__body {
+    flex: 1 1 20rem;
+    min-width: 0;
+}
+
+.person-header__title {
+    margin: 0.5rem 0 0.5rem;
+}
+
+.person-header__lifespan {
+    margin: 0;
+    color: var(--bs-secondary-color);
+    font-size: 1rem;
+}
+
+.name-variants {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.name-variants__item {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    align-items: baseline;
+    font-size: 0.9375rem;
+}
+
+.name-variants__value {
+    color: var(--bs-heading-color);
+}
+
+.name-variants__kind {
+    color: var(--bs-secondary-color);
+    font-size: 0.875rem;
+}
+
 /* --- Плашка «не опубликовано» --- */
 
 .moderation-notice {
@@ -873,6 +946,21 @@ html[data-bs-theme="dark"] {
     .detail-header__logo {
         width: 5rem;
         height: 5rem;
+    }
+
+    .person-header {
+        gap: 1rem;
+        padding: 1.5rem 0 0.75rem;
+    }
+
+    .person-header__photo,
+    .person-header__placeholder {
+        width: 8rem;
+        height: 8rem;
+    }
+
+    .person-header__placeholder {
+        font-size: 2.5rem;
     }
 
     .attribute-list {

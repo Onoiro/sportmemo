@@ -70,12 +70,7 @@
             <ul class="entity-list">
                 {% for membership in roster %}
                     <li class="entity-list__item">
-                        {% comment %}
-                        Ссылки на человека нет: страница человека появляется
-                        в следующем подэтапе, а `reverse()` на ещё не
-                        существующий маршрут уронил бы страницу.
-                        {% endcomment %}
-                        <span class="entity-list__name">{{ membership.person.public_name }}</span>
+                        <a class="entity-list__name" href="{{ membership.person.get_absolute_url }}">{{ membership.person.public_name }}</a>
                         <span class="entity-list__note">
                             {{ membership.get_role_display }}
                             {% if membership.year_from or membership.year_to %}
