@@ -139,12 +139,13 @@ match), then delete with `git branch -D`.
 Details in `.koda/plans/foundation-and-data-model.md` (stage 1),
 `.koda/plans/public-archive.md` (stage 2 master plan) and `.koda/backlog.md`.
 
-**Stage 2 is split into 15 sub-stages**, one session each. A sub-stage plan is created as a
-separate file when work on it starts (`plans/public-archive-2.N-<name>.md`). The order and the
-list of sub-stages are in the master plan. Sub-stages 2.1 (demo data), 2.2 (public UI skeleton),
-2.3 (public queries and lists), 2.4 (gallery component), 2.5 (team and event pages),
+**Stage 2 is split into 16 sub-stages**, one session each (sub-stage 2.8 is split in two parts:
+2.8a — sign-up, login and password; 2.8b — user profile and menu). A sub-stage plan is created
+as a separate file when work on it starts (`plans/public-archive-2.N-<name>.md`). The order and
+the list of sub-stages are in the master plan. Sub-stages 2.1 (demo data), 2.2 (public UI
+skeleton), 2.3 (public queries and lists), 2.4 (gallery component), 2.5 (team and event pages),
 2.6 (person and photo pages) and 2.7 (team roster filter by year) are complete; the next one
-is 2.8 (signup and login in the UI).
+is 2.8a (sign-up, login and password).
 
 ## Deliberately deferred
 

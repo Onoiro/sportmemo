@@ -92,8 +92,8 @@
 | `/search/` | `search:index` | 2.13 |
 | `/comments/add/` | `comments:add` | 2.14 |
 | `/reports/add/` | `moderation:report_add` | 2.14 |
-| `/accounts/...` | `account_*` (allauth) | 2.8 |
-| `/accounts/profile/` | `accounts:profile` | 2.8 |
+| `/accounts/...` | `account_*` (allauth) | 2.8а |
+| `/accounts/profile/` | `accounts:profile` | 2.8б |
 
 Namespace `catalog` обязателен: он уже зашит в `SlugModel.url_name`
 (`Team.url_name = "catalog:team_detail"`, `Person.url_name = "catalog:person_detail"`,
@@ -493,31 +493,68 @@ Bootstrap 5.3 понимает только `data-bs-theme="light"` и `"dark"`.
 
 ---
 
-### 2.8 [ ] Регистрация и вход в UI
+### 2.8а [ ] Вход, регистрация и пароль
 
-**Цель.** Пользователь может зарегистрироваться, подтвердить email, войти, восстановить пароль
-и посмотреть профиль — в общем оформлении, а не в стандартных шаблонах allauth.
+**Цель.** Пользователь может зарегистрироваться, подтвердить email, войти и восстановить
+пароль — в общем оформлении, а не в стандартных шаблонах allauth.
 
 **Объём.**
 
-- Шаблоны `templates/account/*` под `base.html`: вход, регистрация (с согласиями), выход,
-  сброс и смена пароля, подтверждение email, письма (`templates/account/email/*`).
-- Тексты писем на русском (и английский каталог).
-- `apps/accounts/views.py`, `apps/accounts/urls.py`: профиль (`accounts:profile`), заявка
-  «это я» (связь `User.person` с подтверждением модератором — черновик заявки, если полный
-  сценарий велик).
-- Ссылки в navbar: «Войти» / меню пользователя.
+- Каркас: блок `main_inner` в `base.html` и `templates/allauth/layouts/base.html` — обёртка
+  страниц аккаунта внутри общего layout.
+- Элементы allauth в стиле Bootstrap (`templates/allauth/elements/*`).
+- Bootstrap-классы полей: миксин `BootstrapFormMixin` и переопределение 8 форм
+  через `ACCOUNT_FORMS`.
+- Шаблоны `templates/account/*`: вход, регистрация (с согласиями), выход, сброс и смена
+  пароля, подтверждение email, «проверьте почту», неактивный аккаунт.
+- Тексты писем на русском (`templates/account/email/*`: каркас, подтверждение, сброс пароля).
+- Стили `.auth-shell`, `.auth-panel`, ошибки форм.
 - В dev — console email backend (уже настроен); в письмах — корректные ссылки на домен из Sites.
 
-**Файлы:** `templates/account/*.html`, `templates/account/email/*`,
-`apps/accounts/views.py`, `apps/accounts/urls.py`, `templates/accounts/profile.html`,
-`config/urls.py`, `tests/test_auth_ui.py`
+**Файлы:** `templates/base.html`, `templates/allauth/**`, `templates/account/*.html`,
+`templates/account/email/*`, `apps/accounts/forms.py`, `config/settings.py`,
+`static/css/sportmemo.css`, `tests/test_auth_ui.py`
 
-**Критерии готовности.** Полный цикл регистрации проходится в браузере: регистрация → письмо
-в консоли → подтверждение → вход → сброс пароля; страницы оформлены как остальной сайт;
-тесты на коды ответов и на то, что согласия записываются.
+**Критерии готовности.** Полный цикл проходится в браузере: регистрация → письмо в консоли →
+подтверждение → вход → сброс пароля; страницы оформлены как остальной сайт; тесты на подхват
+шаблонов, доступ и запись согласий.
 
 **Навыки:** koda-coder, semver-checker. **Размер:** M. **Semver:** minor.
+**Детальный план:** [`public-archive-2.8a-auth-pages.md`](public-archive-2.8a-auth-pages.md)
+
+---
+
+### 2.8б [ ] Профиль и меню пользователя
+
+**Цель.** У вошедшего есть страница со своими данными и понятное меню в шапке.
+
+**Объём.**
+
+- `apps/accounts/views.py`, `apps/accounts/urls.py`: профиль (`accounts:profile`).
+- `ProfileForm` — меняется только «как к вам обращаться» (`display_name`).
+- `templates/accounts/profile.html`: данные аккаунта, согласия, ссылки на смену пароля
+  и адреса почты, блок «Мой профиль в архиве».
+- Меню пользователя в navbar: «Профиль», «Сменить пароль», «Выйти».
+- Проверка страниц аккаунта, не переопределённых в 2.8а (список адресов email, повторная
+  аутентификация): они оформляются каркасом 2.8а.
+- Стили профиля и меню, локализация, тесты.
+
+**Файлы:** `apps/accounts/views.py`, `apps/accounts/urls.py`, `apps/accounts/forms.py`,
+`templates/accounts/profile.html`, `templates/partials/navbar.html`,
+`templates/account/*` (при необходимости), `config/urls.py`, `static/css/sportmemo.css`,
+`tests/test_profile.py`
+
+**Критерии готовности.** Профиль доступен только вошедшему; имя редактируется, сохранение
+не повторяется при обновлении; согласия видны; в navbar у вошедшего меню с профилем и выходом;
+тесты на доступ, сохранение и блок «Мой профиль в архиве».
+
+**Навыки:** koda-coder, semver-checker. **Размер:** S. **Semver:** minor.
+**Детальный план:** [`public-archive-2.8b-profile.md`](public-archive-2.8b-profile.md)
+
+**Отложено (2026-10-11).** Заявка «это я» (`User.person` с подтверждением модератором) —
+полный сценарий это новая модель `PersonClaim`, миграция, форма со страницы человека, список
+заявок и действие модератора в админке. В 2.8 не делается; записано в бэклог. В профиле
+блока «Это я» нет: только ссылка на уже связанного человека.
 
 ---
 
@@ -703,8 +740,9 @@ Bootstrap 5.3 понимает только `data-bs-theme="light"` и `"dark"`.
          │   │   └─ 2.6 (человек, фото)
          │   │       └─ 2.7 (фильтр состава по годам)
          │   └─ 2.15 (фильтры)
-         ├─ 2.8 (регистрация и вход)
-         │   └─ 2.9 (создание команды)
+         ├─ 2.8а (вход, регистрация, пароль)
+         │   └─ 2.8б (профиль и меню)
+         │       └─ 2.9 (создание команды)
          ├─ 2.10 (метатеги) → 2.11 (sitemap, robots, Schema.org)
          └─ 2.12 (поиск: инфраструктура) → 2.13 (поиск: UI)
 2.14 (комментарии и жалобы) — после 2.6
@@ -739,7 +777,8 @@ Bootstrap 5.3 понимает только `data-bs-theme="light"` и `"dark"`.
 | 2.5 | Страницы команды и события | M | minor | [x] |
 | 2.6 | Страницы человека и фотографии | M | minor | [x] |
 | 2.7 | Фильтр состава команды по годам | S | minor | [x] |
-| 2.8 | Регистрация и вход в UI | M | minor | [ ] |
+| 2.8а | Вход, регистрация и пароль | M | minor | [ ] |
+| 2.8б | Профиль и меню пользователя | S | minor | [ ] |
 | 2.9 | Создание команды пользователем | S | minor | [ ] |
 | 2.10 | Метатеги и Open Graph | S | minor | [ ] |
 | 2.11 | sitemap, robots и Schema.org | S | minor | [ ] |
