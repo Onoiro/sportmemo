@@ -1,0 +1,13 @@
+{% extends "account/base_entrance.html" %}
+{% load allauth i18n %}
+
+{% block head_title %}{% trans "Аккаунт отключён" %}{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        {% element h1 %}{% trans "Аккаунт отключён" %}{% endelement %}
+        {% element p %}
+            {% trans "Этот аккаунт отключён. Напишите нам, если считаете, что это ошибка." %}
+        {% endelement %}
+    </div>
+{% endblock content %}

@@ -1,0 +1,21 @@
+{% load allauth %}
+{% comment %}
+    Кнопки allauth. `prominent` — основное действие на странице,
+    `danger`/`delete` — разрушительное, `link`/`cancel` — отмена.
+{% endcomment %}
+{% if attrs.href %}
+    <a href="{{ attrs.href }}"
+       {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+       class="btn {% if 'prominent' in attrs.tags %}btn-primary{% elif 'danger' in attrs.tags or 'delete' in attrs.tags %}btn-outline-danger{% elif 'link' in attrs.tags or 'cancel' in attrs.tags %}btn-link{% else %}btn-outline-secondary{% endif %}">
+        {% slot %}{% endslot %}
+    </a>
+{% else %}
+    <button class="btn {% if 'prominent' in attrs.tags %}btn-primary{% elif 'danger' in attrs.tags or 'delete' in attrs.tags %}btn-outline-danger{% elif 'link' in attrs.tags or 'cancel' in attrs.tags %}btn-link{% else %}btn-outline-secondary{% endif %}"
+            {% if attrs.form %}form="{{ attrs.form }}"{% endif %}
+            {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+            {% if attrs.name %}name="{{ attrs.name }}"{% endif %}
+            {% if attrs.value %}value="{{ attrs.value }}"{% endif %}
+            type="{{ attrs.type|default:'submit' }}">
+        {% slot %}{% endslot %}
+    </button>
+{% endif %}

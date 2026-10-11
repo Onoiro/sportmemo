@@ -34,11 +34,13 @@
     {% block navbar %}{% include "partials/navbar.html" %}{% endblock %}
 
     <main id="main">
-        {% block breadcrumbs %}
-            {% include "partials/breadcrumbs.html" %}
+        {% block main_inner %}
+            {% block breadcrumbs %}
+                {% include "partials/breadcrumbs.html" %}
+            {% endblock %}
+            {% include "partials/messages.html" %}
+            {% block content %}{% endblock %}
         {% endblock %}
-        {% include "partials/messages.html" %}
-        {% block content %}{% endblock %}
     </main>
 
     {% include "partials/footer.html" %}

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-11 22:31+0300\n"
+"POT-Creation-Date: 2026-10-12 00:34+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -35,19 +35,19 @@ msgstr "Права"
 msgid "Даты"
 msgstr "Даты"
 
-#: apps/accounts/forms.py:18
+#: apps/accounts/forms.py:81
 msgid "Как к вам обращаться"
 msgstr "Как к вам обращаться"
 
-#: apps/accounts/forms.py:23
+#: apps/accounts/forms.py:86
 msgid "Я принимаю пользовательское соглашение"
 msgstr "Я принимаю пользовательское соглашение"
 
-#: apps/accounts/forms.py:27
+#: apps/accounts/forms.py:90
 msgid "Я принимаю политику конфиденциальности"
 msgstr "Я принимаю политику конфиденциальности"
 
-#: apps/accounts/forms.py:31
+#: apps/accounts/forms.py:94
 msgid "Я согласен на обработку персональных данных"
 msgstr "Я согласен на обработку персональных данных"
 
@@ -435,22 +435,22 @@ msgstr "Иннингов"
 msgid "Команд"
 msgstr "Команд"
 
-#: apps/catalog/views.py:138 apps/catalog/views.py:160
-#: apps/catalog/views.py:222 apps/catalog/views.py:250
-#: apps/catalog/views.py:300 apps/core/views.py:83 apps/core/views.py:125
+#: apps/catalog/views.py:136 apps/catalog/views.py:158
+#: apps/catalog/views.py:220 apps/catalog/views.py:248
+#: apps/catalog/views.py:298 apps/core/views.py:83 apps/core/views.py:125
 #: apps/photos/views.py:42 templates/core/placeholder.html:9
 #: templates/partials/footer.html:20
 msgid "Главная"
 msgstr "Главная"
 
-#: apps/catalog/views.py:139 apps/catalog/views.py:223
+#: apps/catalog/views.py:137 apps/catalog/views.py:221
 #: templates/catalog/team_list.html:4 templates/catalog/team_list.html:14
 #: templates/core/home.html:48 templates/partials/footer.html:12
 #: templates/partials/navbar.html:14
 msgid "Команды"
 msgstr "Команды"
 
-#: apps/catalog/views.py:161 apps/catalog/views.py:251
+#: apps/catalog/views.py:159 apps/catalog/views.py:249
 #: templates/catalog/event_list.html:4 templates/catalog/event_list.html:14
 #: templates/partials/footer.html:13 templates/partials/navbar.html:17
 msgid "События"
@@ -1018,6 +1018,235 @@ msgid ""
 msgstr ""
 "Что-то сломалось на нашей стороне. Мы уже знаем о проблеме и починим её."
 
+#: templates/account/account_inactive.html:4
+#: templates/account/account_inactive.html:8
+msgid "Аккаунт отключён"
+msgstr "Аккаунт отключён"
+
+#: templates/account/account_inactive.html:10
+msgid "Этот аккаунт отключён. Напишите нам, если считаете, что это ошибка."
+msgstr "Этот аккаунт отключён. Напишите нам, если считаете, что это ошибка."
+
+#: templates/account/email/base_message.txt:1
+#, python-format
+msgid "Здравствуйте! Это письмо с сайта %(site_name)s."
+msgstr "Здравствуйте! Это письмо с сайта %(site_name)s."
+
+#: templates/account/email/base_message.txt:5
+#, python-format
+msgid ""
+"С уважением,\n"
+"архив спортивных фотографий %(site_name)s\n"
+"%(site_domain)s"
+msgstr "С уважением,\nархив спортивных фотографий %(site_name)s\n%(site_domain)s"
+
+#: templates/account/email/email_confirmation_message.txt:4
+msgid ""
+"Вы указали этот адрес при регистрации в архиве спортивных фотографий. "
+"Осталось подтвердить адрес — без этого вход в аккаунт не откроется."
+msgstr "Вы указали этот адрес при регистрации в архиве спортивных фотографий. Осталось подтвердить адрес — без этого вход в аккаунт не откроется."
+
+#: templates/account/email/email_confirmation_message.txt:6
+msgid "Код подтверждения:"
+msgstr "Код подтверждения:"
+
+#: templates/account/email/email_confirmation_message.txt:8
+msgid "Откройте ссылку, чтобы подтвердить адрес:"
+msgstr "Откройте ссылку, чтобы подтвердить адрес:"
+
+#: templates/account/email/email_confirmation_message.txt:12
+msgid ""
+"Ссылка действует три дня. Если вы не регистрировались на сайте, просто "
+"удалите это письмо — ничего не произойдёт."
+msgstr "Ссылка действует три дня. Если вы не регистрировались на сайте, просто удалите это письмо — ничего не произойдёт."
+
+#: templates/account/email/email_confirmation_subject.txt:1
+msgid "Подтвердите адрес электронной почты"
+msgstr "Подтвердите адрес электронной почты"
+
+#: templates/account/email/password_reset_key_message.txt:4
+msgid ""
+"Кто-то запросил сброс пароля для аккаунта с этим адресом. Если это были вы — "
+"откройте ссылку и задайте новый пароль:"
+msgstr "Кто-то запросил сброс пароля для аккаунта с этим адресом. Если это были вы — откройте ссылку и задайте новый пароль:"
+
+#: templates/account/email/password_reset_key_message.txt:8
+msgid ""
+"Ссылка действует три дня. Если запрос был не от вас, ничего делать не нужно: "
+"пароль останется прежним."
+msgstr "Ссылка действует три дня. Если запрос был не от вас, ничего делать не нужно: пароль останется прежним."
+
+#: templates/account/email/password_reset_key_subject.txt:1
+#: templates/account/password_reset.html:4
+#: templates/account/password_reset.html:8
+#: templates/account/password_reset_done.html:4
+msgid "Сброс пароля"
+msgstr "Сброс пароля"
+
+#: templates/account/email_confirm.html:4
+#: templates/account/email_confirm.html:8
+msgid "Подтверждение адреса"
+msgstr "Подтверждение адреса"
+
+#: templates/account/email_confirm.html:14
+#, python-format
+msgid "Подтвердите, что адрес %(email)s принадлежит вам."
+msgstr "Подтвердите, что адрес %(email)s принадлежит вам."
+
+#: templates/account/email_confirm.html:22
+msgid "Подтвердить"
+msgstr "Подтвердить"
+
+#: templates/account/email_confirm.html:28
+#, python-format
+msgid "Адрес %(email)s уже подтверждён другим аккаунтом."
+msgstr "Адрес %(email)s уже подтверждён другим аккаунтом."
+
+#: templates/account/email_confirm.html:34
+#, python-format
+msgid ""
+"Ссылка подтверждения устарела или не подходит. <a "
+"href=\"%(email_url)s\">Запросите новое письмо</a>."
+msgstr "Ссылка подтверждения устарела или не подходит. <a href=\"%(email_url)s\">Запросите новое письмо</a>."
+
+#: templates/account/login.html:4 templates/account/login.html:8
+msgid "Вход"
+msgstr "Вход"
+
+#: templates/account/login.html:21
+#: templates/account/password_reset_from_key_done.html:12
+#: templates/partials/navbar.html:59
+msgid "Войти"
+msgstr "Войти"
+
+#: templates/account/login.html:27
+msgid "Забыли пароль?"
+msgstr "Забыли пароль?"
+
+#: templates/account/login.html:28 templates/account/signup.html:24
+msgid "Зарегистрироваться"
+msgstr "Зарегистрироваться"
+
+#: templates/account/login.html:37
+msgid "Войти с ключом доступа"
+msgstr "Войти с ключом доступа"
+
+#: templates/account/login.html:42
+msgid "Прислать код для входа"
+msgstr "Прислать код для входа"
+
+#: templates/account/logout.html:4 templates/account/logout.html:8
+msgid "Выход"
+msgstr "Выход"
+
+#: templates/account/logout.html:9
+msgid "Выйти из аккаунта?"
+msgstr "Выйти из аккаунта?"
+
+#: templates/account/logout.html:20 templates/partials/navbar.html:54
+msgid "Выйти"
+msgstr "Выйти"
+
+#: templates/account/password_change.html:4
+#: templates/account/password_change.html:8
+msgid "Смена пароля"
+msgstr "Смена пароля"
+
+#: templates/account/password_change.html:20
+msgid "Сменить пароль"
+msgstr "Сменить пароль"
+
+#: templates/account/password_reset.html:16
+msgid "Забыли пароль? Укажите адрес почты, и мы пришлём ссылку для сброса."
+msgstr "Забыли пароль? Укажите адрес почты, и мы пришлём ссылку для сброса."
+
+#: templates/account/password_reset.html:28
+msgid "Сбросить пароль"
+msgstr "Сбросить пароль"
+
+#: templates/account/password_reset.html:34
+msgid "Не получается сбросить пароль — напишите нам, поможем."
+msgstr "Не получается сбросить пароль — напишите нам, поможем."
+
+#: templates/account/password_reset_done.html:8
+msgid "Письмо отправлено"
+msgstr "Письмо отправлено"
+
+#: templates/account/password_reset_done.html:16
+msgid ""
+"Мы отправили письмо со ссылкой для сброса пароля. Если письма нет, проверьте "
+"папку «спам»."
+msgstr "Мы отправили письмо со ссылкой для сброса пароля. Если письма нет, проверьте папку «спам»."
+
+#: templates/account/password_reset_from_key.html:4
+#: templates/account/password_reset_from_key.html:12
+msgid "Новый пароль"
+msgstr "Новый пароль"
+
+#: templates/account/password_reset_from_key.html:10
+msgid "Ссылка не подходит"
+msgstr "Ссылка не подходит"
+
+#: templates/account/password_reset_from_key.html:20
+#, python-format
+msgid ""
+"Ссылка для сброса пароля не подошла: возможно, ей уже воспользовались. "
+"Запросите <a href=\"%(passwd_reset_url)s\">новую ссылку</a>."
+msgstr "Ссылка для сброса пароля не подошла: возможно, ей уже воспользовались. Запросите <a href=\"%(passwd_reset_url)s\">новую ссылку</a>."
+
+#: templates/account/password_reset_from_key.html:31
+msgid "Сохранить пароль"
+msgstr "Сохранить пароль"
+
+#: templates/account/password_reset_from_key.html:34
+#: templates/admin/core/merge_form.html:46
+msgid "Отмена"
+msgstr "Отмена"
+
+#: templates/account/password_reset_from_key_done.html:4
+#: templates/account/password_reset_from_key_done.html:8
+msgid "Пароль изменён"
+msgstr "Пароль изменён"
+
+#: templates/account/password_reset_from_key_done.html:10
+msgid "Пароль сохранён. Теперь можно войти с новым паролем."
+msgstr "Пароль сохранён. Теперь можно войти с новым паролем."
+
+#: templates/account/signup.html:4 templates/account/signup.html:8
+msgid "Регистрация"
+msgstr "Регистрация"
+
+#: templates/account/signup.html:10
+msgid "Аккаунт нужен, чтобы загружать фотографии и следить за своими правками."
+msgstr "Аккаунт нужен, чтобы загружать фотографии и следить за своими правками."
+
+#: templates/account/signup.html:30
+msgid "Уже есть аккаунт? Войти"
+msgstr "Уже есть аккаунт? Войти"
+
+#: templates/account/signup.html:37
+msgid "Зарегистрироваться с ключом доступа"
+msgstr "Зарегистрироваться с ключом доступа"
+
+#: templates/account/verification_sent.html:4
+#: templates/account/verification_sent.html:8
+msgid "Проверьте почту"
+msgstr "Проверьте почту"
+
+#: templates/account/verification_sent.html:10
+msgid ""
+"Мы отправили письмо со ссылкой для подтверждения адреса. Перейдите по "
+"ссылке, чтобы завершить регистрацию."
+msgstr "Мы отправили письмо со ссылкой для подтверждения адреса. Перейдите по ссылке, чтобы завершить регистрацию."
+
+#: templates/account/verification_sent.html:13
+msgid "Письма нет? Загляните в папку «спам» — иногда оно попадает туда."
+msgstr "Письма нет? Загляните в папку «спам» — иногда оно попадает туда."
+
+#: templates/account/verification_sent.html:15
+msgid "Вернуться на главную"
+msgstr "Вернуться на главную"
+
 #: templates/admin/core/merge_form.html:6
 msgid "Home"
 msgstr "Home"
@@ -1052,10 +1281,6 @@ msgstr "— выберите —"
 #: templates/admin/core/merge_form.html:45
 msgid "Слить"
 msgstr "Слить"
-
-#: templates/admin/core/merge_form.html:46
-msgid "Отмена"
-msgstr "Отмена"
 
 #: templates/base.html:27 templates/catalog/person_detail.html:10
 msgid "Публичный архив спортивных фотографий: команды, события, люди"
@@ -1378,14 +1603,6 @@ msgstr "Искать"
 #: templates/partials/navbar.html:41 templates/partials/navbar.html:43
 msgid "Переключить тему"
 msgstr "Переключить тему"
-
-#: templates/partials/navbar.html:54
-msgid "Выйти"
-msgstr "Выйти"
-
-#: templates/partials/navbar.html:59
-msgid "Войти"
-msgstr "Войти"
 
 #: templates/partials/pagination.html:7
 msgid "Постраничная навигация"

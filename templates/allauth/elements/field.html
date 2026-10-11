@@ -1,0 +1,49 @@
+{% load allauth %}
+{% if attrs.type == "checkbox" or attrs.type == "radio" %}
+    <div class="form-check">
+        <input class="form-check-input{% if attrs.errors %} is-invalid{% endif %}"
+               type="{{ attrs.type }}"
+               {% if attrs.name %}name="{{ attrs.name }}"{% endif %}
+               {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+               {% if attrs.value is not None %}value="{{ attrs.value }}"{% endif %}
+               {% if attrs.checked %}checked{% endif %}
+               {% if attrs.required %}required{% endif %}
+               {% if attrs.disabled %}disabled{% endif %}
+               {% if attrs.readonly %}readonly{% endif %}>
+        <label class="form-check-label" {% if attrs.id %}for="{{ attrs.id }}"{% endif %}>
+            {% slot label %}{% endslot %}
+        </label>
+        {% if slots.help_text %}
+            <div class="form-text">
+                {% slot help_text %}{% endslot %}
+            </div>
+        {% endif %}
+        {% if attrs.errors %}
+            <div class="invalid-feedback d-block">{{ attrs.errors }}</div>
+        {% endif %}
+    </div>
+{% else %}
+    <div class="mb-3">
+        <label class="form-label" {% if attrs.id %}for="{{ attrs.id }}"{% endif %}>
+            {% slot label %}{% endslot %}
+        </label>
+        <input class="form-control{% if attrs.errors %} is-invalid{% endif %}"
+               type="{{ attrs.type }}"
+               {% if attrs.name %}name="{{ attrs.name }}"{% endif %}
+               {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+               {% if attrs.placeholder %}placeholder="{{ attrs.placeholder }}"{% endif %}
+               {% if attrs.autocomplete %}autocomplete="{{ attrs.autocomplete }}"{% endif %}
+               {% if attrs.value is not None %}value="{{ attrs.value }}"{% endif %}
+               {% if attrs.required %}required{% endif %}
+               {% if attrs.disabled %}disabled{% endif %}
+               {% if attrs.readonly %}readonly{% endif %}>
+        {% if slots.help_text %}
+            <div class="form-text">
+                {% slot help_text %}{% endslot %}
+            </div>
+        {% endif %}
+        {% if attrs.errors %}
+            <div class="invalid-feedback d-block">{{ attrs.errors }}</div>
+        {% endif %}
+    </div>
+{% endif %}

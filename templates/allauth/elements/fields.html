@@ -1,0 +1,25 @@
+{% load i18n %}
+{% if attrs.form.non_field_errors %}
+    <div class="alert alert-danger" role="alert">
+        {% for error in attrs.form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+    </div>
+{% endif %}
+{% for field in attrs.form %}
+    {% if field.field.widget.input_type == "checkbox" %}
+        <div class="mb-3 form-check">
+            {{ field }}
+            <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+            {{ field.errors }}
+        </div>
+    {% else %}
+        <div class="mb-3">
+            {% if not attrs.unlabeled %}
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {% endif %}
+            {{ field }}
+            {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+            {{ field.errors }}
+        </div>
+    {% endif %}
+{% endfor %}

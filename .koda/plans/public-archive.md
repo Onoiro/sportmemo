@@ -493,7 +493,7 @@ Bootstrap 5.3 понимает только `data-bs-theme="light"` и `"dark"`.
 
 ---
 
-### 2.8а [ ] Вход, регистрация и пароль
+### 2.8а [x] Вход, регистрация и пароль
 
 **Цель.** Пользователь может зарегистрироваться, подтвердить email, войти и восстановить
 пароль — в общем оформлении, а не в стандартных шаблонах allauth.
@@ -521,6 +521,17 @@ Bootstrap 5.3 понимает только `data-bs-theme="light"` и `"dark"`.
 
 **Навыки:** koda-coder, semver-checker. **Размер:** M. **Semver:** minor.
 **Детальный план:** [`public-archive-2.8a-auth-pages.md`](public-archive-2.8a-auth-pages.md)
+
+**Итог (2026-10-12).** Каркас: блок `main_inner` в `base.html` и layout
+`templates/allauth/layouts/base.html` — обёртка страниц аккаунта внутри общего layout
+(дочерний `{% block content %}` обёртку не перетирает). Элементы allauth оформлены
+в Bootstrap: `fields`, `field`, `button`, `button_group`, `alert`, `badge`, `panel`, `form`,
+`h1`, `h2`, `p`, `hr`. Миксин `BootstrapFormMixin` и 8 форм в `ACCOUNT_FORMS`. Наши шаблоны
+`templates/account/*` (вход, регистрация, выход, пароль, подтверждение адреса, «проверьте
+почту», неактивный аккаунт) с русскими msgid; штатные шаблоны allauth работают через layout
+и элементы. Письма на русском (`templates/account/email/*`: каркас, подтверждение, сброс
+пароля). Стили `.auth-shell`, `.auth-panel`, `.auth-links`, `.auth-actions`, ошибки форм.
+Тесты `tests/test_auth_ui.py` (40), всего 512 (было 472). Версия 0.8.0.
 
 ---
 
@@ -777,7 +788,7 @@ Bootstrap 5.3 понимает только `data-bs-theme="light"` и `"dark"`.
 | 2.5 | Страницы команды и события | M | minor | [x] |
 | 2.6 | Страницы человека и фотографии | M | minor | [x] |
 | 2.7 | Фильтр состава команды по годам | S | minor | [x] |
-| 2.8а | Вход, регистрация и пароль | M | minor | [ ] |
+| 2.8а | Вход, регистрация и пароль | M | minor | [x] |
 | 2.8б | Профиль и меню пользователя | S | minor | [ ] |
 | 2.9 | Создание команды пользователем | S | minor | [ ] |
 | 2.10 | Метатеги и Open Graph | S | minor | [ ] |

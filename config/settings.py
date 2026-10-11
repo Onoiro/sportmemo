@@ -155,8 +155,17 @@ ACCOUNT_RATE_LIMITS = {
     "confirm_email": "1/3m/key",
 }
 ACCOUNT_ADAPTER = "apps.accounts.adapters.AccountAdapter"
+# Формы переопределяются ради Bootstrap-классов у полей: шаблоны allauth
+# рендерят виджеты как есть.
 ACCOUNT_FORMS = {
     "signup": "apps.accounts.forms.SignupForm",
+    "login": "apps.accounts.forms.LoginForm",
+    "reset_password": "apps.accounts.forms.ResetPasswordForm",
+    "reset_password_from_key": "apps.accounts.forms.ResetPasswordKeyForm",
+    "change_password": "apps.accounts.forms.ChangePasswordForm",
+    "set_password": "apps.accounts.forms.SetPasswordForm",
+    "add_email": "apps.accounts.forms.AddEmailForm",
+    "reauthenticate": "apps.accounts.forms.ReauthenticateForm",
 }
 
 # --- Интернационализация ---

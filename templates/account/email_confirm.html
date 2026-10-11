@@ -1,0 +1,37 @@
+{% extends "account/base_entrance.html" %}
+{% load allauth i18n %}
+
+{% block head_title %}{% trans "Подтверждение адреса" %}{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        {% element h1 %}{% trans "Подтверждение адреса" %}{% endelement %}
+    </div>
+
+    {% if confirmation %}
+        {% if can_confirm %}
+            {% element p %}
+                {% blocktranslate with email=confirmation.email_address.email %}Подтвердите, что адрес {{ email }} принадлежит вам.{% endblocktranslate %}
+            {% endelement %}
+            {% url 'account_confirm_email' confirmation.key as action_url %}
+            {% element form method="post" action=action_url %}
+                {% slot actions %}
+                    {% csrf_token %}
+                    {{ redirect_field }}
+                    {% element button type="submit" tags="prominent" %}
+                        {% trans "Подтвердить" %}
+                    {% endelement %}
+                {% endslot %}
+            {% endelement %}
+        {% else %}
+            {% element p %}
+                {% blocktranslate with email=confirmation.email_address.email %}Адрес {{ email }} уже подтверждён другим аккаунтом.{% endblocktranslate %}
+            {% endelement %}
+        {% endif %}
+    {% else %}
+        {% url 'account_email' as email_url %}
+        {% element p %}
+            {% blocktranslate %}Ссылка подтверждения устарела или не подходит. <a href="{{ email_url }}">Запросите новое письмо</a>.{% endblocktranslate %}
+        {% endelement %}
+    {% endif %}
+{% endblock content %}

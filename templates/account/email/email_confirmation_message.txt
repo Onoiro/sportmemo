@@ -1,0 +1,12 @@
+{% extends "account/email/base_message.txt" %}
+{% load i18n %}
+
+{% block content %}{% autoescape off %}{% blocktranslate %}Вы указали этот адрес при регистрации в архиве спортивных фотографий. Осталось подтвердить адрес — без этого вход в аккаунт не откроется.{% endblocktranslate %}
+
+{% if code %}{% blocktranslate %}Код подтверждения:{% endblocktranslate %}
+
+{{ code }}{% else %}{% blocktranslate %}Откройте ссылку, чтобы подтвердить адрес:{% endblocktranslate %}
+
+{{ activate_url }}{% endif %}
+
+{% blocktranslate %}Ссылка действует три дня. Если вы не регистрировались на сайте, просто удалите это письмо — ничего не произойдёт.{% endblocktranslate %}{% endautoescape %}{% endblock content %}

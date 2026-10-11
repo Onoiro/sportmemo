@@ -144,8 +144,8 @@ Details in `.koda/plans/foundation-and-data-model.md` (stage 1),
 as a separate file when work on it starts (`plans/public-archive-2.N-<name>.md`). The order and
 the list of sub-stages are in the master plan. Sub-stages 2.1 (demo data), 2.2 (public UI
 skeleton), 2.3 (public queries and lists), 2.4 (gallery component), 2.5 (team and event pages),
-2.6 (person and photo pages) and 2.7 (team roster filter by year) are complete; the next one
-is 2.8a (sign-up, login and password).
+2.6 (person and photo pages), 2.7 (team roster filter by year) and 2.8a (sign-up, login and
+password) are complete; the next one is 2.8b (user profile and menu).
 
 ## Deliberately deferred
 
@@ -154,21 +154,21 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.7.0
+- Version: 0.8.0
 - Development branch: `master`
 - Stage: 1 (repository foundation and data model) — **complete**;
   stage 2 (public archive) — **in progress**, sub-stages 2.1 (demo data), 2.2
   (public UI skeleton), 2.3 (public queries and lists), 2.4 (gallery component), 2.5
-  (team and event pages), 2.6 (person and photo pages) and 2.7 (team roster filter by year)
-  complete
-- Tests: 472, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
+  (team and event pages), 2.6 (person and photo pages), 2.7 (team roster filter by year) and
+  2.8a (sign-up, login and password) complete
+- Tests: 512, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
 
 ### What exists now
 
 | App | Contents |
 |---|---|
 | `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public views (home page, years, search), `core/urls.py` |
-| `apps/accounts` | email-based `User`, `UserManager`, consents (terms/privacy/PD law + version), roles, `User.person` link, signup form with consents, allauth adapter |
+| `apps/accounts` | email-based `User`, `UserManager`, consents (terms/privacy/PD law + version), roles, `User.person` link, allauth forms with Bootstrap classes (`BootstrapFormMixin`), allauth adapter |
 | `apps/catalog` | `Team`, `TeamMembership` (with `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (roster filter by year), list views and team, event and person detail pages |
 | `apps/photos` | `Source`, `Photo` (rights, `processing_status`, `phash`, `duplicate_of`), `PhotoPerson`, thumbnails via `ImageSpecField`, the photo page and the gallery fragment |
 | `apps/comments` | `Comment` (generic FK, replies, statuses) |
@@ -272,6 +272,37 @@ and the `.agents/skills/semver-checker/` skill.
 - `apps/core/migrations/0003_site_domain.py` sets the `django.contrib.sites` domain to
   `sportmemo.ru` — absolute links in emails and sitemaps must not point at `example.com`.
 
+### Account pages
+
+- Sign-up, login, email confirmation and password flows use `django-allauth` and live inside
+  the site shell: navbar, footer, theme. Stock package templates are **not** copied — the
+  layout (`templates/allauth/layouts/base.html`) and the elements
+  (`templates/allauth/elements/*`) are overridden, so both our templates and the pages we do
+  not override (email address list, re-authentication) get the same styling.
+- The wrapper for account pages is the `main_inner` block in `base.html`, not `content`:
+  allauth child templates override `content` and would wipe the wrapper entirely.
+- Bootstrap classes on fields are set by the `BootstrapFormMixin` mixin
+  (`apps/accounts/forms.py`): allauth templates render widgets as they are, and a template
+  cannot add a widget class. Forms are wired through `ACCOUNT_FORMS`; the mixin calls
+  `super().__init__()` first because allauth adds and removes fields in its own `__init__`.
+- `non_field_errors` are printed as the first row of the form in
+  `templates/allauth/elements/fields.html`: the "wrong email or password" error arrives that
+  way, not as a field error.
+- Email texts live in `templates/account/email/` (wrapper, email confirmation, password
+  reset); in dev the console email backend prints them. The subject gets the `[SportMemo]`
+  prefix from the site name automatically.
+- msgid strings in our templates are **Russian**: our catalogs and the package catalogs share
+  no strings, and English msgid from allauth templates must not shadow package translations.
+- Links in emails are built from the `django.contrib.sites` domain; email confirmation is
+  mandatory (`ACCOUNT_EMAIL_VERIFICATION = "mandatory"`) — without it login sends the user to
+  "check your email", and after confirmation the user is logged in at once
+  (`ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION`).
+- The sign-up form has three mandatory consents with dates and a version — this is legal
+  protection for the project, so the checkboxes are required and have no default values.
+- The "this is me" claim (`User.person` through moderation) is deferred: without moderation
+  anyone could claim someone else's page. The profile (2.8b) will only link an already
+  connected person.
+
 ### Admin rules
 
 - Moderation (publish / hide / reject / soft-delete / restore) runs as list actions; every decision
@@ -331,4 +362,7 @@ and the `.agents/skills/semver-checker/` skill.
 - `django-imagekit` caches the fact that a thumbnail exists in the Django cache. In tests each
   test has its own `MEDIA_ROOT`, so `tests/conftest.py` has a `cleared_cache` fixture; without
   it thumbnail tests fail while reading a file from another test.
+- Account pages are styled through the layout and elements, not by copying templates: every
+  extra copied file is one more place to fix when the package updates. Write an own template
+  only where the text must be ours.
 

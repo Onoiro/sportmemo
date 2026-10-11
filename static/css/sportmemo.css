@@ -895,6 +895,50 @@ html[data-bs-theme="dark"] {
     margin-bottom: 0;
 }
 
+/* --- Страницы аккаунта (вход, регистрация, пароль) --- */
+
+.auth-shell {
+    max-width: 30rem;
+    padding-bottom: 3rem;
+}
+
+.auth-panel {
+    padding: 1.5rem;
+    border: 1px solid var(--sm-photo-border, var(--bs-border-color));
+    border-radius: var(--sm-radius);
+    background-color: var(--sm-photo-bg, var(--bs-secondary-bg));
+}
+
+.auth-panel__title {
+    font-size: 1.125rem;
+    margin-bottom: 1rem;
+}
+
+.auth-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin-top: 1rem;
+}
+
+.auth-actions {
+    margin-top: 1.5rem;
+}
+
+.auth-form .errorlist {
+    list-style: none;
+    padding-left: 0;
+    margin: 0.25rem 0 0;
+    color: var(--bs-danger);
+    font-size: 0.875rem;
+}
+
+.auth-form .form-text ul {
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
+}
+
 /* --- Страницы ошибок --- */
 
 .error-page {

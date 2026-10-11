@@ -1,0 +1,12 @@
+{% load allauth %}
+<section class="auth-panel">
+    <h2 class="auth-panel__title">
+        {% slot title %}{% endslot %}
+    </h2>
+    {% slot body %}{% endslot %}
+    {% if slots.actions %}
+        <div class="auth-actions d-flex flex-wrap gap-2">
+            {% for action in slots.actions %}{{ action }}{% endfor %}
+        </div>
+    {% endif %}
+</section>

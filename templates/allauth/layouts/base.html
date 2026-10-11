@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% block head_title %}{% endblock %} — {{ SPORTMEMO_SITE_NAME|default:"SportMemo" }}{% endblock %}
+
+{% block main_inner %}
+    {% include "partials/messages.html" %}
+    <div class="auth-shell container">
+        {% block content %}{% endblock %}
+    </div>
+{% endblock %}
+
+{% block extra_js %}{% block extra_body %}{% endblock %}{% endblock %}

@@ -1,0 +1,9 @@
+{% load allauth %}
+{% comment %}
+    Бейджи allauth: `success` — подтверждено, `warning` — не подтверждено,
+    без тега — нейтральный.
+{% endcomment %}
+<span class="badge {% if 'success' in attrs.tags %}text-bg-success{% elif 'warning' in attrs.tags %}text-bg-warning{% else %}text-bg-secondary{% endif %}"
+      {% if attrs.title %}title="{{ attrs.title }}"{% endif %}>
+    {% slot %}{% endslot %}
+</span>

@@ -1,0 +1,17 @@
+{% extends "account/base_entrance.html" %}
+{% load allauth i18n %}
+
+{% block head_title %}{% trans "Проверьте почту" %}{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        {% element h1 %}{% trans "Проверьте почту" %}{% endelement %}
+        {% element p %}
+            {% trans "Мы отправили письмо со ссылкой для подтверждения адреса. Перейдите по ссылке, чтобы завершить регистрацию." %}
+        {% endelement %}
+        {% element p %}
+            {% trans "Письма нет? Загляните в папку «спам» — иногда оно попадает туда." %}
+        {% endelement %}
+        <p><a href="{% url 'core:home' %}">{% trans "Вернуться на главную" %}</a></p>
+    </div>
+{% endblock content %}

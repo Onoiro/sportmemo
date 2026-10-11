@@ -1,12 +1,66 @@
 """Формы приложения accounts."""
 
-from allauth.account.forms import SignupForm as AllauthSignupForm
+from allauth.account import forms as allauth_forms
 from django import forms
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
-class SignupForm(AllauthSignupForm):
+def apply_bootstrap_classes(fields):
+    """Bootstrap-классы виджетам: шаблоны allauth рендерят поля как есть."""
+    for field in fields.values():
+        widget = field.widget
+        if isinstance(widget, (forms.CheckboxInput, forms.RadioSelect)):
+            css_class = "form-check-input"
+        elif isinstance(widget, forms.Select):
+            css_class = "form-select"
+        else:
+            css_class = "form-control"
+        existing = widget.attrs.get("class", "")
+        widget.attrs["class"] = f"{existing} {css_class}".strip()
+
+
+class BootstrapFormMixin:
+    """Ставит Bootstrap-классы полям после инициализации формы.
+
+    Порядок важен: allauth добавляет и удаляет поля в своём `__init__`,
+    поэтому классы навешиваются только после `super().__init__()`.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        apply_bootstrap_classes(self.fields)
+
+
+class LoginForm(BootstrapFormMixin, allauth_forms.LoginForm):
+    pass
+
+
+class ResetPasswordForm(BootstrapFormMixin, allauth_forms.ResetPasswordForm):
+    pass
+
+
+class ResetPasswordKeyForm(BootstrapFormMixin, allauth_forms.ResetPasswordKeyForm):
+    pass
+
+
+class ChangePasswordForm(BootstrapFormMixin, allauth_forms.ChangePasswordForm):
+    pass
+
+
+class SetPasswordForm(BootstrapFormMixin, allauth_forms.SetPasswordForm):
+    pass
+
+
+class AddEmailForm(BootstrapFormMixin, allauth_forms.AddEmailForm):
+    pass
+
+
+class ReauthenticateForm(BootstrapFormMixin, allauth_forms.ReauthenticateForm):
+    pass
+
+
+class SignupForm(BootstrapFormMixin, allauth_forms.SignupForm):
     """Регистрация: email + пароль, плюс обязательные согласия.
 
     Согласия фиксируются датой в момент регистрации: их наличие — юридическая
