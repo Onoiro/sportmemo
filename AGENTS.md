@@ -142,7 +142,8 @@ Details in `.koda/plans/foundation-and-data-model.md` (stage 1),
 **Stage 2 is split into 15 sub-stages**, one session each. A sub-stage plan is created as a
 separate file when work on it starts (`plans/public-archive-2.N-<name>.md`). The order and the
 list of sub-stages are in the master plan. Sub-stages 2.1 (demo data), 2.2 (public UI skeleton) and 2.3 (public queries and lists) are
-complete; the next one is 2.4 (gallery component).
+complete; the next one is 2.4 (gallery component), plan approved:
+`.koda/plans/public-archive-2.4-photo-gallery.md`.
 
 ## Deliberately deferred
 
