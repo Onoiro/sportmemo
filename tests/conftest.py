@@ -31,6 +31,21 @@ def staticfiles_without_manifest(settings):
     }
 
 
+@pytest.fixture(autouse=True)
+def cleared_cache():
+    """Очистить кэш между тестами.
+
+    django-imagekit кэширует факт «превью существует», а MEDIA_ROOT
+    в каждом тесте свой: без очистки тест увидел бы чужой файл
+    из предыдущего теста и упал на чтении.
+    """
+    from django.core.cache import cache
+
+    cache.clear()
+    yield
+    cache.clear()
+
+
 @pytest.fixture
 def baseball(db):
     """Вид спорта «Бейсбол» — создаётся data-миграцией,

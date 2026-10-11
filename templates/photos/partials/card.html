@@ -1,0 +1,26 @@
+{% load i18n %}
+{# Карточка фото. В 2.2 намеренно не кликабельна: страница фото появляется в 2.4. #}
+<article class="photo-card">
+    {% if photo.thumbnail %}
+        <img class="photo-card__image" src="{{ photo.thumbnail.url }}" alt="{{ photo.title }}"
+             width="{{ photo.width|default:400 }}" height="{{ photo.height|default:300 }}"
+             loading="lazy" decoding="async">
+    {% else %}
+        <div class="photo-card__placeholder">
+            <i class="bi bi-image" aria-hidden="true"></i>
+        </div>
+    {% endif %}
+    <div class="photo-card__body">
+        {% if photo.year %}
+            <span class="badge-year">{{ photo.year }}</span>
+        {% else %}
+            <span class="badge-status">{% trans "год не указан" %}</span>
+        {% endif %}
+        {% if photo.title %}
+            <h3 class="photo-card__title h6">{{ photo.title }}</h3>
+        {% endif %}
+        {% if photo.caption %}
+            <p class="photo-card__caption">{{ photo.caption }}</p>
+        {% endif %}
+    </div>
+</article>

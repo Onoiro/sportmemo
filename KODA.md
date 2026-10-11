@@ -58,9 +58,9 @@ Docker Compose + Nginx (инфраструктура).
 
 | Приложение | Содержимое |
 |---|---|
-| `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, healthcheck |
+| `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, миксины админки (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, команда `seed_demo`, публичные представления (главная, заглушки), `core/urls.py` |
 | `apps/accounts` | кастомный `User` (email как `USERNAME_FIELD`), согласия, роли, связь с `Person` |
-| `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam` |
+| `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam`, `catalog/urls.py` с заглушками списков |
 | `apps/photos` | `Source`, `Photo`, `PhotoPerson` |
 | `apps/comments` | `Comment` (generic FK, ответы) |
 | `apps/moderation` | `Report`, `ModerationAction` |
@@ -141,8 +141,8 @@ Docker Compose + Nginx (инфраструктура).
 
 **Этап 2 разбит на 15 подэтапов** — по одной сессии на каждый. Детальный план подэтапа
 создаётся отдельным файлом при старте работы (`plans/public-archive-2.N-<имя>.md`).
-Порядок и состав подэтапов — в мастер-плане. Подэтап 2.1 (демо-данные) завершён;
-следующий — 2.2 (каркас публичного UI).
+Порядок и состав подэтапов — в мастер-плане. Подэтапы 2.1 (демо-данные) и 2.2 (каркас
+публичного UI) завершены; следующий — 2.3 (публичные выборки и списки).
 
 ## Отложено осознанно
 
@@ -151,19 +151,20 @@ UI, «конструктор видов спорта». Обработка фо�
 
 ## Текущее состояние
 
-- Версия: 0.1.2
+- Версия: 0.2.0
 - Ветка разработки: `master`
 - Этап: 1 (фундамент репозитория и модель данных) — **завершён**;
-  этап 2 (публичный архив) — **в работе**, подэтап 2.1 (демо-данные) завершён
-- Тесты: 137, проходят на Python 3.12 и 3.13 (`make test`), линтер чист (`make lint`)
+  этап 2 (публичный архив) — **в работе**, подэтапы 2.1 (демо-данные) и 2.2 (каркас
+  публичного UI) завершены
+- Тесты: 175, проходят на Python 3.12 и 3.13 (`make test`), линтер чист (`make lint`)
 
 ### Что уже есть
 
 | Приложение | Содержимое |
 |---|---|
-| `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, миксины админки (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, команда `seed_demo` |
+| `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, миксины админки (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, команда `seed_demo`, публичные представления (главная, заглушки), `core/urls.py` |
 | `apps/accounts` | `User` по email, `UserManager`, согласия (terms/privacy/152-ФЗ + версия), роли, связь `User.person`, форма регистрации с согласиями, адаптер allauth |
-| `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam` |
+| `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam`, `catalog/urls.py` с заглушками списков |
 | `apps/photos` | `Source`, `Photo` (права, `processing_status`, `phash`, `duplicate_of`), `PhotoPerson`, превью через `ImageSpecField` |
 | `apps/comments` | `Comment` (generic FK, ответы, статусы) |
 | `apps/moderation` | `Report`, `ModerationAction` (журнал решений модератора) |
@@ -171,6 +172,25 @@ UI, «конструктор видов спорта». Обработка фо�
 Инфраструктура: `Dockerfile` + `docker-compose.yml` (db, redis, minio, web, worker),
 CI (`.github/workflows/ci.yml`: ruff, проверка миграций, pytest на 3.12 и 3.13 с PostgreSQL 17),
 навык `.agents/skills/semver-checker/`.
+
+### Публичный интерфейс
+
+- `templates/base.html` и партиалы (`navbar.html`, `footer.html`, `breadcrumbs.html`,
+  `messages.html`), карточка фото `templates/photos/partials/card.html`, страницы ошибок
+  `templates/404.html` и `templates/500.html`.
+- Тема: `static/css/sportmemo.css` и `static/js/theme.js` — светлая сепия по умолчанию
+  и тёмный вариант; выбор в `localStorage`. Инлайн-скрипт в `<head>` ставит тему
+  до отрисовки, поэтому мигания при загрузке нет.
+- Фронтенд-библиотеки лежат в репозитории (`static/vendor/`: Bootstrap 5, Bootstrap Icons,
+  htmx, Alpine.js). CDN не используем: версии, лицензии и контрольные суммы —
+  в `static/vendor/README.md`.
+- Публичные выборки: `SoftDeleteQuerySet.published()` (фильтр `status=Status.PUBLISHED`),
+  `.visible()` (дополнительно `rights_confirmed=True` — для фото). Публичные страницы
+  строят цепочку `Model.public.published().visible()`.
+- Разделы, которых ещё нет (`/teams/`, `/events/`, `/years/`, `/search/`), отдают общий
+  шаблон-заглушку; настоящие представления появятся в подэтапах 2.3 и 2.13.
+- `apps/core/migrations/0003_site_domain.py` задаёт домен `django.contrib.sites` —
+  `sportmemo.ru`. Иначе абсолютные ссылки в письмах и sitemap вели бы на `example.com`.
 
 ### Правила работы с админкой
 
@@ -191,4 +211,13 @@ CI (`.github/workflows/ci.yml`: ruff, проверка миграций, pytest 
 - Демо-данные создаются командой `seed_demo` (`make seed-demo`) и помечаются
   `attributes={"demo": true}`; удаляются `make seed-demo-flush`. Это инструмент разработки:
   на боевую базу их не переносим, в чек-лист деплоя входит «демо-данные не переносить».
+- Публичные страницы отдают только опубликованное и не удалённое:
+  `Model.public.published()` (и `.visible()` для фото). Черновики в публичную выдачу
+  не попадают ни на одной странице.
+- Строки интерфейса — только через `gettext`. После добавления строк выполняется `make i18n`;
+  `makemessages` помечает новые строки `fuzzy`, если нашёл похожую старую, а `msgfmt`
+  пропускает fuzzy — после извлечения проверяйте fuzzy-блоки и снимайте флаги.
+- `django-imagekit` кэширует факт «превью существует» в Django-кэше. В тестах `MEDIA_ROOT`
+  у каждого теста свой, поэтому в `tests/conftest.py` есть фикстура `cleared_cache` —
+  без неё тесты превью падают на чтении чужого файла.
 

@@ -1,24 +1,52 @@
-<!DOCTYPE html>
-{% load i18n %}
-<html lang="{{ LANGUAGE_CODE }}">
+{% load i18n static %}<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}" data-bs-theme="light" class="theme-sepia">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}{{ SPORTMEMO_SITE_NAME }}{% endblock %}</title>
-    <meta name="description" content="{% block description %}{% trans "Публичный архив спортивных фотографий" %}{% endblock %}">
+    {# Тема выбирается до отрисовки: иначе при загрузке мигнёт светлый фон. #}
+    <script>
+        (function () {
+            var theme = null;
+            try {
+                theme = window.localStorage.getItem("sportmemo-theme");
+            } catch (error) {
+                theme = null;
+            }
+            if (theme !== "sepia" && theme !== "dark") {
+                theme = window.matchMedia
+                    && window.matchMedia("(prefers-color-scheme: dark)").matches
+                    ? "dark"
+                    : "sepia";
+            }
+            var root = document.documentElement;
+            root.setAttribute("data-bs-theme", theme === "dark" ? "dark" : "light");
+            root.classList.toggle("theme-sepia", theme !== "dark");
+        })();
+    </script>
+    <title>{% block title %}{{ SPORTMEMO_SITE_NAME|default:"SportMemo" }}{% endblock %}</title>
+    <meta name="description" content="{% block description %}{% trans "Публичный архив спортивных фотографий: команды, события, люди" %}{% endblock %}">
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/sportmemo.css' %}">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <header>
-        <a href="/">{{ SPORTMEMO_SITE_NAME }}</a>
-    </header>
+    {% block navbar %}{% include "partials/navbar.html" %}{% endblock %}
 
-    <main>
+    <main id="main">
+        {% block breadcrumbs %}
+            {% include "partials/breadcrumbs.html" %}
+        {% endblock %}
+        {% include "partials/messages.html" %}
         {% block content %}{% endblock %}
     </main>
 
-    <footer>
-        <span>{{ SPORTMEMO_SITE_NAME }} v{{ SPORTMEMO_VERSION }}</span>
-    </footer>
+    {% include "partials/footer.html" %}
+
+    <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'vendor/htmx/htmx.min.js' %}"></script>
+    <script src="{% static 'vendor/alpine/alpine.min.js' %}" defer></script>
+    <script src="{% static 'js/theme.js' %}"></script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

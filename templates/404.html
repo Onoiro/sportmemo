@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block navbar %}{% include "partials/navbar.html" with hide_search=True %}{% endblock %}
+
+{% block title %}{% trans "Страница не найдена" %} — SportMemo{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="error-page">
+        <p class="error-page__code">404</p>
+        <h1 class="h3 mb-3">{% trans "Страница не найдена" %}</h1>
+        <p class="text-body-secondary mb-4">
+            {% trans "Возможно, ссылка устарела или в адресе опечатка. Попробуйте поиск по архиву." %}
+        </p>
+        <a class="btn btn-primary" href="/">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+            <span class="ms-1">{% trans "На главную" %}</span>
+        </a>
+    </div>
+</div>
+{% endblock %}

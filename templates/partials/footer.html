@@ -1,0 +1,30 @@
+{% load i18n %}
+<footer class="site-footer">
+    <div class="container">
+        <div class="row gy-3">
+            <div class="col-12 col-md-6">
+                <p class="site-footer__brand mb-1">{{ SPORTMEMO_SITE_NAME|default:"SportMemo" }}</p>
+                <p class="mb-0">{% trans "Публичный архив спортивных фотографий. Бейсбол в России: команды, события, люди." %}</p>
+            </div>
+            <div class="col-6 col-md-3">
+                <p class="fw-semibold mb-1">{% trans "Разделы" %}</p>
+                <ul class="list-unstyled mb-0">
+                    <li><a href="{% url 'catalog:team_list' %}">{% trans "Команды" %}</a></li>
+                    <li><a href="{% url 'catalog:event_list' %}">{% trans "События" %}</a></li>
+                    <li><a href="{% url 'core:year_list' %}">{% trans "Годы" %}</a></li>
+                </ul>
+            </div>
+            <div class="col-6 col-md-3">
+                <p class="fw-semibold mb-1">{% trans "Архив" %}</p>
+                <ul class="list-unstyled mb-0">
+                    <li><a href="{% url 'core:home' %}">{% trans "Главная" %}</a></li>
+                    <li><a href="{% url 'core:search' %}">{% trans "Поиск" %}</a></li>
+                </ul>
+            </div>
+        </div>
+        <hr>
+        <p class="mb-0 site-footer__version">
+            {{ SPORTMEMO_SITE_NAME|default:"SportMemo" }}{% if SPORTMEMO_VERSION %} v{{ SPORTMEMO_VERSION }}{% endif %}
+        </p>
+    </div>
+</footer>

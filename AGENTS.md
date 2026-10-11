@@ -141,8 +141,8 @@ Details in `.koda/plans/foundation-and-data-model.md` (stage 1),
 
 **Stage 2 is split into 15 sub-stages**, one session each. A sub-stage plan is created as a
 separate file when work on it starts (`plans/public-archive-2.N-<name>.md`). The order and the
-list of sub-stages are in the master plan. Sub-stage 2.1 (demo data) is complete; the next one
-is 2.2 (public UI skeleton).
+list of sub-stages are in the master plan. Sub-stages 2.1 (demo data) and 2.2 (public UI
+skeleton) are complete; the next one is 2.3 (public queries and lists).
 
 ## Deliberately deferred
 
@@ -151,19 +151,20 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.1.2
+- Version: 0.2.0
 - Development branch: `master`
 - Stage: 1 (repository foundation and data model) — **complete**;
-  stage 2 (public archive) — **in progress**, sub-stage 2.1 (demo data) complete
-- Tests: 137, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
+  stage 2 (public archive) — **in progress**, sub-stages 2.1 (demo data) and 2.2
+  (public UI skeleton) complete
+- Tests: 175, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
 
 ### What exists now
 
 | App | Contents |
 |---|---|
-| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command |
+| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public views (home page, placeholders), `core/urls.py` |
 | `apps/accounts` | email-based `User`, `UserManager`, consents (terms/privacy/PD law + version), roles, `User.person` link, signup form with consents, allauth adapter |
-| `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam` |
+| `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam`, `catalog/urls.py` with placeholder lists |
 | `apps/photos` | `Source`, `Photo` (rights, `processing_status`, `phash`, `duplicate_of`), `PhotoPerson`, thumbnails via `ImageSpecField` |
 | `apps/comments` | `Comment` (generic FK, replies, statuses) |
 | `apps/moderation` | `Report`, `ModerationAction` (moderator decision log) |
@@ -171,6 +172,23 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 Infrastructure: `Dockerfile` + `docker-compose.yml` (db, redis, minio, web, worker), CI
 (`.github/workflows/ci.yml`: ruff, migration check, pytest on 3.12 and 3.13 against PostgreSQL 17),
 and the `.agents/skills/semver-checker/` skill.
+
+### Public UI
+
+- `templates/base.html` plus `templates/partials/` (navbar, footer, breadcrumbs, messages) and
+  `templates/photos/partials/card.html`; error pages in `templates/404.html` and `templates/500.html`.
+- Theme: `static/css/sportmemo.css` and `static/js/theme.js` — warm sepia by default, dark
+  variant, choice kept in `localStorage`. An inline script in `<head>` applies the theme before
+  paint, so there is no flash.
+- Frontend libraries are vendored in `static/vendor/` (Bootstrap 5, Bootstrap Icons, htmx,
+  Alpine.js). No CDN: versions and checksums are in `static/vendor/README.md`.
+- Public queries: `SoftDeleteQuerySet.published()` filters by `status=Status.PUBLISHED`;
+  `.visible()` additionally requires `rights_confirmed=True` (used for photos). Public pages
+  chain `Model.public.published().visible()`.
+- Sections that do not exist yet (`/teams/`, `/events/`, `/years/`, `/search/`) render a shared
+  placeholder template and are replaced in sub-stages 2.3 and 2.13.
+- `apps/core/migrations/0003_site_domain.py` sets the `django.contrib.sites` domain to
+  `sportmemo.ru` — absolute links in emails and sitemaps must not point at `example.com`.
 
 ### Admin rules
 
@@ -192,4 +210,12 @@ and the `.agents/skills/semver-checker/` skill.
   `attributes={"demo": true}`; `make seed-demo-flush` removes it. This is a development tool:
   demo data is never moved to production, and the deploy checklist includes "do not move demo
   data".
+- Public pages return published, non-deleted objects only: `Model.public.published()` (plus
+  `.visible()` for photos). Drafts never appear on any public page.
+- UI strings go through `gettext` only. Run `make i18n` after adding strings. `makemessages`
+  marks new strings as `fuzzy` when it finds a similar old one, and `msgfmt` skips fuzzy
+  entries — check the fuzzy blocks after extraction and clear the flags.
+- `django-imagekit` caches the fact that a thumbnail exists in the Django cache. In tests each
+  test has its own `MEDIA_ROOT`, so `tests/conftest.py` has a `cleared_cache` fixture; without
+  it thumbnail tests fail while reading a file from another test.
 

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ SPORTMEMO_SITE_NAME }} — {% trans "архив спортивных фотографий" %}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="home-hero">
+        <h1 class="home-hero__title">{{ SPORTMEMO_SITE_NAME }}</h1>
+        <p class="home-hero__lead">
+            {% trans "Архив спортивных фотографий: команды, турниры и люди. Бейсбол в России — от дворовых секций до ветеранских встреч." %}
+        </p>
+
+        <form class="home-hero__search" role="search" method="get"
+              action="{% url 'core:search' %}">
+            <label class="visually-hidden" for="home-search">{% trans "Поиск по архиву" %}</label>
+            <div class="input-group">
+                <input class="form-control" type="search" id="home-search" name="q"
+                       placeholder="{% trans "Фамилия, команда, турнир" %}" autocomplete="off">
+                <button class="btn btn-primary" type="submit">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <span class="ms-1">{% trans "Найти" %}</span>
+                </button>
+            </div>
+        </form>
+
+        <div class="archive-stats">
+            <div class="archive-stats__item">
+                <div class="archive-stats__value">{{ stats.teams }}</div>
+                <div class="archive-stats__label">{% trans "команд" %}</div>
+            </div>
+            <div class="archive-stats__item">
+                <div class="archive-stats__value">{{ stats.photos }}</div>
+                <div class="archive-stats__label">{% trans "фотографий" %}</div>
+            </div>
+            <div class="archive-stats__item">
+                <div class="archive-stats__value">{{ stats.years }}</div>
+                <div class="archive-stats__label">{% trans "лет в архиве" %}</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="entry-tiles">
+        <div class="row g-3">
+            <div class="col-12 col-md-6">
+                <a class="entry-tile" href="{% url 'catalog:team_list' %}">
+                    <i class="bi bi-people entry-tile__icon" aria-hidden="true"></i>
+                    <p class="entry-tile__title">{% trans "Команды" %}</p>
+                    <p class="entry-tile__text">
+                        {% trans "Состав по годам, города и история клубов." %}
+                    </p>
+                </a>
+            </div>
+            <div class="col-12 col-md-6">
+                <a class="entry-tile" href="{% url 'core:year_list' %}">
+                    <i class="bi bi-calendar3 entry-tile__icon" aria-hidden="true"></i>
+                    <p class="entry-tile__title">{% trans "Годы" %}</p>
+                    <p class="entry-tile__text">
+                        {% trans "Хронология архива: что происходило в каждом году." %}
+                    </p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="mb-5">
+        <h2 class="h4 mb-3">{% trans "Последние фотографии" %}</h2>
+        {% if latest_photos %}
+            <div class="photo-grid">
+                {% for photo in latest_photos %}
+                    {% include "photos/partials/card.html" %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="bi bi-images empty-state__icon" aria-hidden="true"></i>
+                <p class="empty-state__title">{% trans "Архив пока пуст" %}</p>
+                <p class="mb-0">
+                    {% trans "Фотографии появятся здесь, когда их добавят и опубликуют." %}
+                </p>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

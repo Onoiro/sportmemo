@@ -1,0 +1,64 @@
+{% load i18n %}
+<header class="site-header">
+    <nav class="navbar navbar-expand-lg container" aria-label="{% trans "Основная навигация" %}">
+        <a class="navbar-brand" href="{% url 'core:home' %}">{{ SPORTMEMO_SITE_NAME|default:"SportMemo" }}</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#site-nav" aria-controls="site-nav"
+                aria-expanded="false" aria-label="{% trans "Показать меню" %}">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="site-nav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'catalog:team_list' %}">{% trans "Команды" %}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'catalog:event_list' %}">{% trans "События" %}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'core:year_list' %}">{% trans "Годы" %}</a>
+                </li>
+            </ul>
+
+            {% if not hide_search %}
+            <form class="d-flex search-form me-lg-3" role="search" method="get"
+                  action="{% url 'core:search' %}">
+                <label class="visually-hidden" for="navbar-search">{% trans "Поиск по архиву" %}</label>
+                <input class="form-control me-2" type="search" id="navbar-search" name="q"
+                       value="{{ request.GET.q|default:'' }}" placeholder="{% trans "Поиск" %}"
+                       autocomplete="off">
+                <button class="btn btn-outline-primary" type="submit">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <span class="visually-hidden">{% trans "Искать" %}</span>
+                </button>
+            </form>
+            {% endif %}
+
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-secondary btn-sm" type="button"
+                        data-theme-toggle aria-pressed="false"
+                        title="{% trans "Переключить тему" %}">
+                    <i class="bi bi-moon-stars" data-theme-toggle-icon aria-hidden="true"></i>
+                    <span class="visually-hidden">{% trans "Переключить тему" %}</span>
+                </button>
+
+                {% if user.is_authenticated %}
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ user.display_name|default:user.email }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'account_logout' %}">{% trans "Выйти" %}</a>
+                            </li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <a class="btn btn-outline-primary btn-sm" href="{% url 'account_login' %}">{% trans "Войти" %}</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+</header>

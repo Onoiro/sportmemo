@@ -9,6 +9,8 @@ from apps.core.views import healthz
 
 urlpatterns = [
     path("healthz/", healthz, name="healthz"),
+    path("", include("apps.core.urls")),
+    path("", include("apps.catalog.urls")),
     path("admin/", admin.site.urls),
     path("accounts/", include("allauth.urls")),
 ]

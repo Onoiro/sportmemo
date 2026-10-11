@@ -2,7 +2,7 @@ MANAGE := uv run python manage.py
 DC := docker compose
 
 .PHONY: help install lint format format-check test test-cov migrate migrations shell superuser \
-        collectstatic messages compile i18n seed-demo seed-demo-flush \
+        run collectstatic messages compile i18n seed-demo seed-demo-flush \
         up down down-clean restart build rebuild logs ps
 
 help: ## Показать доступные команды
@@ -27,6 +27,9 @@ test: ## Запустить тесты (pytest)
 
 test-cov: ## Запустить тесты с покрытием
 	uv run pytest --cov=apps --cov=config --cov-report=term-missing
+
+run: ## Запустить сервер разработки
+	$(MANAGE) runserver
 
 migrate: ## Применить миграции
 	$(MANAGE) migrate
@@ -58,10 +61,10 @@ seed-demo-flush: ## Удалить демо-данные и их файлы
 # ======================================================================
 
 messages: ## Извлечь строки для перевода
-	$(MANAGE) makemessages -a --ignore=.venv
+	$(MANAGE) makemessages -a --ignore=.venv --ignore=.venv313
 
 compile: ## Скомпилировать переводы
-	$(MANAGE) compilemessages
+	$(MANAGE) compilemessages --ignore=.venv --ignore=.venv313
 
 i18n: messages compile ## Полный цикл локализации
 
