@@ -132,11 +132,16 @@ match), then delete with `git branch -D`.
 | Stage | Content | Status |
 |---|---|---|
 | 1 | Foundation: data schema, admin, tests, CI | complete |
-| 2 | Public archive: layout, pages, galleries, search, comments, sign-up UI | planned |
+| 2 | Public archive: layout, pages, galleries, search, comments, sign-up UI | in progress |
 | 3 | Photo processing: frame correction (OpenCV), Celery pipeline, perceptual hash, duplicate merge | planned |
 | 4 | Mobile PWA, legal layer, deployment, backups, monitoring | planned |
 
-Details in `.koda/plans/foundation-and-data-model.md` and `.koda/backlog.md`.
+Details in `.koda/plans/foundation-and-data-model.md` (stage 1),
+`.koda/plans/public-archive.md` (stage 2 master plan) and `.koda/backlog.md`.
+
+**Stage 2 is split into 15 sub-stages**, one session each. A sub-stage plan is created as a
+separate file when work on it starts (`plans/public-archive-2.N-<name>.md`). The order and the
+list of sub-stages are in the master plan.
 
 ## Deliberately deferred
 
@@ -147,7 +152,8 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 
 - Version: 0.1.1
 - Development branch: `master`
-- Stage: 1 (repository foundation and data model) — **complete**
+- Stage: 1 (repository foundation and data model) — **complete**;
+  stage 2 (public archive) — **in progress**, sub-stage 2.1 (demo data)
 - Tests: 117, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
 
 ### What exists now
