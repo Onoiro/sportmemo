@@ -1,6 +1,8 @@
 {% load i18n %}
-{# Карточка события. В 2.3 намеренно не кликабельна: страница события
-   появляется в 2.5. #}
+{% comment %}
+Карточка события. В 2.3 намеренно не кликабельна: страница события
+появляется в 2.5.
+{% endcomment %}
 <article class="entity-card">
     <div class="entity-card__body">
         <span class="badge-status">{{ event.get_event_type_display }}</span>

@@ -1,0 +1,22 @@
+{% load i18n %}
+{% comment %}
+Компонент галереи: сетка карточек и кнопка «показать ещё».
+Параметры: `photos` (обязательно), `page_obj` (без него кнопки нет —
+так галерея работает на главной) и `gallery_query` — фильтры для
+следующей порции. Нужен там, где фильтр не лежит в `request.GET`
+(страница года): фрагмент получает их явно.
+
+Тексты для сообщений скрипта лежат в data-атрибутах: строки интерфейса
+остаются в gettext, а `gallery.js` только подставляет число.
+В подстановке — фигурные скобки, а не `%(count)s`: `makemessages`
+удваивает проценты в строках из шаблонов, и плейсхолдер ломается.
+{% endcomment %}
+<div class="photo-gallery" id="photo-gallery"
+     data-loaded-text="{% trans "Загружено ещё {count} фото" %}"
+     data-end-text="{% trans "Это все фотографии" %}"
+     data-error-text="{% trans "Не удалось загрузить фотографии. Ссылка работает как обычная." %}">
+    <div class="photo-grid" id="photo-grid">
+        {% include "photos/partials/grid_items.html" with photos=photos page_obj=page_obj gallery_query=gallery_query %}
+    </div>
+    <p class="visually-hidden" id="gallery-status" role="status" aria-live="polite"></p>
+</div>

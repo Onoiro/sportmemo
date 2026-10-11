@@ -10,6 +10,12 @@ from django.core.paginator import Paginator
 from django.db.models import Count
 from django.http import Http404
 
+# Размер порции галереи и порядок карточек. Общие для страницы года
+# и htmx-фрагмента: разойдутся — «показать ещё» начнёт пропускать
+# или повторять фотографии.
+PHOTO_PAGE_SIZE = 24
+PHOTO_ORDERING = ("-created_at",)
+
 
 def visible_photos():
     """Фото, разрешённые к публичному показу.

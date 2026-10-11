@@ -211,6 +211,16 @@ class Photo(TimeStampedModel, StatusModel, SoftDeleteModel):
     def __str__(self):
         return self.title or f"Фото #{self.pk}"
 
+    def get_absolute_url(self):
+        """Ссылка на страницу фото.
+
+        `Photo` — не `SlugModel`: заголовок не уникален и часто пуст,
+        поэтому URL строится по первичному ключу.
+        """
+        from django.urls import reverse
+
+        return reverse("photos:photo_detail", kwargs={"pk": self.pk})
+
     @property
     def is_public(self) -> bool:
         """Фото публикуется только при подтверждённых правах."""

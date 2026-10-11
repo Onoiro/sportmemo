@@ -114,8 +114,15 @@ class TestBaseTemplate:
         assert "vendor/bootstrap-icons/bootstrap-icons.min.css" in html
         assert "vendor/htmx/htmx.min.js" in html
         assert "vendor/alpine/alpine.min.js" in html
+        assert "js/gallery.js" in html
         assert "css/sportmemo.css" in html
         assert "js/theme.js" in html
+
+    def test_gallery_script_loads_after_htmx(self, client):
+        """Скрипт галереи слушает события htmx: порядок подключения важен."""
+        html = client.get(reverse("core:home")).content.decode()
+
+        assert html.index("vendor/htmx/htmx.min.js") < html.index("js/gallery.js")
 
     def test_theme_script_runs_before_head_end(self, client):
         html = client.get(reverse("core:home")).content.decode()
@@ -139,6 +146,16 @@ class TestBaseTemplate:
         html = client.get(reverse("core:home")).content.decode()
 
         assert reverse("account_login") in html
+
+    def test_no_template_comment_leaks_into_html(self, client, photo):
+        """`{# ... #}` в Django работает только в одной строке.
+
+        Многострочный комментарий не распознаётся, и его текст попадает
+        в HTML — так комментарий из партиала утекал на страницу.
+        """
+        for name in ("core:home", "core:year_list", "catalog:team_list"):
+            html = client.get(reverse(name)).content.decode()
+            assert "{#" not in html, name
 
 
 class TestPlaceholders:

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-11 15:07+0300\n"
+"POT-Creation-Date: 2026-10-11 16:24+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -71,7 +71,7 @@ msgid "как обращаться"
 msgstr "display name"
 
 #: apps/accounts/models.py:27 apps/catalog/models.py:137
-#: apps/photos/models.py:264
+#: apps/photos/models.py:274
 msgid "роль"
 msgstr "role"
 
@@ -137,11 +137,11 @@ msgstr "Biography"
 msgid "Даты и место"
 msgstr "Dates and place"
 
-#: apps/catalog/models.py:43 apps/photos/models.py:236
+#: apps/catalog/models.py:43 apps/photos/models.py:246
 msgid "игрок"
 msgstr "player"
 
-#: apps/catalog/models.py:44 apps/photos/models.py:237
+#: apps/catalog/models.py:44 apps/photos/models.py:247
 msgid "тренер"
 msgstr "coach"
 
@@ -200,7 +200,7 @@ msgid "команды"
 msgstr "teams"
 
 #: apps/catalog/models.py:130 apps/catalog/models.py:231
-#: apps/catalog/models.py:298 apps/photos/models.py:259
+#: apps/catalog/models.py:298 apps/photos/models.py:269
 msgid "человек"
 msgstr "person"
 
@@ -221,7 +221,7 @@ msgid "амплуа"
 msgstr "position"
 
 #: apps/catalog/models.py:141 apps/catalog/models.py:309
-#: apps/photos/models.py:275
+#: apps/photos/models.py:285
 msgid "примечание"
 msgstr "note"
 
@@ -346,7 +346,7 @@ msgid "церемония"
 msgstr "ceremony"
 
 #: apps/catalog/models.py:336 apps/moderation/models.py:21
-#: apps/photos/models.py:29 apps/photos/models.py:241
+#: apps/photos/models.py:29 apps/photos/models.py:251
 msgid "другое"
 msgstr "other"
 
@@ -395,9 +395,9 @@ msgstr "team participation"
 msgid "участие команд"
 msgstr "team participation"
 
-#: apps/catalog/views.py:45 apps/catalog/views.py:67 apps/core/views.py:70
-#: apps/core/views.py:91 templates/core/placeholder.html:9
-#: templates/partials/footer.html:20
+#: apps/catalog/views.py:45 apps/catalog/views.py:67 apps/core/views.py:82
+#: apps/core/views.py:110 apps/photos/views.py:42
+#: templates/core/placeholder.html:9 templates/partials/footer.html:20
 msgid "Главная"
 msgstr "Home"
 
@@ -585,23 +585,25 @@ msgstr "sort order"
 msgid "виды спорта"
 msgstr "sports"
 
-#: apps/core/views.py:71 apps/core/views.py:92 templates/core/home.html:57
-#: templates/core/year_list.html:4 templates/core/year_list.html:14
-#: templates/partials/footer.html:14 templates/partials/navbar.html:20
+#: apps/core/views.py:83 apps/core/views.py:111 apps/photos/views.py:45
+#: templates/core/home.html:57 templates/core/year_list.html:4
+#: templates/core/year_list.html:14 templates/partials/footer.html:14
+#: templates/partials/navbar.html:20
 msgid "Годы"
 msgstr "Years"
 
-#: apps/core/views.py:93 templates/core/year_detail.html:4
-#: templates/core/year_detail.html:15
+#: apps/core/views.py:112 apps/photos/views.py:48
+#: templates/core/year_detail.html:4 templates/core/year_detail.html:15
+#, python-format
 msgid "%(year)s год"
 msgstr "%(year)s"
 
-#: apps/core/views.py:102 templates/partials/footer.html:21
+#: apps/core/views.py:121 templates/partials/footer.html:21
 #: templates/partials/navbar.html:29
 msgid "Поиск"
 msgstr "Search"
 
-#: apps/core/views.py:103
+#: apps/core/views.py:122
 msgid "Здесь появится поиск по командам, событиям, людям и фотографиям."
 msgstr "Search across teams, events, people and photos will appear here."
 
@@ -891,7 +893,7 @@ msgstr "views"
 msgid "загрузил"
 msgstr "uploaded by"
 
-#: apps/photos/models.py:194 apps/photos/models.py:253
+#: apps/photos/models.py:194 apps/photos/models.py:263
 msgid "фотография"
 msgstr "photo"
 
@@ -899,41 +901,46 @@ msgstr "photo"
 msgid "фотографии"
 msgstr "photos"
 
-#: apps/photos/models.py:238
+#: apps/photos/models.py:248
 msgid "судья"
 msgstr "umpire"
 
-#: apps/photos/models.py:239
+#: apps/photos/models.py:249
 msgid "зритель"
 msgstr "spectator"
 
-#: apps/photos/models.py:240
+#: apps/photos/models.py:250
 msgid "фотограф"
 msgstr "photographer"
 
-#: apps/photos/models.py:270
+#: apps/photos/models.py:280
 msgid "позиция в кадре"
 msgstr "position in frame"
 
-#: apps/photos/models.py:273
+#: apps/photos/models.py:283
 msgid "Например: «слева второй»"
 msgstr "For example: “second from the left”"
 
-#: apps/photos/models.py:278
+#: apps/photos/models.py:288
 msgid "добавил"
 msgstr "added by"
 
-#: apps/photos/models.py:284
+#: apps/photos/models.py:294
 msgid "дата добавления"
 msgstr "added at"
 
-#: apps/photos/models.py:289
+#: apps/photos/models.py:299
 msgid "человек на фото"
 msgstr "person in photo"
 
-#: apps/photos/models.py:290
+#: apps/photos/models.py:300
 msgid "люди на фото"
 msgstr "people in photos"
+
+#: apps/photos/views.py:51 templates/photos/photo_detail.html:4
+#: templates/photos/photo_detail.html:37
+msgid "Фотография"
+msgstr "Photo"
 
 #: templates/404.html:6 templates/404.html:14
 msgid "Страница не найдена"
@@ -1010,6 +1017,7 @@ msgid "Турниры, серии и товарищеские встречи в 
 msgstr "Tournaments, series and friendly games in the SportMemo archive."
 
 #: templates/catalog/event_list.html:16
+#, python-format
 msgid "Найдено %(counter)s событие"
 msgid_plural "Найдено %(counter)s событий"
 msgstr[0] "Found %(counter)s event"
@@ -1024,19 +1032,21 @@ msgid "События появятся здесь, когда их добавя�
 msgstr "Events will appear here once they are added and published."
 
 #: templates/catalog/partials/event_card.html:12
-#: templates/photos/partials/card.html:17
+#: templates/photos/partials/card.html:18
 msgid "год не указан"
 msgstr "year not set"
 
 #: templates/catalog/partials/event_card.html:18
 #: templates/catalog/partials/team_card.html:15
 #: templates/core/year_list.html:26
+#, python-format
 msgid "%(counter)s фото"
 msgid_plural "%(counter)s фото"
 msgstr[0] "%(counter)s photo"
 msgstr[1] "%(counter)s photos"
 
 #: templates/catalog/partials/team_card.html:12
+#, python-format
 msgid "осн. %(year)s"
 msgstr "founded %(year)s"
 
@@ -1045,6 +1055,7 @@ msgid "Команды архива SportMemo: города, годы основ�
 msgstr "Teams in the SportMemo archive: cities, founding years and photos."
 
 #: templates/catalog/team_list.html:16
+#, python-format
 msgid "Найдена %(counter)s команда"
 msgid_plural "Найдено %(counter)s команд"
 msgstr[0] "Found %(counter)s team"
@@ -1106,11 +1117,11 @@ msgstr "Archive timeline: what happened in each year."
 msgid "Последние фотографии"
 msgstr "Latest photos"
 
-#: templates/core/home.html:77
+#: templates/core/home.html:73
 msgid "Архив пока пуст"
 msgstr "The archive is empty for now"
 
-#: templates/core/home.html:79
+#: templates/core/home.html:75
 msgid "Фотографии появятся здесь, когда их добавят и опубликуют."
 msgstr "Photos will appear here once they are added and published."
 
@@ -1129,22 +1140,23 @@ msgid "Раздел в разработке"
 msgstr "Section in progress"
 
 #: templates/core/year_detail.html:5
+#, python-format
 msgid "Фотографии %(year)s года в архиве SportMemo."
 msgstr "Photos from %(year)s in the SportMemo archive."
 
 #: templates/core/year_detail.html:18
+#, python-format
 msgid "Найдена %(counter)s фотография"
 msgid_plural "Найдено %(counter)s фотографий"
 msgstr[0] "Found %(counter)s photo"
 msgstr[1] "Found %(counter)s photos"
 
-#: templates/core/year_detail.html:32
+#: templates/core/year_detail.html:27
 msgid "Фотографий за этот год нет"
 msgstr "There are no photos for this year"
 
 #: templates/core/year_list.html:5
 msgid "Хронология архива SportMemo: годы и фотографии каждого года."
-"Archive navigation will appear here: all years and the photos of each year."
 msgstr "The SportMemo archive timeline: years and the photos of each year."
 
 #: templates/core/year_list.html:16
@@ -1213,3 +1225,68 @@ msgstr "Previous"
 #: templates/partials/pagination.html:45 templates/partials/pagination.html:52
 msgid "Вперёд"
 msgstr "Next"
+
+#: templates/photos/partials/grid.html:13
+#, python-brace-format
+msgid "Загружено ещё {count} фото"
+msgstr "Loaded {count} more photos"
+
+#: templates/photos/partials/grid.html:14
+msgid "Это все фотографии"
+msgstr "These are all the photos"
+
+#: templates/photos/partials/grid.html:15
+msgid "Не удалось загрузить фотографии. Ссылка работает как обычная."
+msgstr "Could not load the photos. The link still works as a normal link."
+
+#: templates/photos/partials/grid_items.html:22
+msgid "Показать ещё"
+msgstr "Show more"
+
+#: templates/photos/photo_detail.html:5
+msgid "Фотография из архива SportMemo"
+msgstr "A photo from the SportMemo archive"
+
+#: templates/photos/photo_detail.html:42
+msgid "Год"
+msgstr "Year"
+
+#: templates/photos/photo_detail.html:48
+msgid "Дата съёмки"
+msgstr "Date taken"
+
+#: templates/photos/photo_detail.html:52
+msgid "Команда"
+msgstr "Team"
+
+#: templates/photos/photo_detail.html:56
+msgid "Событие"
+msgstr "Event"
+
+#: templates/photos/photo_detail.html:59
+msgid "Просмотров"
+msgstr "Views"
+
+#: templates/photos/photo_detail.html:65
+msgid "Источник"
+msgstr "Source"
+
+#: templates/photos/photo_detail.html:67
+msgid "Тип"
+msgstr "Type"
+
+#: templates/photos/photo_detail.html:70
+msgid "Издание"
+msgstr "Publication"
+
+#: templates/photos/photo_detail.html:74
+msgid "Дата источника"
+msgstr "Source date"
+
+#: templates/photos/photo_detail.html:78
+msgid "Владелец оригинала"
+msgstr "Original owner"
+
+#: templates/photos/photo_detail.html:87
+msgid "Люди на фото"
+msgstr "People in the photo"

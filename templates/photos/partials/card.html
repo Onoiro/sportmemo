@@ -1,6 +1,9 @@
 {% load i18n %}
-{# Карточка фото. В 2.2 намеренно не кликабельна: страница фото появляется в 2.4. #}
-<article class="photo-card">
+{% comment %}
+Карточка фото. Кликабельна целиком: внутри нет других ссылок,
+поэтому вложенные интерактивные элементы не мешают друг другу.
+{% endcomment %}
+<a class="photo-card" href="{{ photo.get_absolute_url }}">
     {% if photo.thumbnail %}
         <img class="photo-card__image" src="{{ photo.thumbnail.url }}" alt="{{ photo.title }}"
              width="{{ photo.width|default:400 }}" height="{{ photo.height|default:300 }}"
@@ -22,5 +25,15 @@
         {% if photo.caption %}
             <p class="photo-card__caption">{{ photo.caption }}</p>
         {% endif %}
+        {% if photo.team or photo.event %}
+            <p class="photo-card__meta">
+                {% if photo.team %}
+                    <span><i class="bi bi-people" aria-hidden="true"></i> {{ photo.team.name }}</span>
+                {% endif %}
+                {% if photo.event %}
+                    <span><i class="bi bi-trophy" aria-hidden="true"></i> {{ photo.event.name }}</span>
+                {% endif %}
+            </p>
+        {% endif %}
     </div>
-</article>
+</a>

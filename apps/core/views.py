@@ -2,17 +2,25 @@
 
 from django.db import connection
 from django.db.models import Count
-from django.http import Http404, JsonResponse
+from django.http import Http404, JsonResponse, QueryDict
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from apps.core.shortcuts import archive_stats, paginate, visible_photos
+from apps.core.shortcuts import (
+    PHOTO_ORDERING,
+    PHOTO_PAGE_SIZE,
+    archive_stats,
+    paginate,
+    visible_photos,
+)
 
 HOME_PHOTO_LIMIT = 12
-YEAR_PHOTO_LIMIT = 24
+# Размер порции галереи года: общий с htmx-фрагментом, иначе «показать ещё»
+# подмешает фото, которых на странице не было.
+YEAR_PHOTO_LIMIT = PHOTO_PAGE_SIZE
 
 
 @require_GET
@@ -38,7 +46,11 @@ def home(request):
     """Главная страница: поиск, статистика и последние фото."""
     context = {
         "stats": archive_stats(),
-        "latest_photos": visible_photos().order_by("-created_at")[:HOME_PHOTO_LIMIT],
+        "latest_photos": (
+            visible_photos()
+            .select_related("team", "event")
+            .order_by("-created_at")[:HOME_PHOTO_LIMIT]
+        ),
     }
     return render(request, "core/home.html", context)
 
@@ -80,13 +92,20 @@ def year_detail(request, year):
     Года без видимых фото в архиве не существует: отдаём 404, а не пустую
     страницу — иначе поисковики проиндексируют бесконечные пустые годы.
     """
-    photos = visible_photos().filter(year=year)
+    photos = visible_photos().filter(year=year).select_related("team", "event")
     if not photos.exists():
         raise Http404("Год не найден в архиве")
 
     context = {
         "year": year,
-        "page_obj": paginate(request, photos.order_by("-created_at"), YEAR_PHOTO_LIMIT),
+        # Порядок и размер порции обязаны совпадать с htmx-фрагментом:
+        # вторая порция подгружается отдельным запросом.
+        "page_obj": paginate(
+            request, photos.order_by(*PHOTO_ORDERING), PHOTO_PAGE_SIZE
+        ),
+        # Год не лежит в `request.GET`, поэтому фильтр для кнопки
+        # «показать ещё» передаётся в галерею явно.
+        "gallery_query": QueryDict(f"year={year}"),
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},
             {"url": reverse("core:year_list"), "label": _("Годы")},

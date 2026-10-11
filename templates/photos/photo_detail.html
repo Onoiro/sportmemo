@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% if photo.title %}{{ photo.title }}{% else %}{% trans "Фотография" %}{% endif %} — {{ SPORTMEMO_SITE_NAME }}{% endblock %}
+{% block description %}{% if photo.caption %}{{ photo.caption }}{% elif photo.title %}{{ photo.title }}{% else %}{% trans "Фотография из архива SportMemo" %}{% endif %}{% endblock %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <article class="photo-detail">
+        <figure class="photo-detail__figure">
+            {% if photo.preview %}
+                {% comment %}
+                Главная картинка страницы: без `loading="lazy"` —
+                отложенная загрузка задержала бы её появление.
+                {% endcomment %}
+                <img class="photo-detail__image" src="{{ photo.preview.url }}"
+                     alt="{{ photo.title }}"
+                     width="{{ photo.width|default:1280 }}"
+                     height="{{ photo.height|default:960 }}"
+                     decoding="async">
+            {% else %}
+                <div class="photo-detail__placeholder">
+                    <i class="bi bi-image" aria-hidden="true"></i>
+                </div>
+            {% endif %}
+            {% if photo.caption %}
+                <figcaption class="photo-detail__caption">{{ photo.caption }}</figcaption>
+            {% endif %}
+        </figure>
+
+        <div class="photo-detail__meta">
+            {% if photo.title %}
+                <h1 class="photo-detail__title">{{ photo.title }}</h1>
+            {% else %}
+                <h1 class="photo-detail__title">{% trans "Фотография" %}</h1>
+            {% endif %}
+
+            <dl class="photo-detail__facts">
+                {% if photo.year %}
+                    <dt>{% trans "Год" %}</dt>
+                    <dd>
+                        <a href="{% url 'core:year_detail' photo.year %}">{{ photo.year }}</a>
+                    </dd>
+                {% endif %}
+                {% if photo.taken_date %}
+                    <dt>{% trans "Дата съёмки" %}</dt>
+                    <dd>{{ photo.taken_date }}</dd>
+                {% endif %}
+                {% if photo.team %}
+                    <dt>{% trans "Команда" %}</dt>
+                    <dd>{{ photo.team.name }}</dd>
+                {% endif %}
+                {% if photo.event %}
+                    <dt>{% trans "Событие" %}</dt>
+                    <dd>{{ photo.event.name }}</dd>
+                {% endif %}
+                <dt>{% trans "Просмотров" %}</dt>
+                <dd>{{ photo.views_count }}</dd>
+            </dl>
+
+            {% if photo.source %}
+                <section class="photo-detail__section">
+                    <h2 class="photo-detail__section-title h5">{% trans "Источник" %}</h2>
+                    <dl class="photo-detail__facts">
+                        <dt>{% trans "Тип" %}</dt>
+                        <dd>{{ photo.source.get_kind_display }}</dd>
+                        {% if photo.source.publication %}
+                            <dt>{% trans "Издание" %}</dt>
+                            <dd>{{ photo.source.publication }}</dd>
+                        {% endif %}
+                        {% if photo.source.date %}
+                            <dt>{% trans "Дата источника" %}</dt>
+                            <dd>{{ photo.source.date }}</dd>
+                        {% endif %}
+                        {% if photo.source.holder %}
+                            <dt>{% trans "Владелец оригинала" %}</dt>
+                            <dd>{{ photo.source.holder }}</dd>
+                        {% endif %}
+                    </dl>
+                </section>
+            {% endif %}
+
+            {% if photo_persons %}
+                <section class="photo-detail__section">
+                    <h2 class="photo-detail__section-title h5">{% trans "Люди на фото" %}</h2>
+                    <ul class="person-list">
+                        {% for link in photo_persons %}
+                            <li class="person-list__item">
+                                <span class="person-list__name">{{ link.person.public_name }}</span>
+                                <span class="person-list__role">{{ link.get_role_display }}</span>
+                                {% if link.position %}
+                                    <span class="person-list__position">{{ link.position }}</span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </section>
+            {% endif %}
+        </div>
+    </article>
+</div>
+{% endblock %}

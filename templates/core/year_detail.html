@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n pagination %}
+{% load i18n %}
 
 {% block title %}{% blocktranslate with year=year %}{{ year }} год{% endblocktranslate %} — {{ SPORTMEMO_SITE_NAME }}{% endblock %}
 {% block description %}{% blocktranslate with year=year %}Фотографии {{ year }} года в архиве SportMemo.{% endblocktranslate %}{% endblock %}
@@ -20,12 +20,7 @@
     </header>
 
     {% if page_obj.object_list %}
-        <div class="photo-grid">
-            {% for photo in page_obj %}
-                {% include "photos/partials/card.html" %}
-            {% endfor %}
-        </div>
-        {% pagination page_obj %}
+        {% include "photos/partials/grid.html" with photos=page_obj page_obj=page_obj gallery_query=gallery_query %}
     {% else %}
         <div class="empty-state">
             <i class="bi bi-images empty-state__icon" aria-hidden="true"></i>

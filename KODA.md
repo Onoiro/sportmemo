@@ -61,7 +61,7 @@ Docker Compose + Nginx (инфраструктура).
 | `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, миксины админки (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, команда `seed_demo`, публичные выборки (`shortcuts.py`), публичные представления (главная, годы, поиск), тег пагинации, `core/urls.py` |
 | `apps/accounts` | кастомный `User` (email как `USERNAME_FIELD`), согласия, роли, связь с `Person` |
 | `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam`, `catalog/urls.py` с заглушками списков |
-| `apps/photos` | `Source`, `Photo`, `PhotoPerson` |
+| `apps/photos` | `Source`, `Photo`, `PhotoPerson`, публичные представления (страница фото, фрагмент галереи), `photos/urls.py` |
 | `apps/comments` | `Comment` (generic FK, ответы) |
 | `apps/moderation` | `Report`, `ModerationAction` |
 
@@ -141,9 +141,9 @@ Docker Compose + Nginx (инфраструктура).
 
 **Этап 2 разбит на 15 подэтапов** — по одной сессии на каждый. Детальный план подэтапа
 создаётся отдельным файлом при старте работы (`plans/public-archive-2.N-<имя>.md`).
-Порядок и состав подэтапов — в мастер-плане. Подэтапы 2.1 (демо-данные), 2.2 (каркас публичного UI) и 2.3 (публичные выборки и списки)
-завершены; следующий — 2.4 (компонент галереи), план утверждён:
-`.koda/plans/public-archive-2.4-photo-gallery.md`.
+Порядок и состав подэтапов — в мастер-плане. Подэтапы 2.1 (демо-данные), 2.2 (каркас публичного UI),
+2.3 (публичные выборки и списки) и 2.4 (компонент галереи) завершены; следующий —
+2.5 (страницы команды и события).
 
 ## Отложено осознанно
 
@@ -152,12 +152,12 @@ UI, «конструктор видов спорта». Обработка фо�
 
 ## Текущее состояние
 
-- Версия: 0.3.0
+- Версия: 0.4.0
 - Ветка разработки: `master`
 - Этап: 1 (фундамент репозитория и модель данных) — **завершён**;
   этап 2 (публичный архив) — **в работе**, подэтапы 2.1 (демо-данные), 2.2 (каркас
-  публичного UI) и 2.3 (публичные выборки и списки) завершены
-- Тесты: 230, проходят на Python 3.12 и 3.13 (`make test`), линтер чист (`make lint`)
+  публичного UI), 2.3 (публичные выборки и списки) и 2.4 (компонент галереи) завершены
+- Тесты: 282, проходят на Python 3.12 и 3.13 (`make test`), линтер чист (`make lint`)
 
 ### Что уже есть
 
@@ -166,7 +166,7 @@ UI, «конструктор видов спорта». Обработка фо�
 | `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, миксины админки (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, команда `seed_demo`, публичные выборки (`shortcuts.py`), публичные представления (главная, годы, поиск), тег пагинации, `core/urls.py` |
 | `apps/accounts` | `User` по email, `UserManager`, согласия (terms/privacy/152-ФЗ + версия), роли, связь `User.person`, форма регистрации с согласиями, адаптер allauth |
 | `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam`, `catalog/urls.py` с заглушками списков |
-| `apps/photos` | `Source`, `Photo` (права, `processing_status`, `phash`, `duplicate_of`), `PhotoPerson`, превью через `ImageSpecField` |
+| `apps/photos` | `Source`, `Photo` (права, `processing_status`, `phash`, `duplicate_of`), `PhotoPerson`, превью через `ImageSpecField`, страница фото и фрагмент галереи |
 | `apps/comments` | `Comment` (generic FK, ответы, статусы) |
 | `apps/moderation` | `Report`, `ModerationAction` (журнал решений модератора) |
 
@@ -177,11 +177,14 @@ CI (`.github/workflows/ci.yml`: ruff, проверка миграций, pytest 
 ### Публичный интерфейс
 
 - `templates/base.html` и партиалы (`navbar.html`, `footer.html`, `breadcrumbs.html`,
-  `messages.html`), карточка фото `templates/photos/partials/card.html`, страницы ошибок
-  `templates/404.html` и `templates/500.html`.
+  `messages.html`), партиалы галереи (`templates/photos/partials/grid.html` и `grid_items.html`),
+  страницы ошибок `templates/404.html` и `templates/500.html`.
 - Тема: `static/css/sportmemo.css` и `static/js/theme.js` — светлая сепия по умолчанию
   и тёмный вариант; выбор в `localStorage`. Инлайн-скрипт в `<head>` ставит тему
   до отрисовки, поэтому мигания при загрузке нет.
+- Галерея: `static/js/gallery.js` добавляет `aria-busy` и сообщения в `aria-live` к кнопке
+  «показать ещё». Скрипт подключается после htmx; без JavaScript кнопка остаётся обычной
+  ссылкой.
 - Фронтенд-библиотеки лежат в репозитории (`static/vendor/`: Bootstrap 5, Bootstrap Icons,
   htmx, Alpine.js). CDN не используем: версии, лицензии и контрольные суммы —
   в `static/vendor/README.md`.
@@ -198,6 +201,21 @@ CI (`.github/workflows/ci.yml`: ruff, проверка миграций, pytest 
 - Списки `/teams/` (24 на страницу), `/events/` (20), `/years/` и `/years/<год>/` (24 фото)
   отдают только видимое. Список годов считается из видимых фото — тот же источник, что
   и счётчик «лет в архиве» на главной.
+- Сетка фото — один компонент (`templates/photos/partials/grid.html` + `grid_items.html`),
+  общий для главной, страницы года и htmx-фрагмента. «Показать ещё» дописывает следующую
+  порцию в конец сетки без перезагрузки: фрагмент `photos:grid` отдаёт только карточки
+  и контейнер кнопки, а на последней странице — пустой контейнер с `hx-swap-oob`, и кнопка
+  исчезает. Без JavaScript та же кнопка работает обычной ссылкой `?page=N`.
+- Размер порции (24) и порядок карточек общие для страницы года и фрагмента
+  (`PHOTO_PAGE_SIZE`, `PHOTO_ORDERING` в `apps/core/shortcuts.py`): разойдутся — «показать
+  ещё» начнёт пропускать или повторять фото. Страницы, где фильтр не лежит в `request.GET`
+  (страница года), передают его в галерею явно — задел для фильтров каталога в 2.15.
+- `/photos/<pk>/` открывается анонимно для опубликованного фото с подтверждёнными правами.
+  Черновик и фото без подтверждённых прав видит только автор (`uploaded_by`) и модератор —
+  отсев делает `get_visible_or_404`. Названия команды, события и человека выводятся текстом:
+  их страницы появятся в 2.5 и 2.6. Счётчик просмотров растёт при каждом открытии атомарным
+  `update(views_count=F("views_count") + 1)`, а не `save()`, — иначе каждое открытие
+  страницы писало бы запись в историю.
 - Разделы, которых ещё нет (`/search/`), отдают общий шаблон-заглушку; настоящий поиск
   появится в подэтапе 2.13.
 - `apps/core/migrations/0003_site_domain.py` задаёт домен `django.contrib.sites` —
@@ -227,9 +245,14 @@ CI (`.github/workflows/ci.yml`: ruff, проверка миграций, pytest 
   не попадают ни на одной странице.
 - Новая публичная страница берёт выборку через `apps/core/shortcuts.py`, а не собирает
   цепочку `public.published()` вручную: правило отсева должно быть в одном месте.
+- Счётчик просмотров фото растёт через `QuerySet.update()`, а не `save()`: `save()` писал бы
+  запись в историю при каждом открытии страницы и засорил бы журнал.
 - Строки интерфейса — только через `gettext`. После добавления строк выполняется `make i18n`;
   `makemessages` помечает новые строки `fuzzy`, если нашёл похожую старую, а `msgfmt`
   пропускает fuzzy — после извлечения проверяйте fuzzy-блоки и снимайте флаги.
+- Комментарии в шаблонах — только `{% comment %}...{% endcomment %}`. `{# ... #}` в Django
+  работает в пределах **одной строки**: закрывающая `#}` на следующей строке не распознаётся,
+  и текст комментария попадает в HTML.
 - `django-imagekit` кэширует факт «превью существует» в Django-кэше. В тестах `MEDIA_ROOT`
   у каждого теста свой, поэтому в `tests/conftest.py` есть фикстура `cleared_cache` —
   без неё тесты превью падают на чтении чужого файла.

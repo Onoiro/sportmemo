@@ -11,6 +11,7 @@ urlpatterns = [
     path("healthz/", healthz, name="healthz"),
     path("", include("apps.core.urls")),
     path("", include("apps.catalog.urls")),
+    path("", include("apps.photos.urls")),
     path("admin/", admin.site.urls),
     path("accounts/", include("allauth.urls")),
 ]

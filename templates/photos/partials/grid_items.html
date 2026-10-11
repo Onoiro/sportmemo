@@ -1,0 +1,30 @@
+{% load i18n %}
+{% comment %}
+Карточки галереи и кнопка «показать ещё». Партиал используется дважды:
+как часть страницы (`grid.html`) и как ответ htmx-фрагмента. Во втором
+случае `oob` добавляет `hx-swap-oob`, и контейнер кнопки заменяется
+целиком — так кнопка исчезает, когда фотографии закончились.
+{% endcomment %}
+{% for photo in photos %}
+    {% include "photos/partials/card.html" %}
+{% endfor %}
+{% if page_obj %}
+    <div id="gallery-more" class="photo-gallery__more"{% if oob %} hx-swap-oob="outerHTML:#gallery-more"{% endif %}>
+        {% if page_obj.has_next %}
+            {% comment %}
+            Две ссылки на одну кнопку. `href` работает без JS: тот же
+            адрес с другим `page` отдаёт следующую порцию. `hx-get` ведёт
+            на фрагмент и дописывает карточки в конец сетки.
+            `gallery_query` несёт фильтры, которых нет в `request.GET`
+            (страница года).
+            {% endcomment %}
+            <a class="btn btn-outline-primary"
+               href="{% querystring page=page_obj.next_page_number %}"
+               hx-get="{% url 'photos:grid' %}{% querystring gallery_query|default:request.GET page=page_obj.next_page_number %}"
+               hx-target="#photo-grid" hx-swap="beforeend">
+                <span class="spinner-border spinner-border-sm htmx-indicator me-1" aria-hidden="true"></span>
+                {% trans "Показать ещё" %}
+            </a>
+        {% endif %}
+    </div>
+{% endif %}

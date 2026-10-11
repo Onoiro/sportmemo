@@ -1,6 +1,8 @@
 {% load i18n %}
-{# Пагинация. `{% querystring page=N %}` из Django 5.2 сохраняет остальные
-   query-параметры (фильтры), меняя только `page`. #}
+{% comment %}
+Пагинация. `{% querystring page=N %}` из Django 5.2 сохраняет остальные
+query-параметры (фильтры), меняя только `page`.
+{% endcomment %}
 {% if page_obj.paginator.num_pages > 1 %}
     <nav class="mt-4" aria-label="{% trans "Постраничная навигация" %}">
         <ul class="pagination justify-content-center">

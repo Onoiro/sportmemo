@@ -66,11 +66,7 @@
     <section class="mb-5">
         <h2 class="h4 mb-3">{% trans "Последние фотографии" %}</h2>
         {% if latest_photos %}
-            <div class="photo-grid">
-                {% for photo in latest_photos %}
-                    {% include "photos/partials/card.html" %}
-                {% endfor %}
-            </div>
+            {% include "photos/partials/grid.html" with photos=latest_photos %}
         {% else %}
             <div class="empty-state">
                 <i class="bi bi-images empty-state__icon" aria-hidden="true"></i>
