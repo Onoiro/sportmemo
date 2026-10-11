@@ -1,0 +1,25 @@
+{% load i18n %}
+{# Карточка события. В 2.3 намеренно не кликабельна: страница события
+   появляется в 2.5. #}
+<article class="entity-card">
+    <div class="entity-card__body">
+        <span class="badge-status">{{ event.get_event_type_display }}</span>
+        <h2 class="entity-card__title">{{ event.name }}</h2>
+        <p class="entity-card__meta">
+            {% if event.year %}
+                <span><i class="bi bi-calendar3" aria-hidden="true"></i> {{ event.year }}</span>
+            {% else %}
+                <span>{% trans "год не указан" %}</span>
+            {% endif %}
+            {% if event.city %}
+                <span><i class="bi bi-geo-alt" aria-hidden="true"></i> {{ event.city }}</span>
+            {% endif %}
+            <span><i class="bi bi-images" aria-hidden="true"></i>
+                {% blocktranslate count counter=event.photos_total %}{{ counter }} фото{% plural %}{{ counter }} фото{% endblocktranslate %}
+            </span>
+        </p>
+        {% if event.description %}
+            <p class="entity-card__text">{{ event.description }}</p>
+        {% endif %}
+    </div>
+</article>

@@ -1,4 +1,4 @@
-"""Тесты публичных выборок: `published()` и `visible()`.
+"""Тесты публичных выборок: `published()`, `visible()` и хелперы.
 
 Правило проекта: наружу отдаём только опубликованное, без удалённых
 и слитых объектов, а фото — только с подтверждёнными правами.
@@ -8,6 +8,7 @@ import pytest
 
 from apps.catalog.models import Team
 from apps.core.models import Status
+from apps.core.shortcuts import archive_stats, visible_photos
 from apps.photos.models import Photo
 from tests.factories import PhotoFactory, TeamFactory
 
@@ -74,3 +75,35 @@ class TestVisible:
         photo.soft_delete()
 
         assert not Photo.public.published().visible().filter(pk=photo.pk).exists()
+
+
+class TestShortcutQueries:
+    def test_visible_photos_is_the_public_chain(self, photo):
+        PhotoFactory(rights_confirmed=False)
+        PhotoFactory(status=Status.DRAFT)
+
+        assert list(visible_photos()) == [photo]
+
+    def test_archive_stats_count_only_public_objects(self, baseball, user, photo):
+        TeamFactory(sport=baseball, created_by=user, status=Status.PUBLISHED)
+        TeamFactory(sport=baseball, created_by=user, status=Status.DRAFT)
+        PhotoFactory(year=1994, rights_confirmed=False)
+
+        stats = archive_stats()
+
+        assert stats["teams"] == 1
+        assert stats["photos"] == 1
+        assert stats["years"] == 0
+
+    def test_archive_stats_years_match_year_list_source(self, photo):
+        photo.year = 1994
+        photo.save(update_fields=["year"])
+
+        assert (
+            archive_stats()["years"]
+            == visible_photos()
+            .exclude(year__isnull=True)
+            .values("year")
+            .distinct()
+            .count()
+        )

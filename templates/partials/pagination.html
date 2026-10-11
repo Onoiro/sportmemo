@@ -1,0 +1,58 @@
+{% load i18n %}
+{# Пагинация. `{% querystring page=N %}` из Django 5.2 сохраняет остальные
+   query-параметры (фильтры), меняя только `page`. #}
+{% if page_obj.paginator.num_pages > 1 %}
+    <nav class="mt-4" aria-label="{% trans "Постраничная навигация" %}">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="{% querystring page=page_obj.previous_page_number %}"
+                       rel="prev">
+                        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                        <span class="visually-hidden">{% trans "Назад" %}</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">
+                        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                        <span class="visually-hidden">{% trans "Назад" %}</span>
+                    </span>
+                </li>
+            {% endif %}
+
+            {% for num in page_range %}
+                {% if num == page_obj.number %}
+                    <li class="page-item active" aria-current="page">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num == page_obj.paginator.ELLIPSIS %}
+                    <li class="page-item disabled">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="{% querystring page=num %}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{% querystring page=page_obj.next_page_number %}"
+                       rel="next">
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                        <span class="visually-hidden">{% trans "Вперёд" %}</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                        <span class="visually-hidden">{% trans "Вперёд" %}</span>
+                    </span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endif %}

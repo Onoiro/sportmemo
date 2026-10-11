@@ -1,0 +1,22 @@
+{% load i18n %}
+{# Карточка команды. В 2.3 намеренно не кликабельна: страница команды
+   появляется в 2.5. #}
+<article class="entity-card">
+    <div class="entity-card__body">
+        <h2 class="entity-card__title">{{ team.name }}</h2>
+        <p class="entity-card__meta">
+            {% if team.city %}
+                <span><i class="bi bi-geo-alt" aria-hidden="true"></i> {{ team.city }}</span>
+            {% endif %}
+            {% if team.founded_year %}
+                <span><i class="bi bi-calendar3" aria-hidden="true"></i> {% blocktranslate with year=team.founded_year %}осн. {{ year }}{% endblocktranslate %}</span>
+            {% endif %}
+            <span><i class="bi bi-images" aria-hidden="true"></i>
+                {% blocktranslate count counter=team.photos_total %}{{ counter }} фото{% plural %}{{ counter }} фото{% endblocktranslate %}
+            </span>
+        </p>
+        {% if team.description %}
+            <p class="entity-card__text">{{ team.description }}</p>
+        {% endif %}
+    </div>
+</article>

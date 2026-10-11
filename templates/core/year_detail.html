@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load i18n pagination %}
+
+{% block title %}{% blocktranslate with year=year %}{{ year }} год{% endblocktranslate %} — {{ SPORTMEMO_SITE_NAME }}{% endblock %}
+{% block description %}{% blocktranslate with year=year %}Фотографии {{ year }} года в архиве SportMemo.{% endblocktranslate %}{% endblock %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1 class="page-header__title">
+            {% blocktranslate with year=year %}{{ year }} год{% endblocktranslate %}
+        </h1>
+        <p class="page-header__lead">
+            {% blocktranslate count counter=page_obj.paginator.count %}Найдена {{ counter }} фотография{% plural %}Найдено {{ counter }} фотографий{% endblocktranslate %}
+        </p>
+    </header>
+
+    {% if page_obj.object_list %}
+        <div class="photo-grid">
+            {% for photo in page_obj %}
+                {% include "photos/partials/card.html" %}
+            {% endfor %}
+        </div>
+        {% pagination page_obj %}
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-images empty-state__icon" aria-hidden="true"></i>
+            <p class="empty-state__title">{% trans "Фотографий за этот год нет" %}</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

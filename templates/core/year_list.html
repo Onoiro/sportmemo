@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Годы" %} — {{ SPORTMEMO_SITE_NAME }}{% endblock %}
+{% block description %}{% trans "Хронология архива SportMemo: годы и фотографии каждого года." %}{% endblock %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1 class="page-header__title">{% trans "Годы" %}</h1>
+        <p class="page-header__lead">
+            {% trans "Хронология архива: выберите год, чтобы увидеть его фотографии." %}
+        </p>
+    </header>
+
+    {% if years %}
+        <div class="year-grid">
+            {% for item in years %}
+                <a class="year-tile" href="{% url 'core:year_detail' item.year %}">
+                    <span class="year-tile__year">{{ item.year }}</span>
+                    <span class="year-tile__count">
+                        {% blocktranslate count counter=item.total %}{{ counter }} фото{% plural %}{{ counter }} фото{% endblocktranslate %}
+                    </span>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-calendar3 empty-state__icon" aria-hidden="true"></i>
+            <p class="empty-state__title">{% trans "В архиве пока нет фотографий" %}</p>
+            <p class="mb-0">
+                {% trans "Годы появятся здесь, когда фотографии добавят и опубликуют." %}
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

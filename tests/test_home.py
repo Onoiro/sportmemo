@@ -15,9 +15,6 @@ from tests.factories import PhotoFactory, TeamFactory
 pytestmark = pytest.mark.django_db
 
 PLACEHOLDERS = [
-    ("catalog:team_list", "/teams/"),
-    ("catalog:event_list", "/events/"),
-    ("core:year_list", "/years/"),
     ("core:search", "/search/"),
 ]
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-11 14:12+0300\n"
+"POT-Creation-Date: 2026-10-11 15:07+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -395,23 +395,23 @@ msgstr "team participation"
 msgid "участие команд"
 msgstr "team participation"
 
-#: apps/catalog/views.py:16 templates/core/home.html:48
+#: apps/catalog/views.py:45 apps/catalog/views.py:67 apps/core/views.py:70
+#: apps/core/views.py:91 templates/core/placeholder.html:9
+#: templates/partials/footer.html:20
+msgid "Главная"
+msgstr "Home"
+
+#: apps/catalog/views.py:46 templates/catalog/team_list.html:4
+#: templates/catalog/team_list.html:14 templates/core/home.html:48
 #: templates/partials/footer.html:12 templates/partials/navbar.html:14
 msgid "Команды"
 msgstr "Teams"
 
-#: apps/catalog/views.py:17
-msgid "Здесь появится список команд архива с фильтрами по городу и году."
-msgstr "The list of archive teams with filters by city and year will appear here."
-
-#: apps/catalog/views.py:25 templates/partials/footer.html:13
+#: apps/catalog/views.py:68 templates/catalog/event_list.html:4
+#: templates/catalog/event_list.html:14 templates/partials/footer.html:13
 #: templates/partials/navbar.html:17
 msgid "События"
 msgstr "Events"
-
-#: apps/catalog/views.py:26
-msgid "Здесь появится список турниров, серий и товарищеских встреч."
-msgstr "The list of tournaments, series and friendly games will appear here."
 
 #: apps/comments/admin.py:38
 msgid "Объект"
@@ -585,21 +585,23 @@ msgstr "sort order"
 msgid "виды спорта"
 msgstr "sports"
 
-#: apps/core/views.py:84 templates/core/home.html:57
+#: apps/core/views.py:71 apps/core/views.py:92 templates/core/home.html:57
+#: templates/core/year_list.html:4 templates/core/year_list.html:14
 #: templates/partials/footer.html:14 templates/partials/navbar.html:20
 msgid "Годы"
 msgstr "Years"
 
-#: apps/core/views.py:85
-msgid "Здесь появится навигация по архиву: все годы и фотографии каждого года."
-msgstr "Archive navigation will appear here: all years and the photos of each year."
+#: apps/core/views.py:93 templates/core/year_detail.html:4
+#: templates/core/year_detail.html:15
+msgid "%(year)s год"
+msgstr "%(year)s"
 
-#: apps/core/views.py:92 templates/partials/footer.html:21
+#: apps/core/views.py:102 templates/partials/footer.html:21
 #: templates/partials/navbar.html:29
 msgid "Поиск"
 msgstr "Search"
 
-#: apps/core/views.py:93
+#: apps/core/views.py:103
 msgid "Здесь появится поиск по командам, событиям, людям и фотографиям."
 msgstr "Search across teams, events, people and photos will appear here."
 
@@ -940,7 +942,9 @@ msgstr "Page not found"
 #: templates/404.html:16
 msgid ""
 "Возможно, ссылка устарела или в адресе опечатка. Попробуйте поиск по архиву."
-msgstr "The link may be outdated, or there is a typo in the address. Try the archive search."
+msgstr ""
+"The link may be outdated, or there is a typo in the address. Try the archive "
+"search."
 
 #: templates/404.html:20 templates/500.html:20
 #: templates/core/placeholder.html:35
@@ -954,7 +958,9 @@ msgstr "Server error"
 #: templates/500.html:16
 msgid ""
 "Что-то сломалось на нашей стороне. Мы уже знаем о проблеме и починим её."
-msgstr "Something broke on our side. We already know about the problem and will fix it."
+msgstr ""
+"Something broke on our side. We already know about the problem and will fix "
+"it."
 
 #: templates/admin/core/merge_form.html:6
 msgid "Home"
@@ -966,7 +972,10 @@ msgid ""
 "Будет слито объектов: %(count)s. Связи (фото, состав, события) будут "
 "перенесены в целевой объект, а источники помечены как удалённые. Операция "
 "обратима через историю изменений."
-msgstr "Objects to merge: %(count)s. Relations (photos, roster, events) will be moved to the target object, and the sources will be marked as deleted. The operation can be undone through the change history."
+msgstr ""
+"Objects to merge: %(count)s. Relations (photos, roster, events) will be "
+"moved to the target object, and the sources will be marked as deleted. The "
+"operation can be undone through the change history."
 
 #: templates/admin/core/merge_form.html:20
 msgid "Объекты к слиянию"
@@ -996,6 +1005,59 @@ msgstr "Cancel"
 msgid "Публичный архив спортивных фотографий: команды, события, люди"
 msgstr "A public archive of sports photos: teams, events, people"
 
+#: templates/catalog/event_list.html:5
+msgid "Турниры, серии и товарищеские встречи в архиве SportMemo."
+msgstr "Tournaments, series and friendly games in the SportMemo archive."
+
+#: templates/catalog/event_list.html:16
+msgid "Найдено %(counter)s событие"
+msgid_plural "Найдено %(counter)s событий"
+msgstr[0] "Found %(counter)s event"
+msgstr[1] "Found %(counter)s events"
+
+#: templates/catalog/event_list.html:30
+msgid "В архиве пока нет событий"
+msgstr "There are no events in the archive yet"
+
+#: templates/catalog/event_list.html:32
+msgid "События появятся здесь, когда их добавят и опубликуют."
+msgstr "Events will appear here once they are added and published."
+
+#: templates/catalog/partials/event_card.html:12
+#: templates/photos/partials/card.html:17
+msgid "год не указан"
+msgstr "year not set"
+
+#: templates/catalog/partials/event_card.html:18
+#: templates/catalog/partials/team_card.html:15
+#: templates/core/year_list.html:26
+msgid "%(counter)s фото"
+msgid_plural "%(counter)s фото"
+msgstr[0] "%(counter)s photo"
+msgstr[1] "%(counter)s photos"
+
+#: templates/catalog/partials/team_card.html:12
+msgid "осн. %(year)s"
+msgstr "founded %(year)s"
+
+#: templates/catalog/team_list.html:5
+msgid "Команды архива SportMemo: города, годы основания и фотографии."
+msgstr "Teams in the SportMemo archive: cities, founding years and photos."
+
+#: templates/catalog/team_list.html:16
+msgid "Найдена %(counter)s команда"
+msgid_plural "Найдено %(counter)s команд"
+msgstr[0] "Found %(counter)s team"
+msgstr[1] "Found %(counter)s teams"
+
+#: templates/catalog/team_list.html:30
+msgid "В архиве пока нет команд"
+msgstr "There are no teams in the archive yet"
+
+#: templates/catalog/team_list.html:32
+msgid "Команды появятся здесь, когда их добавят и опубликуют."
+msgstr "Teams will appear here once they are added and published."
+
 #: templates/core/home.html:4
 msgid "архив спортивных фотографий"
 msgstr "sports photo archive"
@@ -1004,7 +1066,9 @@ msgstr "sports photo archive"
 msgid ""
 "Архив спортивных фотографий: команды, турниры и люди. Бейсбол в России — от "
 "дворовых секций до ветеранских встреч."
-msgstr "An archive of sports photos: teams, tournaments and people. Baseball in Russia — from yard teams to veteran games."
+msgstr ""
+"An archive of sports photos: teams, tournaments and people. Baseball in "
+"Russia — from yard teams to veteran games."
 
 #: templates/core/home.html:16 templates/partials/navbar.html:27
 msgid "Поиск по архиву"
@@ -1054,23 +1118,53 @@ msgstr "Photos will appear here once they are added and published."
 msgid "Хлебные крошки"
 msgstr "Breadcrumbs"
 
-#: templates/core/placeholder.html:9 templates/partials/footer.html:20
-msgid "Главная"
-msgstr "Home"
-
 #: templates/core/placeholder.html:20
 msgid "Раздел появится позже — каркас сайта уже готов, наполнение в работе."
-msgstr "This section comes later — the site framework is ready, the content is in progress."
+msgstr ""
+"This section comes later — the site framework is ready, the content is in "
+"progress."
 
 #: templates/core/placeholder.html:26
 msgid "Раздел в разработке"
 msgstr "Section in progress"
 
+#: templates/core/year_detail.html:5
+msgid "Фотографии %(year)s года в архиве SportMemo."
+msgstr "Photos from %(year)s in the SportMemo archive."
+
+#: templates/core/year_detail.html:18
+msgid "Найдена %(counter)s фотография"
+msgid_plural "Найдено %(counter)s фотографий"
+msgstr[0] "Found %(counter)s photo"
+msgstr[1] "Found %(counter)s photos"
+
+#: templates/core/year_detail.html:32
+msgid "Фотографий за этот год нет"
+msgstr "There are no photos for this year"
+
+#: templates/core/year_list.html:5
+msgid "Хронология архива SportMemo: годы и фотографии каждого года."
+"Archive navigation will appear here: all years and the photos of each year."
+msgstr "The SportMemo archive timeline: years and the photos of each year."
+
+#: templates/core/year_list.html:16
+msgid "Хронология архива: выберите год, чтобы увидеть его фотографии."
+msgstr "Archive timeline: pick a year to see its photos."
+
+#: templates/core/year_list.html:34
+msgid "В архиве пока нет фотографий"
+msgstr "There are no photos in the archive yet"
+
+#: templates/core/year_list.html:36
+msgid "Годы появятся здесь, когда фотографии добавят и опубликуют."
+msgstr "Years will appear here once photos are added and published."
+
 #: templates/partials/footer.html:7
 msgid ""
 "Публичный архив спортивных фотографий. Бейсбол в России: команды, события, "
 "люди."
-msgstr "A public archive of sports photos. Baseball in Russia: teams, events, people."
+msgstr ""
+"A public archive of sports photos. Baseball in Russia: teams, events, people."
 
 #: templates/partials/footer.html:10
 msgid "Разделы"
@@ -1108,6 +1202,14 @@ msgstr "Log out"
 msgid "Войти"
 msgstr "Log in"
 
-#: templates/photos/partials/card.html:17
-msgid "год не указан"
-msgstr "year not set"
+#: templates/partials/pagination.html:5
+msgid "Постраничная навигация"
+msgstr "Pagination"
+
+#: templates/partials/pagination.html:12 templates/partials/pagination.html:19
+msgid "Назад"
+msgstr "Previous"
+
+#: templates/partials/pagination.html:45 templates/partials/pagination.html:52
+msgid "Вперёд"
+msgstr "Next"

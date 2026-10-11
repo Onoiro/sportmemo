@@ -58,9 +58,9 @@ stays tidy.
 
 | App | Contents |
 |---|---|
-| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, healthcheck |
+| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public query helpers (`shortcuts.py`), public views (home page, years, search), the pagination tag, `core/urls.py` |
 | `apps/accounts` | custom `User` (email as `USERNAME_FIELD`), consents, roles, link to `Person` |
-| `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam` |
+| `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam`, `catalog/urls.py` with team and event lists |
 | `apps/photos` | `Source`, `Photo`, `PhotoPerson` |
 | `apps/comments` | `Comment` (generic FK, replies) |
 | `apps/moderation` | `Report`, `ModerationAction` |
@@ -141,8 +141,8 @@ Details in `.koda/plans/foundation-and-data-model.md` (stage 1),
 
 **Stage 2 is split into 15 sub-stages**, one session each. A sub-stage plan is created as a
 separate file when work on it starts (`plans/public-archive-2.N-<name>.md`). The order and the
-list of sub-stages are in the master plan. Sub-stages 2.1 (demo data) and 2.2 (public UI
-skeleton) are complete; the next one is 2.3 (public queries and lists).
+list of sub-stages are in the master plan. Sub-stages 2.1 (demo data), 2.2 (public UI skeleton) and 2.3 (public queries and lists) are
+complete; the next one is 2.4 (gallery component).
 
 ## Deliberately deferred
 
@@ -151,12 +151,12 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.2.0
+- Version: 0.3.0
 - Development branch: `master`
 - Stage: 1 (repository foundation and data model) — **complete**;
-  stage 2 (public archive) — **in progress**, sub-stages 2.1 (demo data) and 2.2
-  (public UI skeleton) complete
-- Tests: 175, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
+  stage 2 (public archive) — **in progress**, sub-stages 2.1 (demo data), 2.2
+  (public UI skeleton) and 2.3 (public queries and lists) complete
+- Tests: 230, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
 
 ### What exists now
 
@@ -175,8 +175,9 @@ and the `.agents/skills/semver-checker/` skill.
 
 ### Public UI
 
-- `templates/base.html` plus `templates/partials/` (navbar, footer, breadcrumbs, messages) and
-  `templates/photos/partials/card.html`; error pages in `templates/404.html` and `templates/500.html`.
+- `templates/base.html` plus `templates/partials/` (navbar, footer, breadcrumbs, messages,
+  pagination) and `templates/photos/partials/card.html`; error pages in `templates/404.html` and
+  `templates/500.html`.
 - Theme: `static/css/sportmemo.css` and `static/js/theme.js` — warm sepia by default, dark
   variant, choice kept in `localStorage`. An inline script in `<head>` applies the theme before
   paint, so there is no flash.
@@ -185,8 +186,19 @@ and the `.agents/skills/semver-checker/` skill.
 - Public queries: `SoftDeleteQuerySet.published()` filters by `status=Status.PUBLISHED`;
   `.visible()` additionally requires `rights_confirmed=True` (used for photos). Public pages
   chain `Model.public.published().visible()`.
-- Sections that do not exist yet (`/teams/`, `/events/`, `/years/`, `/search/`) render a shared
-  placeholder template and are replaced in sub-stages 2.3 and 2.13.
+- Shared entry points for public queries live in `apps/core/shortcuts.py`: `visible_photos()`,
+  `archive_stats()`, `paginate(request, queryset, per_page)` and
+  `get_visible_or_404(model, *, request=None, **lookup)`. The helper takes the model as an
+  argument and imports no app models — otherwise `core` ↔ `catalog`/`photos` would cycle.
+- `get_visible_or_404`: the object comes from `public`; an unpublished object is returned only
+  to its author (`created_by` / `uploaded_by`) and to a moderator, everyone else gets 404;
+  deleted and merged objects are 404 for everyone. The "not published" badge in the UI
+  arrives in sub-stage 2.5.
+- Lists `/teams/` (24 per page), `/events/` (20), `/years/` and `/years/<year>/` (24 photos)
+  return visible objects only. The year list is built from visible photos — the same source
+  as the "years in the archive" counter on the home page.
+- Sections that do not exist yet (`/search/`) render a shared placeholder template; the real
+  search arrives in sub-stage 2.13.
 - `apps/core/migrations/0003_site_domain.py` sets the `django.contrib.sites` domain to
   `sportmemo.ru` — absolute links in emails and sitemaps must not point at `example.com`.
 
@@ -212,6 +224,8 @@ and the `.agents/skills/semver-checker/` skill.
   data".
 - Public pages return published, non-deleted objects only: `Model.public.published()` (plus
   `.visible()` for photos). Drafts never appear on any public page.
+- A new public page takes its queryset from `apps/core/shortcuts.py` instead of building the
+  `public.published()` chain by hand: the filtering rule must live in one place.
 - UI strings go through `gettext` only. Run `make i18n` after adding strings. `makemessages`
   marks new strings as `fuzzy` when it finds a similar old one, and `msgfmt` skips fuzzy
   entries — check the fuzzy blocks after extraction and clear the flags.

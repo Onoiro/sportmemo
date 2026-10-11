@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load i18n pagination %}
+
+{% block title %}{% trans "Команды" %} — {{ SPORTMEMO_SITE_NAME }}{% endblock %}
+{% block description %}{% trans "Команды архива SportMemo: города, годы основания и фотографии." %}{% endblock %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1 class="page-header__title">{% trans "Команды" %}</h1>
+        <p class="page-header__lead">
+            {% blocktranslate count counter=page_obj.paginator.count %}Найдена {{ counter }} команда{% plural %}Найдено {{ counter }} команд{% endblocktranslate %}
+        </p>
+    </header>
+
+    {% if page_obj.object_list %}
+        <div class="entity-grid">
+            {% for team in page_obj %}
+                {% include "catalog/partials/team_card.html" %}
+            {% endfor %}
+        </div>
+        {% pagination page_obj %}
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-people empty-state__icon" aria-hidden="true"></i>
+            <p class="empty-state__title">{% trans "В архиве пока нет команд" %}</p>
+            <p class="mb-0">
+                {% trans "Команды появятся здесь, когда их добавят и опубликуют." %}
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

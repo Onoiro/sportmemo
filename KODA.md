@@ -58,7 +58,7 @@ Docker Compose + Nginx (инфраструктура).
 
 | Приложение | Содержимое |
 |---|---|
-| `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, миксины админки (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, команда `seed_demo`, публичные представления (главная, заглушки), `core/urls.py` |
+| `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, миксины админки (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, команда `seed_demo`, публичные выборки (`shortcuts.py`), публичные представления (главная, годы, поиск), тег пагинации, `core/urls.py` |
 | `apps/accounts` | кастомный `User` (email как `USERNAME_FIELD`), согласия, роли, связь с `Person` |
 | `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam`, `catalog/urls.py` с заглушками списков |
 | `apps/photos` | `Source`, `Photo`, `PhotoPerson` |
@@ -141,8 +141,8 @@ Docker Compose + Nginx (инфраструктура).
 
 **Этап 2 разбит на 15 подэтапов** — по одной сессии на каждый. Детальный план подэтапа
 создаётся отдельным файлом при старте работы (`plans/public-archive-2.N-<имя>.md`).
-Порядок и состав подэтапов — в мастер-плане. Подэтапы 2.1 (демо-данные) и 2.2 (каркас
-публичного UI) завершены; следующий — 2.3 (публичные выборки и списки).
+Порядок и состав подэтапов — в мастер-плане. Подэтапы 2.1 (демо-данные), 2.2 (каркас публичного UI) и 2.3 (публичные выборки и списки)
+завершены; следующий — 2.4 (компонент галереи).
 
 ## Отложено осознанно
 
@@ -151,18 +151,18 @@ UI, «конструктор видов спорта». Обработка фо�
 
 ## Текущее состояние
 
-- Версия: 0.2.0
+- Версия: 0.3.0
 - Ветка разработки: `master`
 - Этап: 1 (фундамент репозитория и модель данных) — **завершён**;
-  этап 2 (публичный архив) — **в работе**, подэтапы 2.1 (демо-данные) и 2.2 (каркас
-  публичного UI) завершены
-- Тесты: 175, проходят на Python 3.12 и 3.13 (`make test`), линтер чист (`make lint`)
+  этап 2 (публичный архив) — **в работе**, подэтапы 2.1 (демо-данные), 2.2 (каркас
+  публичного UI) и 2.3 (публичные выборки и списки) завершены
+- Тесты: 230, проходят на Python 3.12 и 3.13 (`make test`), линтер чист (`make lint`)
 
 ### Что уже есть
 
 | Приложение | Содержимое |
 |---|---|
-| `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, миксины админки (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, команда `seed_demo`, публичные представления (главная, заглушки), `core/urls.py` |
+| `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, миксины админки (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, команда `seed_demo`, публичные выборки (`shortcuts.py`), публичные представления (главная, годы, поиск), тег пагинации, `core/urls.py` |
 | `apps/accounts` | `User` по email, `UserManager`, согласия (terms/privacy/152-ФЗ + версия), роли, связь `User.person`, форма регистрации с согласиями, адаптер allauth |
 | `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam`, `catalog/urls.py` с заглушками списков |
 | `apps/photos` | `Source`, `Photo` (права, `processing_status`, `phash`, `duplicate_of`), `PhotoPerson`, превью через `ImageSpecField` |
@@ -187,8 +187,18 @@ CI (`.github/workflows/ci.yml`: ruff, проверка миграций, pytest 
 - Публичные выборки: `SoftDeleteQuerySet.published()` (фильтр `status=Status.PUBLISHED`),
   `.visible()` (дополнительно `rights_confirmed=True` — для фото). Публичные страницы
   строят цепочку `Model.public.published().visible()`.
-- Разделы, которых ещё нет (`/teams/`, `/events/`, `/years/`, `/search/`), отдают общий
-  шаблон-заглушку; настоящие представления появятся в подэтапах 2.3 и 2.13.
+- Общие точки входа в публичные выборки — `apps/core/shortcuts.py`: `visible_photos()`,
+  `archive_stats()`, `paginate(request, queryset, per_page)` и
+  `get_visible_or_404(model, *, request=None, **lookup)`. Хелпер принимает модель параметром
+  и не импортирует модели приложений — иначе легко получить цикл `core` ↔ `catalog`/`photos`.
+- `get_visible_or_404`: объект из `public`; неопубликованный отдаётся только автору
+  (`created_by` / `uploaded_by`) и модератору, остальным — 404; удалённый и слитый —
+  404 всем. Плашка «не опубликовано» в UI появится в 2.5.
+- Списки `/teams/` (24 на страницу), `/events/` (20), `/years/` и `/years/<год>/` (24 фото)
+  отдают только видимое. Список годов считается из видимых фото — тот же источник, что
+  и счётчик «лет в архиве» на главной.
+- Разделы, которых ещё нет (`/search/`), отдают общий шаблон-заглушку; настоящий поиск
+  появится в подэтапе 2.13.
 - `apps/core/migrations/0003_site_domain.py` задаёт домен `django.contrib.sites` —
   `sportmemo.ru`. Иначе абсолютные ссылки в письмах и sitemap вели бы на `example.com`.
 
@@ -214,6 +224,8 @@ CI (`.github/workflows/ci.yml`: ruff, проверка миграций, pytest 
 - Публичные страницы отдают только опубликованное и не удалённое:
   `Model.public.published()` (и `.visible()` для фото). Черновики в публичную выдачу
   не попадают ни на одной странице.
+- Новая публичная страница берёт выборку через `apps/core/shortcuts.py`, а не собирает
+  цепочку `public.published()` вручную: правило отсева должно быть в одном месте.
 - Строки интерфейса — только через `gettext`. После добавления строк выполняется `make i18n`;
   `makemessages` помечает новые строки `fuzzy`, если нашёл похожую старую, а `msgfmt`
   пропускает fuzzy — после извлечения проверяйте fuzzy-блоки и снимайте флаги.

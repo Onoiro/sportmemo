@@ -21,6 +21,10 @@ class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = User
         django_get_or_create = ("email",)
+        # Пароль сохраняет хук ниже. Автосохранение после post_generation
+        # здесь лишнее — без этого флага factory_boy предупреждает
+        # о грядущем изменении поведения.
+        skip_postgeneration_save = True
 
     email = factory.Sequence(lambda n: f"user{n}@example.com")
     display_name = factory.Faker("first_name", locale="ru_RU")

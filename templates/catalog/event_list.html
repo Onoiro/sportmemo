@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load i18n pagination %}
+
+{% block title %}{% trans "События" %} — {{ SPORTMEMO_SITE_NAME }}{% endblock %}
+{% block description %}{% trans "Турниры, серии и товарищеские встречи в архиве SportMemo." %}{% endblock %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1 class="page-header__title">{% trans "События" %}</h1>
+        <p class="page-header__lead">
+            {% blocktranslate count counter=page_obj.paginator.count %}Найдено {{ counter }} событие{% plural %}Найдено {{ counter }} событий{% endblocktranslate %}
+        </p>
+    </header>
+
+    {% if page_obj.object_list %}
+        <div class="entity-grid">
+            {% for event in page_obj %}
+                {% include "catalog/partials/event_card.html" %}
+            {% endfor %}
+        </div>
+        {% pagination page_obj %}
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-calendar-event empty-state__icon" aria-hidden="true"></i>
+            <p class="empty-state__title">{% trans "В архиве пока нет событий" %}</p>
+            <p class="mb-0">
+                {% trans "События появятся здесь, когда их добавят и опубликуют." %}
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
