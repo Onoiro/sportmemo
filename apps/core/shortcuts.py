@@ -7,14 +7,36 @@
 """
 
 from django.core.paginator import Paginator
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.http import Http404
+
+from apps.core.models import Status
 
 # Размер порции галереи и порядок карточек. Общие для страницы года
 # и htmx-фрагмента: разойдутся — «показать ещё» начнёт пропускать
 # или повторять фотографии.
 PHOTO_PAGE_SIZE = 24
 PHOTO_ORDERING = ("-created_at",)
+
+
+def photos_count():
+    """Аннотация «сколько видимых фото привязано к объекту».
+
+    Права и статус проверяются в самой аннотации: счётчик не должен
+    учитывать черновики и фото без подтверждённых прав. `distinct=True`
+    обязателен — без него `Count` по обратной связи размножает строки.
+    Живёт здесь, а не в `catalog/views.py`: ту же аннотацию использует
+    страница года, и общая точка не даёт двум счётчикам разойтись.
+    """
+    return Count(
+        "photos",
+        filter=Q(
+            photos__status=Status.PUBLISHED,
+            photos__rights_confirmed=True,
+            photos__deleted_at__isnull=True,
+        ),
+        distinct=True,
+    )
 
 
 def visible_photos():

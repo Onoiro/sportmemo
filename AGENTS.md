@@ -58,9 +58,9 @@ stays tidy.
 
 | App | Contents |
 |---|---|
-| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public query helpers (`shortcuts.py`), public views (home page, years, search), the pagination tag, `core/urls.py` |
+| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public query helpers (`shortcuts.py`), public views (home page, years, search), the `uslug` URL converter (`converters.py`), the pagination tag, `core/urls.py` |
 | `apps/accounts` | custom `User` (email as `USERNAME_FIELD`), consents, roles, link to `Person` |
-| `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam`, `catalog/urls.py` with team and event lists |
+| `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, list views and team/event detail pages |
 | `apps/photos` | `Source`, `Photo`, `PhotoPerson`, public views (`photo_detail`, the `grid` fragment), `photos/urls.py` |
 | `apps/comments` | `Comment` (generic FK, replies) |
 | `apps/moderation` | `Report`, `ModerationAction` |
@@ -142,8 +142,8 @@ Details in `.koda/plans/foundation-and-data-model.md` (stage 1),
 **Stage 2 is split into 15 sub-stages**, one session each. A sub-stage plan is created as a
 separate file when work on it starts (`plans/public-archive-2.N-<name>.md`). The order and the
 list of sub-stages are in the master plan. Sub-stages 2.1 (demo data), 2.2 (public UI skeleton),
-2.3 (public queries and lists) and 2.4 (gallery component) are complete; the next one is 2.5
-(team and event pages).
+2.3 (public queries and lists), 2.4 (gallery component) and 2.5 (team and event pages) are
+complete; the next one is 2.6 (person and photo pages).
 
 ## Deliberately deferred
 
@@ -152,21 +152,21 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.4.0
+- Version: 0.5.0
 - Development branch: `master`
 - Stage: 1 (repository foundation and data model) — **complete**;
   stage 2 (public archive) — **in progress**, sub-stages 2.1 (demo data), 2.2
-  (public UI skeleton), 2.3 (public queries and lists) and 2.4 (gallery component)
-  complete
-- Tests: 282, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
+  (public UI skeleton), 2.3 (public queries and lists), 2.4 (gallery component) and 2.5
+  (team and event pages) complete
+- Tests: 365, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
 
 ### What exists now
 
 | App | Contents |
 |---|---|
-| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public views (home page, placeholders), `core/urls.py` |
+| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public views (home page, years, search), `core/urls.py` |
 | `apps/accounts` | email-based `User`, `UserManager`, consents (terms/privacy/PD law + version), roles, `User.person` link, signup form with consents, allauth adapter |
-| `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam`, `catalog/urls.py` with placeholder lists |
+| `apps/catalog` | `Team`, `TeamMembership`, `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, list views and team/event detail pages |
 | `apps/photos` | `Source`, `Photo` (rights, `processing_status`, `phash`, `duplicate_of`), `PhotoPerson`, thumbnails via `ImageSpecField`, the photo page and the gallery fragment |
 | `apps/comments` | `Comment` (generic FK, replies, statuses) |
 | `apps/moderation` | `Report`, `ModerationAction` (moderator decision log) |
@@ -196,8 +196,8 @@ and the `.agents/skills/semver-checker/` skill.
   argument and imports no app models — otherwise `core` ↔ `catalog`/`photos` would cycle.
 - `get_visible_or_404`: the object comes from `public`; an unpublished object is returned only
   to its author (`created_by` / `uploaded_by`) and to a moderator, everyone else gets 404;
-  deleted and merged objects are 404 for everyone. The "not published" badge in the UI
-  arrives in sub-stage 2.5.
+  deleted and merged objects are 404 for everyone. Author and moderator see the "not published"
+  badge (`templates/partials/moderation_notice.html`).
 - Lists `/teams/` (24 per page), `/events/` (20), `/years/` and `/years/<year>/` (24 photos)
   return visible objects only. The year list is built from visible photos — the same source
   as the "years in the archive" counter on the home page.
@@ -213,10 +213,29 @@ and the `.agents/skills/semver-checker/` skill.
   in 2.15.
 - `/photos/<pk>/` opens anonymously for a published photo with confirmed rights. A draft or a
   photo without confirmed rights is shown only to its author (`uploaded_by`) and to a moderator;
-  `get_visible_or_404` does the filtering. Team, event and person names are plain text — their
-  pages arrive in 2.5 and 2.6. The view counter grows on every open through an atomic
-  `update(views_count=F("views_count") + 1)` instead of `save()`, so no `django-simple-history`
-  record is created.
+  `get_visible_or_404` does the filtering. Links to the team and the event appear only when they
+  are published; the person link arrives in 2.6. The view counter grows on every open through an
+  atomic `update(views_count=F("views_count") + 1)` instead of `save()`, so no
+  `django-simple-history` record is created.
+- `/teams/<slug>/` and `/events/<slug>/` are the "visiting card" pages: a header with facts,
+  a description, attributes, a gallery and relations. A team shows its events and a short roster
+  (up to 12 people, `TEAM_ROSTER_PREVIEW`); an event shows its participating teams with results.
+  The full roster by year arrives in 2.7.
+- A link to a team or an event is created only when the object is published (`is_published`);
+  otherwise the name is plain text. The rule applies to lists, the photo page, participating
+  teams and the "Events of the year" block.
+- Attributes (`Team.attributes`, `Event.attributes`) are rendered as "label, value" pairs by
+  `attribute_items()` (`apps/catalog/views.py`): the service key `demo` is hidden, known keys are
+  translated, unknown keys are shown as is, lists are joined with commas.
+- `Event.date_label` renders event dates from months and years only: "July 1980",
+  "June — July 1988", "July 1988 — August 1989", "1980" or "date not stated". The month name
+  comes from the active locale through `date_format`, so no separate month strings are needed.
+- Slugs are stored with `allow_unicode=True`, so routes use a custom `<uslug:slug>` converter
+  (`apps/core/converters.py`, registered in `CoreConfig.ready()`): the stock `<slug:...>` accepts
+  ASCII only and would break `reverse()` on Cyrillic slugs.
+- The "Events of the year" block on `/years/<year>/` shows published events of that year without
+  pagination; the photo counter in the card uses the shared `photos_count()` annotation from
+  `apps/core/shortcuts.py`.
 - Sections that do not exist yet (`/search/`) render a shared placeholder template; the real
   search arrives in sub-stage 2.13.
 - `apps/core/migrations/0003_site_domain.py` sets the `django.contrib.sites` domain to
@@ -246,6 +265,18 @@ and the `.agents/skills/semver-checker/` skill.
   `.visible()` for photos). Drafts never appear on any public page.
 - A new public page takes its queryset from `apps/core/shortcuts.py` instead of building the
   `public.published()` chain by hand: the filtering rule must live in one place.
+- A link to an unpublished object is never created: check `is_published` before the link,
+  otherwise render the name as plain text. A draft must not leak through a direct link or
+  reach a search engine index.
+- People in public context are rendered through `Person.public_name`, and a team roster is
+  filtered by `Person.public.published()`: a draft person never appears publicly, even when
+  listed in a team.
+- The photo counter in team and event cards comes from the shared `photos_count()` annotation
+  (`apps/core/shortcuts.py`): a local copy would drift from the counter on another page.
+- Slugs are Cyrillic, so routes built on `SlugModel` use the `uslug` converter
+  (`apps/core/converters.py`) instead of the stock `<slug:...>`. The `QueryDict` for gallery
+  links is built from a dict, not from a string: Cyrillic and `&` inside a slug would break
+  the URL.
 - The view counter of a photo grows with `QuerySet.update()` on purpose: `save()` would write
   a history record on every page open and flood the audit log.
 - UI strings go through `gettext` only. Run `make i18n` after adding strings. `makemessages`

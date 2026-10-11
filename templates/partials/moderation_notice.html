@@ -1,0 +1,19 @@
+{% load i18n %}
+{% comment %}
+Плашка «не опубликовано» для автора и модератора. Анониму неопубликованный
+объект отдаёт 404 (`get_visible_or_404`), поэтому достаточно проверить статус:
+если страница открылась и объект не опубликован — смотрит автор или модератор.
+{% endcomment %}
+{% if not obj.is_published %}
+    <div class="moderation-notice" role="status">
+        <i class="bi bi-eye-slash" aria-hidden="true"></i>
+        <div>
+            <p class="moderation-notice__title">
+                {% trans "Не опубликовано" %} — {{ obj.get_status_display }}
+            </p>
+            <p class="moderation-notice__text">
+                {% trans "Видно только вам и модератору." %}
+            </p>
+        </div>
+    </div>
+{% endif %}

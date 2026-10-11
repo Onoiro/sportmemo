@@ -5,9 +5,12 @@
 структуре таблиц нет.
 """
 
+from datetime import date
+
 from django.conf import settings
 from django.db import models
 from django.utils.dateparse import parse_date
+from django.utils.formats import date_format
 from django.utils.translation import gettext_lazy as _
 from simple_history.models import HistoricalRecords
 
@@ -18,6 +21,32 @@ from apps.core.models import (
     StatusModel,
     TimeStampedModel,
 )
+
+
+def _as_date(value):
+    """Дата из поля, которое может прийти строкой.
+
+    Строки приходят из data-миграций, фикстур и тестов: у них нет `.year`
+    и `.month`, поэтому перед разбором значения его нужно привести к дате.
+    """
+    if value is None or isinstance(value, date):
+        return value
+    return parse_date(value)
+
+
+def _month(value, pattern="F"):
+    """Название месяца или месяц с годом из активной локали.
+
+    `date_format` берёт форму из каталога переводов Django: «Июль 1980»
+    для русского и «July 1980» для английского. Отдельные строки для
+    названий месяцев не нужны.
+    """
+    return date_format(value, pattern)
+
+
+def _date_range(start, end):
+    """Диапазон через длинное тире с неразрывными пробелами."""
+    return f"{start}\u00a0—\u00a0{end}"
 
 
 def _unique_slug(instance, base_slug, queryset):
@@ -405,14 +434,34 @@ class Event(TimeStampedModel, SlugModel, StatusModel, SoftDeleteModel, Mergeable
         # если не задан явно. date_from может прийти строкой
         # (data-миграции, тесты), а строки не имеют .year.
         if not self.year:
-            date_from = (
-                parse_date(self.date_from)
-                if isinstance(self.date_from, str)
-                else self.date_from
-            )
+            date_from = _as_date(self.date_from)
             if date_from:
                 self.year = date_from.year
         super().save(*args, **kwargs)
+
+    @property
+    def date_label(self) -> str:
+        """Даты события подписью: только месяцы и годы, без чисел дня.
+
+        День съёмки в архиве чаще всего неизвестен, поэтому подпись строится
+        из месяцев: «Июль 1980», «Июнь — Июль 1988», «Июль 1988 — Август 1989».
+        Если дат нет, но известен год — выводится год. Название месяца берёт
+        `date_format` из активной локали, поэтому отдельных строк для месяцев
+        не нужно. Живёт в модели: тем же свойством пользуются карточки
+        событий и фильтры каталога.
+        """
+        start = _as_date(self.date_from) or _as_date(self.date_to)
+        end = _as_date(self.date_to) or start
+
+        if start and end:
+            if (start.year, start.month) == (end.year, end.month):
+                return _month(start, "F Y")
+            if start.year == end.year:
+                return _date_range(_month(start), _month(end, "F Y"))
+            return _date_range(_month(start, "F Y"), _month(end, "F Y"))
+        if self.year:
+            return str(self.year)
+        return str(_("дата не указана"))
 
     def clean(self):
         from django.core.exceptions import ValidationError

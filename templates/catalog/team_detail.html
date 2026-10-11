@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ team.name }}{% if team.city %} ({{ team.city }}){% endif %} — {{ SPORTMEMO_SITE_NAME }}{% endblock %}
+{% block description %}{% if team.description %}{{ team.description|truncatechars:160 }}{% else %}{% blocktranslate with name=team.name %}Команда «{{ name }}» в архиве SportMemo.{% endblocktranslate %}{% endif %}{% endblock %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="detail-header">
+        {% if team.logo %}
+            <img class="detail-header__logo" src="{{ team.logo.url }}" alt=""
+                 width="120" height="120" decoding="async">
+        {% endif %}
+        <div class="detail-header__body">
+            <h1 class="detail-header__title">{{ team.name }}</h1>
+            <p class="detail-header__facts">
+                {% if team.city %}
+                    <span><i class="bi bi-geo-alt" aria-hidden="true"></i> {{ team.city }}</span>
+                {% endif %}
+                {% if team.founded_year %}
+                    <span><i class="bi bi-calendar3" aria-hidden="true"></i>
+                        {% blocktranslate with year=team.founded_year %}основана в {{ year }}{% endblocktranslate %}
+                    </span>
+                {% endif %}
+                <span><i class="bi bi-dribbble" aria-hidden="true"></i> {{ team.sport.name }}</span>
+            </p>
+        </div>
+    </header>
+
+    {% include "partials/moderation_notice.html" with obj=team %}
+
+    {% if team.description %}
+        <section class="detail-section">
+            <p class="detail-section__text">{{ team.description }}</p>
+        </section>
+    {% endif %}
+
+    {% if attribute_items %}
+        <section class="detail-section">
+            <h2 class="section-title h5">{% trans "Дополнительно" %}</h2>
+            {% include "catalog/partials/attributes.html" with items=attribute_items %}
+        </section>
+    {% endif %}
+
+    {% if page_obj.object_list %}
+        <section class="detail-section">
+            <h2 class="section-title h5">{% trans "Фотографии команды" %}</h2>
+            {% include "photos/partials/grid.html" with photos=page_obj page_obj=page_obj gallery_query=gallery_query %}
+        </section>
+    {% endif %}
+
+    {% if events %}
+        <section class="detail-section">
+            <h2 class="section-title h5">{% trans "События команды" %}</h2>
+            <div class="entity-grid">
+                {% for event in events %}
+                    {% include "catalog/partials/event_card.html" %}
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
+    {% if roster %}
+        <section class="detail-section">
+            <h2 class="section-title h5">{% trans "Состав" %}</h2>
+            <ul class="entity-list">
+                {% for membership in roster %}
+                    <li class="entity-list__item">
+                        {% comment %}
+                        Ссылки на человека нет: страница человека появляется
+                        в следующем подэтапе, а `reverse()` на ещё не
+                        существующий маршрут уронил бы страницу.
+                        {% endcomment %}
+                        <span class="entity-list__name">{{ membership.person.public_name }}</span>
+                        <span class="entity-list__note">
+                            {{ membership.get_role_display }}
+                            {% if membership.year_from or membership.year_to %}
+                                — {{ membership.year_from|default:"?" }}–{{ membership.year_to|default:"…" }}
+                            {% endif %}
+                            {% if membership.position %}
+                                · {{ membership.position }}
+                            {% endif %}
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+</div>
+{% endblock %}

@@ -39,6 +39,8 @@
                 <h1 class="photo-detail__title">{% trans "Фотография" %}</h1>
             {% endif %}
 
+            {% include "partials/moderation_notice.html" with obj=photo %}
+
             <dl class="photo-detail__facts">
                 {% if photo.year %}
                     <dt>{% trans "Год" %}</dt>
@@ -50,13 +52,29 @@
                     <dt>{% trans "Дата съёмки" %}</dt>
                     <dd>{{ photo.taken_date }}</dd>
                 {% endif %}
+                {% comment %}
+                Ссылка на команду и событие — только если они опубликованы:
+                неопубликованные выводятся текстом (решение мастер-плана).
+                {% endcomment %}
                 {% if photo.team %}
                     <dt>{% trans "Команда" %}</dt>
-                    <dd>{{ photo.team.name }}</dd>
+                    <dd>
+                        {% if photo.team.is_published %}
+                            <a href="{{ photo.team.get_absolute_url }}">{{ photo.team.name }}</a>
+                        {% else %}
+                            {{ photo.team.name }}
+                        {% endif %}
+                    </dd>
                 {% endif %}
                 {% if photo.event %}
                     <dt>{% trans "Событие" %}</dt>
-                    <dd>{{ photo.event.name }}</dd>
+                    <dd>
+                        {% if photo.event.is_published %}
+                            <a href="{{ photo.event.get_absolute_url }}">{{ photo.event.name }}</a>
+                        {% else %}
+                            {{ photo.event.name }}
+                        {% endif %}
+                    </dd>
                 {% endif %}
                 <dt>{% trans "Просмотров" %}</dt>
                 <dd>{{ photo.views_count }}</dd>

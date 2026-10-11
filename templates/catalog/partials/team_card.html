@@ -1,9 +1,9 @@
 {% load i18n %}
 {% comment %}
-Карточка команды. В 2.3 намеренно не кликабельна: страница команды
-появляется в 2.5.
+Карточка команды. Кликабельна целиком: внутри нет других ссылок,
+поэтому вложенные интерактивные элементы не мешают друг другу.
 {% endcomment %}
-<article class="entity-card">
+<a class="entity-card" href="{{ team.get_absolute_url }}">
     <div class="entity-card__body">
         <h2 class="entity-card__title">{{ team.name }}</h2>
         <p class="entity-card__meta">
@@ -21,4 +21,4 @@
             <p class="entity-card__text">{{ team.description }}</p>
         {% endif %}
     </div>
-</article>
+</a>

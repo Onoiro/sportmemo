@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ event.name }}{% if event.year %} ({{ event.year }}){% endif %} — {{ SPORTMEMO_SITE_NAME }}{% endblock %}
+{% block description %}{% if event.description %}{{ event.description|truncatechars:160 }}{% else %}{% blocktranslate with name=event.name %}Событие «{{ name }}» в архиве SportMemo.{% endblocktranslate %}{% endif %}{% endblock %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="detail-header">
+        <div class="detail-header__body">
+            <span class="badge-status">{{ event.get_event_type_display }}</span>
+            <h1 class="detail-header__title">{{ event.name }}</h1>
+            <p class="detail-header__facts">
+                <span><i class="bi bi-calendar3" aria-hidden="true"></i> {{ event.date_label }}</span>
+                {% if event.city or event.country %}
+                    <span><i class="bi bi-geo-alt" aria-hidden="true"></i>
+                        {% if event.city %}{{ event.city }}{% if event.country %}, {% endif %}{% endif %}{{ event.country }}
+                    </span>
+                {% endif %}
+                <span><i class="bi bi-dribbble" aria-hidden="true"></i> {{ event.sport.name }}</span>
+            </p>
+        </div>
+    </header>
+
+    {% include "partials/moderation_notice.html" with obj=event %}
+
+    {% if event.description %}
+        <section class="detail-section">
+            <p class="detail-section__text">{{ event.description }}</p>
+        </section>
+    {% endif %}
+
+    {% if attribute_items %}
+        <section class="detail-section">
+            <h2 class="section-title h5">{% trans "Итоги" %}</h2>
+            {% include "catalog/partials/attributes.html" with items=attribute_items %}
+        </section>
+    {% endif %}
+
+    {% if participants %}
+        <section class="detail-section">
+            <h2 class="section-title h5">{% trans "Команды-участники" %}</h2>
+            <ul class="entity-list">
+                {% for link in participants %}
+                    <li class="entity-list__item">
+                        {% comment %}
+                        Ссылка ведёт на команду, только если та опубликована:
+                        неопубликованная выводится текстом — то же правило,
+                        что для фото и черновиков.
+                        {% endcomment %}
+                        {% if link.team.is_published %}
+                            <a class="entity-list__name" href="{{ link.team.get_absolute_url }}">{{ link.team.name }}</a>
+                        {% else %}
+                            <span class="entity-list__name">{{ link.team.name }}</span>
+                        {% endif %}
+                        {% if link.result_note %}
+                            <span class="entity-list__note">{{ link.result_note }}</span>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+
+    {% if page_obj.object_list %}
+        <section class="detail-section">
+            <h2 class="section-title h5">{% trans "Фотографии события" %}</h2>
+            {% include "photos/partials/grid.html" with photos=page_obj page_obj=page_obj gallery_query=gallery_query %}
+        </section>
+    {% endif %}
+</div>
+{% endblock %}

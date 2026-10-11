@@ -1,0 +1,15 @@
+{% load i18n %}
+{% comment %}
+Атрибуты объекта: пары «подпись, значение». Подписи готовит представление
+(`attribute_items` в apps/catalog/views.py): служебные ключи там отсеяны,
+известные переведены, неизвестные выведены как есть. При пустом списке
+партиал не рендерит ничего — пустого блока на странице не остаётся.
+{% endcomment %}
+{% if items %}
+    <dl class="attribute-list">
+        {% for item in items %}
+            <dt>{{ item.label }}</dt>
+            <dd>{{ item.value }}</dd>
+        {% endfor %}
+    </dl>
+{% endif %}

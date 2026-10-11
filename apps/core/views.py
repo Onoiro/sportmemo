@@ -1,7 +1,7 @@
 """Служебные представления приложения core."""
 
 from django.db import connection
-from django.db.models import Count
+from django.db.models import Count, F
 from django.http import Http404, JsonResponse, QueryDict
 from django.shortcuts import render
 from django.urls import reverse
@@ -14,6 +14,7 @@ from apps.core.shortcuts import (
     PHOTO_PAGE_SIZE,
     archive_stats,
     paginate,
+    photos_count,
     visible_photos,
 )
 
@@ -87,7 +88,7 @@ def year_list(request):
 
 
 def year_detail(request, year):
-    """Фотографии одного года.
+    """Фотографии одного года и события этого года.
 
     Года без видимых фото в архиве не существует: отдаём 404, а не пустую
     страницу — иначе поисковики проиндексируют бесконечные пустые годы.
@@ -95,6 +96,19 @@ def year_detail(request, year):
     photos = visible_photos().filter(year=year).select_related("team", "event")
     if not photos.exists():
         raise Http404("Год не найден в архиве")
+
+    # Модель импортируется внутри функции: на уровне модуля это дало бы
+    # зависимость `core` → `catalog` и риск цикла (правило `shortcuts`).
+    from apps.catalog.models import Event
+
+    # Событий в году обычно немного, поэтому блок выводится без пагинации.
+    events = (
+        Event.public.published()
+        .filter(year=year)
+        .select_related("sport")
+        .annotate(photos_total=photos_count())
+        .order_by(F("year").desc(nulls_last=True), "name")
+    )
 
     context = {
         "year": year,
@@ -106,6 +120,7 @@ def year_detail(request, year):
         # Год не лежит в `request.GET`, поэтому фильтр для кнопки
         # «показать ещё» передаётся в галерею явно.
         "gallery_query": QueryDict(f"year={year}"),
+        "events": events,
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},
             {"url": reverse("core:year_list"), "label": _("Годы")},

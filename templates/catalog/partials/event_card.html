@@ -1,18 +1,14 @@
 {% load i18n %}
 {% comment %}
-Карточка события. В 2.3 намеренно не кликабельна: страница события
-появляется в 2.5.
+Карточка события. Кликабельна целиком: внутри нет других ссылок,
+поэтому вложенные интерактивные элементы не мешают друг другу.
 {% endcomment %}
-<article class="entity-card">
+<a class="entity-card" href="{{ event.get_absolute_url }}">
     <div class="entity-card__body">
         <span class="badge-status">{{ event.get_event_type_display }}</span>
         <h2 class="entity-card__title">{{ event.name }}</h2>
         <p class="entity-card__meta">
-            {% if event.year %}
-                <span><i class="bi bi-calendar3" aria-hidden="true"></i> {{ event.year }}</span>
-            {% else %}
-                <span>{% trans "год не указан" %}</span>
-            {% endif %}
+            <span><i class="bi bi-calendar3" aria-hidden="true"></i> {{ event.date_label }}</span>
             {% if event.city %}
                 <span><i class="bi bi-geo-alt" aria-hidden="true"></i> {{ event.city }}</span>
             {% endif %}
@@ -24,4 +20,4 @@
             <p class="entity-card__text">{{ event.description }}</p>
         {% endif %}
     </div>
-</article>
+</a>

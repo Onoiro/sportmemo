@@ -27,5 +27,16 @@
             <p class="empty-state__title">{% trans "Фотографий за этот год нет" %}</p>
         </div>
     {% endif %}
+
+    {% if events %}
+        <section class="detail-section">
+            <h2 class="section-title h5">{% trans "События года" %}</h2>
+            <div class="entity-grid">
+                {% for event in events %}
+                    {% include "catalog/partials/event_card.html" %}
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
 </div>
 {% endblock %}
