@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 00:34+0300\n"
+"POT-Creation-Date: 2026-10-12 17:45+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,11 +17,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: apps/accounts/admin.py:34
+#: apps/accounts/admin.py:34 apps/accounts/views.py:35
+#: templates/accounts/profile.html:4 templates/accounts/profile.html:14
+#: templates/partials/navbar.html:55
 msgid "Профиль"
 msgstr "Profile"
 
-#: apps/accounts/admin.py:36
+#: apps/accounts/admin.py:36 templates/accounts/profile.html:89
 msgid "Согласия"
 msgstr "Consents"
 
@@ -33,19 +35,19 @@ msgstr "Rights"
 msgid "Даты"
 msgstr "Dates"
 
-#: apps/accounts/forms.py:81
+#: apps/accounts/forms.py:47 apps/accounts/forms.py:88
 msgid "Как к вам обращаться"
 msgstr "How should we address you"
 
-#: apps/accounts/forms.py:86
+#: apps/accounts/forms.py:93
 msgid "Я принимаю пользовательское соглашение"
 msgstr "I accept the terms of use"
 
-#: apps/accounts/forms.py:90
+#: apps/accounts/forms.py:97
 msgid "Я принимаю политику конфиденциальности"
 msgstr "I accept the privacy policy"
 
-#: apps/accounts/forms.py:94
+#: apps/accounts/forms.py:101
 msgid "Я согласен на обработку персональных данных"
 msgstr "I agree to personal data processing"
 
@@ -110,6 +112,18 @@ msgstr "date joined"
 #: apps/accounts/models.py:70
 msgid "пользователи"
 msgstr "users"
+
+#: apps/accounts/views.py:25
+msgid "Профиль обновлён"
+msgstr "Profile updated"
+
+#: apps/accounts/views.py:34 apps/catalog/views.py:136
+#: apps/catalog/views.py:158 apps/catalog/views.py:220
+#: apps/catalog/views.py:248 apps/catalog/views.py:298 apps/core/views.py:83
+#: apps/core/views.py:125 apps/photos/views.py:42
+#: templates/core/placeholder.html:9 templates/partials/footer.html:20
+msgid "Главная"
+msgstr "Home"
 
 #: apps/catalog/admin.py:69 apps/catalog/admin.py:179
 msgid "Содержание"
@@ -432,14 +446,6 @@ msgstr "Innings"
 #: apps/catalog/views.py:38
 msgid "Команд"
 msgstr "Teams"
-
-#: apps/catalog/views.py:136 apps/catalog/views.py:158
-#: apps/catalog/views.py:220 apps/catalog/views.py:248
-#: apps/catalog/views.py:298 apps/core/views.py:83 apps/core/views.py:125
-#: apps/photos/views.py:42 templates/core/placeholder.html:9
-#: templates/partials/footer.html:20
-msgid "Главная"
-msgstr "Home"
 
 #: apps/catalog/views.py:137 apps/catalog/views.py:221
 #: templates/catalog/team_list.html:4 templates/catalog/team_list.html:14
@@ -1030,13 +1036,18 @@ msgid ""
 "С уважением,\n"
 "архив спортивных фотографий %(site_name)s\n"
 "%(site_domain)s"
-msgstr "Best regards,\n%(site_name)s sports photo archive\n%(site_domain)s"
+msgstr ""
+"Best regards,\n"
+"%(site_name)s sports photo archive\n"
+"%(site_domain)s"
 
 #: templates/account/email/email_confirmation_message.txt:4
 msgid ""
 "Вы указали этот адрес при регистрации в архиве спортивных фотографий. "
 "Осталось подтвердить адрес — без этого вход в аккаунт не откроется."
-msgstr "You gave this address when you signed up in the sports photo archive. Please confirm the address. You cannot sign in before that."
+msgstr ""
+"You gave this address when you signed up in the sports photo archive. Please "
+"confirm the address. You cannot sign in before that."
 
 #: templates/account/email/email_confirmation_message.txt:6
 msgid "Код подтверждения:"
@@ -1050,7 +1061,9 @@ msgstr "Open the link to confirm the address:"
 msgid ""
 "Ссылка действует три дня. Если вы не регистрировались на сайте, просто "
 "удалите это письмо — ничего не произойдёт."
-msgstr "The link works for three days. If you did not sign up, just delete this message. Nothing will happen."
+msgstr ""
+"The link works for three days. If you did not sign up, just delete this "
+"message. Nothing will happen."
 
 #: templates/account/email/email_confirmation_subject.txt:1
 msgid "Подтвердите адрес электронной почты"
@@ -1060,13 +1073,17 @@ msgstr "Confirm your email address"
 msgid ""
 "Кто-то запросил сброс пароля для аккаунта с этим адресом. Если это были вы — "
 "откройте ссылку и задайте новый пароль:"
-msgstr "Someone asked to reset the password for the account with this address. If it was you, open the link and set a new password:"
+msgstr ""
+"Someone asked to reset the password for the account with this address. If it "
+"was you, open the link and set a new password:"
 
 #: templates/account/email/password_reset_key_message.txt:8
 msgid ""
 "Ссылка действует три дня. Если запрос был не от вас, ничего делать не нужно: "
 "пароль останется прежним."
-msgstr "The link works for three days. If the request was not yours, do nothing: the password stays the same."
+msgstr ""
+"The link works for three days. If the request was not yours, do nothing: the "
+"password stays the same."
 
 #: templates/account/email/password_reset_key_subject.txt:1
 #: templates/account/password_reset.html:4
@@ -1099,7 +1116,9 @@ msgstr "The address %(email)s is already confirmed by another account."
 msgid ""
 "Ссылка подтверждения устарела или не подходит. <a "
 "href=\"%(email_url)s\">Запросите новое письмо</a>."
-msgstr "The confirmation link is expired or invalid. <a href=\"%(email_url)s\">Request a new email</a>."
+msgstr ""
+"The confirmation link is expired or invalid. <a "
+"href=\"%(email_url)s\">Request a new email</a>."
 
 #: templates/account/login.html:4 templates/account/login.html:8
 msgid "Вход"
@@ -1107,7 +1126,7 @@ msgstr "Sign in"
 
 #: templates/account/login.html:21
 #: templates/account/password_reset_from_key_done.html:12
-#: templates/partials/navbar.html:59
+#: templates/partials/navbar.html:67
 msgid "Войти"
 msgstr "Log in"
 
@@ -1135,7 +1154,8 @@ msgstr "Sign out"
 msgid "Выйти из аккаунта?"
 msgstr "Do you want to sign out?"
 
-#: templates/account/logout.html:20 templates/partials/navbar.html:54
+#: templates/account/logout.html:20 templates/accounts/profile.html:63
+#: templates/partials/navbar.html:62
 msgid "Выйти"
 msgstr "Log out"
 
@@ -1145,12 +1165,14 @@ msgid "Смена пароля"
 msgstr "Change password"
 
 #: templates/account/password_change.html:20
+#: templates/accounts/profile.html:105 templates/partials/navbar.html:58
 msgid "Сменить пароль"
 msgstr "Change password"
 
 #: templates/account/password_reset.html:16
 msgid "Забыли пароль? Укажите адрес почты, и мы пришлём ссылку для сброса."
-msgstr "Forgot your password? Enter your email address and we will send a reset link."
+msgstr ""
+"Forgot your password? Enter your email address and we will send a reset link."
 
 #: templates/account/password_reset.html:28
 msgid "Сбросить пароль"
@@ -1168,7 +1190,9 @@ msgstr "Email sent"
 msgid ""
 "Мы отправили письмо со ссылкой для сброса пароля. Если письма нет, проверьте "
 "папку «спам»."
-msgstr "We sent an email with a password reset link. If there is no email, check the spam folder."
+msgstr ""
+"We sent an email with a password reset link. If there is no email, check the "
+"spam folder."
 
 #: templates/account/password_reset_from_key.html:4
 #: templates/account/password_reset_from_key.html:12
@@ -1184,7 +1208,9 @@ msgstr "The link is invalid"
 msgid ""
 "Ссылка для сброса пароля не подошла: возможно, ей уже воспользовались. "
 "Запросите <a href=\"%(passwd_reset_url)s\">новую ссылку</a>."
-msgstr "The password reset link is invalid: maybe it was already used. Request <a href=\"%(passwd_reset_url)s\">a new link</a>."
+msgstr ""
+"The password reset link is invalid: maybe it was already used. Request <a "
+"href=\"%(passwd_reset_url)s\">a new link</a>."
 
 #: templates/account/password_reset_from_key.html:31
 msgid "Сохранить пароль"
@@ -1229,7 +1255,9 @@ msgstr "Check your email"
 msgid ""
 "Мы отправили письмо со ссылкой для подтверждения адреса. Перейдите по "
 "ссылке, чтобы завершить регистрацию."
-msgstr "We sent an email with a link to confirm the address. Open the link to finish the sign-up."
+msgstr ""
+"We sent an email with a link to confirm the address. Open the link to finish "
+"the sign-up."
 
 #: templates/account/verification_sent.html:13
 msgid "Письма нет? Загляните в папку «спам» — иногда оно попадает туда."
@@ -1238,6 +1266,70 @@ msgstr "No email? Look in the spam folder. Sometimes it goes there."
 #: templates/account/verification_sent.html:15
 msgid "Вернуться на главную"
 msgstr "Back to the home page"
+
+#: templates/accounts/profile.html:5
+msgid "Личный профиль SportMemo: имя, согласия и безопасность аккаунта."
+msgstr "Your SportMemo profile: name, consents and account security."
+
+#: templates/accounts/profile.html:20
+msgid "Аккаунт"
+msgstr "Account"
+
+#: templates/accounts/profile.html:22
+msgid "Email"
+msgstr "Email"
+
+#: templates/accounts/profile.html:24
+msgid "Дата регистрации"
+msgstr "Date joined"
+
+#: templates/accounts/profile.html:32
+msgid "Роль"
+msgstr "Role"
+
+#: templates/accounts/profile.html:39
+msgid "Мой профиль в архиве"
+msgstr "My archive profile"
+
+#: templates/accounts/profile.html:42
+msgid "Ваш аккаунт связан со страницей человека в архиве."
+msgstr "Your account is linked to a person page in the archive."
+
+#: templates/accounts/profile.html:56
+msgid "Аккаунт пока не связан ни с одним человеком в архиве."
+msgstr "Your account is not linked to any person in the archive yet."
+
+#: templates/accounts/profile.html:69
+msgid "Обращение"
+msgstr "Display name"
+
+#: templates/accounts/profile.html:83
+msgid "Сохранить"
+msgstr "Save"
+
+#: templates/accounts/profile.html:91
+msgid "Пользовательское соглашение"
+msgstr "Terms of use"
+
+#: templates/accounts/profile.html:93
+msgid "Политика конфиденциальности"
+msgstr "Privacy policy"
+
+#: templates/accounts/profile.html:95
+msgid "Обработка персональных данных"
+msgstr "Personal data processing"
+
+#: templates/accounts/profile.html:97
+msgid "Версия согласия"
+msgstr "Consent version"
+
+#: templates/accounts/profile.html:103
+msgid "Безопасность"
+msgstr "Security"
+
+#: templates/accounts/profile.html:106
+msgid "Изменить адрес почты"
+msgstr "Change email address"
 
 #: templates/admin/core/merge_form.html:6
 msgid "Home"
@@ -1586,6 +1678,10 @@ msgstr "Search"
 #: templates/partials/navbar.html:41 templates/partials/navbar.html:43
 msgid "Переключить тему"
 msgstr "Switch theme"
+
+#: templates/partials/navbar.html:50
+msgid "Меню пользователя"
+msgstr "User menu"
 
 #: templates/partials/pagination.html:7
 msgid "Постраничная навигация"

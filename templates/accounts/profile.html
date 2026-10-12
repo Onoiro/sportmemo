@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Профиль" %} — {{ SPORTMEMO_SITE_NAME }}{% endblock %}
+{% block description %}{% trans "Личный профиль SportMemo: имя, согласия и безопасность аккаунта." %}{% endblock %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1 class="page-header__title">{% trans "Профиль" %}</h1>
+    </header>
+
+    <div class="profile-grid">
+        <aside class="profile-card">
+            <div class="auth-panel">
+                <h2 class="auth-panel__title">{% trans "Аккаунт" %}</h2>
+                <dl class="profile-facts">
+                    <dt>{% trans "Email" %}</dt>
+                    <dd>{{ user.email }}</dd>
+                    <dt>{% trans "Дата регистрации" %}</dt>
+                    <dd>{{ user.date_joined|date:"j E Y" }}</dd>
+                    {% comment %}
+                    Роль показываем только тем, у кого она есть: обычному
+                    пользователю строка «пользователь» ничего не сообщает.
+                    {% endcomment %}
+                    {% if user.is_moderator %}
+                        <dt>{% trans "Роль" %}</dt>
+                        <dd>{{ user.get_role_display }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+
+            <div class="auth-panel">
+                <h2 class="auth-panel__title">{% trans "Мой профиль в архиве" %}</h2>
+                {% if person %}
+                    <p class="mb-2">
+                        {% trans "Ваш аккаунт связан со страницей человека в архиве." %}
+                    </p>
+                    <a class="btn btn-outline-primary btn-sm" href="{{ person.get_absolute_url }}">
+                        <i class="bi bi-person" aria-hidden="true"></i>
+                        {{ person.public_name }}
+                    </a>
+                {% else %}
+                    {% comment %}
+                    Кнопки «Это я» здесь нет осознанно: заявка на связь
+                    с человеком пока не реализована, а обещать несуществующее
+                    нельзя. Текст объясняет, куда обратиться.
+                    {% endcomment %}
+                    <p class="mb-0 text-body-secondary">
+                        {% trans "Аккаунт пока не связан ни с одним человеком в архиве." %}
+                    </p>
+                {% endif %}
+            </div>
+
+            <a class="btn btn-outline-secondary" href="{% url 'account_logout' %}">
+                <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                {% trans "Выйти" %}
+            </a>
+        </aside>
+
+        <div class="profile-main">
+            <section class="profile-section">
+                <h2 class="section-title h5">{% trans "Обращение" %}</h2>
+                <form class="auth-form" method="post" action="{% url 'accounts:profile' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ profile_form.display_name.id_for_label }}">
+                            {{ profile_form.display_name.label }}
+                        </label>
+                        {{ profile_form.display_name }}
+                        {% if profile_form.display_name.help_text %}
+                            <div class="form-text">{{ profile_form.display_name.help_text }}</div>
+                        {% endif %}
+                        {{ profile_form.display_name.errors }}
+                    </div>
+                    <button class="btn btn-primary" type="submit">
+                        {% trans "Сохранить" %}
+                    </button>
+                </form>
+            </section>
+
+            <section class="profile-section">
+                <h2 class="section-title h5">{% trans "Согласия" %}</h2>
+                <dl class="profile-facts">
+                    <dt>{% trans "Пользовательское соглашение" %}</dt>
+                    <dd>{{ user.terms_accepted_at|date:"j E Y"|default:"—" }}</dd>
+                    <dt>{% trans "Политика конфиденциальности" %}</dt>
+                    <dd>{{ user.privacy_accepted_at|date:"j E Y"|default:"—" }}</dd>
+                    <dt>{% trans "Обработка персональных данных" %}</dt>
+                    <dd>{{ user.consent_pd_at|date:"j E Y"|default:"—" }}</dd>
+                    <dt>{% trans "Версия согласия" %}</dt>
+                    <dd>{{ user.consent_pd_version|default:"—" }}</dd>
+                </dl>
+            </section>
+
+            <section class="profile-section">
+                <h2 class="section-title h5">{% trans "Безопасность" %}</h2>
+                <div class="auth-links">
+                    <a href="{% url 'account_change_password' %}">{% trans "Сменить пароль" %}</a>
+                    <a href="{% url 'account_email' %}">{% trans "Изменить адрес почты" %}</a>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

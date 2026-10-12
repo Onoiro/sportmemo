@@ -46,10 +46,18 @@
                 {% if user.is_authenticated %}
                     <div class="dropdown">
                         <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button"
-                                data-bs-toggle="dropdown" aria-expanded="false">
-                            {{ user.display_name|default:user.email }}
+                                data-bs-toggle="dropdown" aria-expanded="false"
+                                aria-label="{% trans "Меню пользователя" %}">
+                            <span class="account-menu__name">{{ user.display_name|default:user.email }}</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'accounts:profile' %}">{% trans "Профиль" %}</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'account_change_password' %}">{% trans "Сменить пароль" %}</a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
                             <li>
                                 <a class="dropdown-item" href="{% url 'account_logout' %}">{% trans "Выйти" %}</a>
                             </li>

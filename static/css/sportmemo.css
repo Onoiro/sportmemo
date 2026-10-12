@@ -939,6 +939,56 @@ html[data-bs-theme="dark"] {
     list-style: none;
 }
 
+/* --- Меню пользователя в шапке --- */
+
+.account-menu__name {
+    display: inline-block;
+    max-width: 10rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+}
+
+/* --- Страница профиля --- */
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+    padding-bottom: 3rem;
+}
+
+.profile-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.profile-section {
+    margin-bottom: 1.75rem;
+}
+
+.profile-facts {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.25rem 0.875rem;
+    margin: 0;
+    font-size: 0.9375rem;
+}
+
+.profile-facts dt {
+    color: var(--bs-secondary-color);
+    font-weight: 400;
+}
+
+.profile-facts dd {
+    margin: 0;
+    color: var(--bs-body-color);
+    overflow-wrap: anywhere;
+}
+
 /* --- Страницы ошибок --- */
 
 .error-page {
@@ -1055,5 +1105,20 @@ html[data-bs-theme="dark"] {
     .roster-filter__select {
         flex: 1 1 auto;
         width: 100%;
+    }
+
+    .profile-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    .profile-facts {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .profile-facts dt {
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
     }
 }

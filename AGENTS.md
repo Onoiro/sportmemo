@@ -144,8 +144,9 @@ Details in `.koda/plans/foundation-and-data-model.md` (stage 1),
 as a separate file when work on it starts (`plans/public-archive-2.N-<name>.md`). The order and
 the list of sub-stages are in the master plan. Sub-stages 2.1 (demo data), 2.2 (public UI
 skeleton), 2.3 (public queries and lists), 2.4 (gallery component), 2.5 (team and event pages),
-2.6 (person and photo pages), 2.7 (team roster filter by year) and 2.8a (sign-up, login and
-password) are complete; the next one is 2.8b (user profile and menu).
+2.6 (person and photo pages), 2.7 (team roster filter by year), 2.8a (sign-up, login and
+password) and 2.8b (user profile and menu) are complete; the next one is 2.9 (user-created
+team).
 
 ## Deliberately deferred
 
@@ -154,14 +155,14 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.8.1
+- Version: 0.9.0
 - Development branch: `master`
 - Stage: 1 (repository foundation and data model) — **complete**;
   stage 2 (public archive) — **in progress**, sub-stages 2.1 (demo data), 2.2
   (public UI skeleton), 2.3 (public queries and lists), 2.4 (gallery component), 2.5
-  (team and event pages), 2.6 (person and photo pages), 2.7 (team roster filter by year) and
-  2.8a (sign-up, login and password) complete
-- Tests: 513, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
+  (team and event pages), 2.6 (person and photo pages), 2.7 (team roster filter by year),
+  2.8a (sign-up, login and password) and 2.8b (user profile and menu) complete
+- Tests: 542, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
 
 ### What exists now
 
@@ -300,8 +301,33 @@ and the `.agents/skills/semver-checker/` skill.
 - The sign-up form has three mandatory consents with dates and a version — this is legal
   protection for the project, so the checkboxes are required and have no default values.
 - The "this is me" claim (`User.person` through moderation) is deferred: without moderation
-  anyone could claim someone else's page. The profile (2.8b) will only link an already
+  anyone could claim someone else's page. The profile (2.8b) only links an already
   connected person.
+
+### User profile
+
+- `/accounts/profile/` is our own page (`apps/accounts/views.py`, `accounts:profile`), not an
+  allauth template: it extends `base.html` and gets breadcrumbs. It must not extend the
+  allauth layout — that gives a narrow `.auth-shell` column meant for a single form.
+- The route is wired **before** `allauth.urls`: the paths do not overlap, but the order makes
+  the priority of our pages explicit.
+- Only `display_name` can be edited in the profile. Email and password are changed on their
+  own allauth pages, and the profile links to them: two places for one value would drift
+  apart.
+- Saving is POST-redirect-GET with `messages.success`. Without the redirect, reloading the
+  page would repeat the form submission.
+- The role row is shown to moderators and administrators only (`user.is_moderator`): for a
+  regular user the word "user" says nothing.
+- The "My archive profile" block shows a link only when `User.person` is already connected.
+  There is deliberately no "This is me" button: the claim flow is not implemented, and we
+  must not promise what does not exist.
+- The user menu in the navbar is built from existing routes only — otherwise
+  `NoReverseMatch` would break every page. The name in the button is truncated with CSS
+  (`.account-menu__name`), not in the view: a long value would stretch the header.
+- The `account_email` and `account_reauthenticate` pages are **not** overridden: the 2.8a
+  shell styles them, and the allauth scripts arrive through the `extra_body` → `extra_js`
+  block. Check them after a package update: without those scripts the address management
+  buttons do not work.
 
 ### Admin rules
 

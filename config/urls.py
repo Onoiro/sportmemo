@@ -13,6 +13,9 @@ urlpatterns = [
     path("", include("apps.catalog.urls")),
     path("", include("apps.photos.urls")),
     path("admin/", admin.site.urls),
+    # Наши страницы аккаунта объявлены до allauth: адреса не пересекаются,
+    # но так видно, что `/accounts/profile/` — наша страница, а не пакета.
+    path("accounts/", include("apps.accounts.urls")),
     path("accounts/", include("allauth.urls")),
 ]
 

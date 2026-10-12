@@ -5,6 +5,8 @@ from django import forms
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from apps.accounts.models import User
+
 
 def apply_bootstrap_classes(fields):
     """Bootstrap-классы виджетам: шаблоны allauth рендерят поля как есть."""
@@ -30,6 +32,20 @@ class BootstrapFormMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         apply_bootstrap_classes(self.fields)
+
+
+class ProfileForm(BootstrapFormMixin, forms.ModelForm):
+    """Профиль: меняется только «как к вам обращаться».
+
+    Email и пароль меняются на своих страницах allauth: поле в профиле
+    создало бы второе место, где то же значение правится иначе.
+    """
+
+    class Meta:
+        model = User
+        fields = ["display_name"]
+        labels = {"display_name": _("Как к вам обращаться")}
+        widgets = {"display_name": forms.TextInput(attrs={"autocomplete": "name"})}
 
 
 class LoginForm(BootstrapFormMixin, allauth_forms.LoginForm):
