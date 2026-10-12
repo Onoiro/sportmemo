@@ -1,0 +1,10 @@
+{% load i18n %}{% blocktranslate with name=team.name %}Новая команда в архиве SportMemo: {{ name }}{% endblocktranslate %}
+
+{% trans "Название" %}: {{ team.name }}
+{% if team.city %}{% trans "Город" %}: {{ team.city }}
+{% endif %}{% if team.founded_year %}{% trans "Год основания" %}: {{ team.founded_year }}
+{% endif %}{% trans "Автор" %}: {{ team.created_by|default:"—" }}
+{% trans "Страница" %}: {{ team_url }}
+{% trans "В админке" %}: {{ admin_url }}
+
+{% trans "Команда создана в статусе «черновик» и ждёт проверки." %}

@@ -33,6 +33,16 @@
 
     {% include "partials/moderation_notice.html" with obj=team %}
 
+    {% if can_edit %}
+        <p>
+            <a class="btn btn-outline-secondary btn-sm"
+               href="{% url 'catalog:team_update' team.slug %}">
+                <i class="bi bi-pencil" aria-hidden="true"></i>
+                {% trans "Редактировать" %}
+            </a>
+        </p>
+    {% endif %}
+
     {% if team.description %}
         <section class="detail-section">
             <p class="detail-section__text">{{ team.description }}</p>

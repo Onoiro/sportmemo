@@ -49,15 +49,16 @@ def _date_range(start, end):
     return f"{start}\u00a0—\u00a0{end}"
 
 
-def _unique_slug(instance, base_slug, queryset):
+def _unique_slug(instance, base_slug, queryset, fallback="item"):
     """Подобрать свободный slug с числовым суффиксом при коллизии.
 
-    Используется там, где slug глобально уникален (`Person`): люди с
-    одинаковыми именами — норма, а не ошибка.
+    Используется там, где slug уникален не глобально: люди с одинаковыми
+    именами и команды с одинаковыми названиями в одном виде спорта — норма,
+    а не ошибка. `queryset` задаёт область уникальности.
     """
     from django.utils.text import slugify
 
-    slug = base_slug or slugify(instance.full_name) or "person"
+    slug = base_slug or slugify(instance.full_name) or fallback
     candidate = slug
     counter = 2
     while queryset.filter(slug=candidate).exclude(pk=instance.pk).exists():
@@ -135,7 +136,14 @@ class Team(TimeStampedModel, SlugModel, StatusModel, SoftDeleteModel, MergeableM
         if not self.slug:
             from django.utils.text import slugify
 
-            self.slug = slugify(self.name, allow_unicode=True)[:200]
+            base_slug = slugify(self.name, allow_unicode=True)[:200]
+            # Уникальность slug — в пределах вида спорта (`UniqueConstraint`).
+            # Менеджер по умолчанию, а не `public`: constraint про `deleted_at`
+            # не знает, и «свободный» по мнению `public` slug всё равно упал бы
+            # на уровне базы.
+            self.slug = _unique_slug(
+                self, base_slug, Team.objects.filter(sport=self.sport)
+            )
         super().save(*args, **kwargs)
 
     def _merge_relations(self, target):
@@ -320,7 +328,7 @@ class Person(TimeStampedModel, SlugModel, StatusModel, SoftDeleteModel, Mergeabl
         if not self.display_name:
             self.display_name = self.full_name
         if not self.slug:
-            self.slug = _unique_slug(self, "", Person.objects.all())
+            self.slug = _unique_slug(self, "", Person.objects.all(), fallback="person")
         super().save(*args, **kwargs)
 
     def _merge_relations(self, target):

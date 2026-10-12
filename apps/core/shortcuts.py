@@ -10,7 +10,7 @@ from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.http import Http404
 
-from apps.core.models import Status
+from apps.core.models import Sport, Status
 
 # Размер порции галереи и порядок карточек. Общие для страницы года
 # и htmx-фрагмента: разойдутся — «показать ещё» начнёт пропускать
@@ -70,6 +70,19 @@ def archive_stats():
         .annotate(total=Count("year"))
         .count(),
     }
+
+
+def default_sport():
+    """Вид спорта по умолчанию для объектов, создаваемых пользователем.
+
+    Продукт односпортный: выбора вида спорта в интерфейсе нет, но схема
+    мультиспортная, и поле `sport` обязательное. Пока спортов несколько,
+    «по умолчанию» — первый активный по порядку сортировки.
+
+    Возвращает `None`, если активных видов спорта нет: вызывающая сторона
+    должна показать понятное сообщение, а не падать на пустом значении.
+    """
+    return Sport.objects.filter(is_active=True).order_by("sort_order", "name").first()
 
 
 def paginate(request, queryset, per_page):

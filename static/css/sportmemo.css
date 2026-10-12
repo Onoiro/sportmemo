@@ -847,6 +847,83 @@ html[data-bs-theme="dark"] {
     color: var(--bs-secondary-color);
 }
 
+/* Статусы публикации: цвет помогает отличить черновик от опубликованного. */
+.badge-status--draft {
+    color: var(--bs-secondary-color);
+    background-color: var(--bs-tertiary-bg);
+    border-color: var(--bs-border-color);
+}
+
+.badge-status--published {
+    color: var(--bs-success-text-emphasis, var(--bs-body-color));
+    background-color: var(--bs-success-bg-subtle, var(--bs-tertiary-bg));
+    border-color: var(--bs-success-border-subtle, var(--bs-border-color));
+}
+
+.badge-status--hidden {
+    color: var(--bs-warning-text-emphasis, var(--bs-body-color));
+    background-color: var(--bs-warning-bg-subtle, var(--bs-tertiary-bg));
+    border-color: var(--bs-warning-border-subtle, var(--bs-border-color));
+}
+
+.badge-status--rejected {
+    color: var(--bs-danger-text-emphasis, var(--bs-body-color));
+    background-color: var(--bs-danger-bg-subtle, var(--bs-tertiary-bg));
+    border-color: var(--bs-danger-border-subtle, var(--bs-border-color));
+}
+
+/* --- Форма команды --- */
+
+.team-form {
+    max-width: 46rem;
+    padding: 1.5rem;
+    background-color: var(--sm-photo-bg, var(--bs-secondary-bg));
+    border: 1px solid var(--sm-photo-border, var(--bs-border-color));
+    border-radius: var(--sm-radius);
+}
+
+.team-form__field {
+    margin-bottom: 1rem;
+}
+
+.team-form__checkbox {
+    margin-bottom: 1rem;
+}
+
+.team-form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+}
+
+/* --- Плашка «команда с таким названием уже есть» --- */
+
+.duplicate-notice {
+    margin-bottom: 1.25rem;
+    padding: 0.875rem 1rem;
+    background-color: var(--bs-warning-bg-subtle, var(--bs-secondary-bg));
+    border: 1px solid var(--bs-warning-border-subtle, var(--bs-border-color));
+    border-radius: var(--sm-radius);
+    font-size: 0.9375rem;
+}
+
+.duplicate-notice__title {
+    margin: 0;
+    color: var(--bs-heading-color);
+    font-weight: 600;
+}
+
+.duplicate-notice__list {
+    margin: 0.5rem 0;
+    padding-left: 1.25rem;
+}
+
+.duplicate-notice__text {
+    margin: 0;
+    color: var(--bs-secondary-color);
+}
+
 /* --- Пустое состояние --- */
 
 .empty-state {

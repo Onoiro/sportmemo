@@ -58,9 +58,9 @@ stays tidy.
 
 | App | Contents |
 |---|---|
-| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public query helpers (`shortcuts.py`), public views (home page, years, search), the `uslug` URL converter (`converters.py`), the pagination tag, `core/urls.py` |
+| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public query helpers (`shortcuts.py`), public views (home page, years, search), the `uslug` URL converter (`converters.py`), the pagination tag, `core/urls.py`, shared form helpers (`forms.py`: `BootstrapFormMixin`) |
 | `apps/accounts` | custom `User` (email as `USERNAME_FIELD`), consents, roles, link to `Person` |
-| `apps/catalog` | `Team`, `TeamMembership` (with `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (roster filter by year), list views and team, event and person detail pages |
+| `apps/catalog` | `Team`, `TeamMembership` (with `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (roster filter by year), `forms.py` (`TeamForm`), `emails.py` (moderator notification), list views and team, event and person detail pages, team create and edit views |
 | `apps/photos` | `Source`, `Photo`, `PhotoPerson`, public views (`photo_detail`, the `grid` fragment), `photos/urls.py` |
 | `apps/comments` | `Comment` (generic FK, replies) |
 | `apps/moderation` | `Report`, `ModerationAction` |
@@ -145,8 +145,8 @@ as a separate file when work on it starts (`plans/public-archive-2.N-<name>.md`)
 the list of sub-stages are in the master plan. Sub-stages 2.1 (demo data), 2.2 (public UI
 skeleton), 2.3 (public queries and lists), 2.4 (gallery component), 2.5 (team and event pages),
 2.6 (person and photo pages), 2.7 (team roster filter by year), 2.8a (sign-up, login and
-password) and 2.8b (user profile and menu) are complete; the next one is 2.9 (user-created
-team).
+password), 2.8b (user profile and menu) and 2.9 (user-created team) are complete; the next
+one is 2.10 (meta tags and Open Graph).
 
 ## Deliberately deferred
 
@@ -155,22 +155,23 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.9.0
+- Version: 0.10.0
 - Development branch: `master`
 - Stage: 1 (repository foundation and data model) — **complete**;
   stage 2 (public archive) — **in progress**, sub-stages 2.1 (demo data), 2.2
   (public UI skeleton), 2.3 (public queries and lists), 2.4 (gallery component), 2.5
   (team and event pages), 2.6 (person and photo pages), 2.7 (team roster filter by year),
-  2.8a (sign-up, login and password) and 2.8b (user profile and menu) complete
-- Tests: 542, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
+  2.8a (sign-up, login and password), 2.8b (user profile and menu) and 2.9 (user-created
+  team) complete
+- Tests: 600, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
 
 ### What exists now
 
 | App | Contents |
 |---|---|
-| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public views (home page, years, search), `core/urls.py` |
-| `apps/accounts` | email-based `User`, `UserManager`, consents (terms/privacy/PD law + version), roles, `User.person` link, allauth forms with Bootstrap classes (`BootstrapFormMixin`), allauth adapter |
-| `apps/catalog` | `Team`, `TeamMembership` (with `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (roster filter by year), list views and team, event and person detail pages |
+| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public views (home page, years, search), `core/urls.py`, shared form helpers (`forms.py`: `BootstrapFormMixin`) |
+| `apps/accounts` | email-based `User`, `UserManager`, consents (terms/privacy/PD law + version), roles, `User.person` link, allauth forms with Bootstrap classes, allauth adapter |
+| `apps/catalog` | `Team`, `TeamMembership` (with `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (roster filter by year), `forms.py` (`TeamForm`), `emails.py` (moderator notification), list views and team, event and person detail pages, team create and edit views |
 | `apps/photos` | `Source`, `Photo` (rights, `processing_status`, `phash`, `duplicate_of`), `PhotoPerson`, thumbnails via `ImageSpecField`, the photo page and the gallery fragment |
 | `apps/comments` | `Comment` (generic FK, replies, statuses) |
 | `apps/moderation` | `Report`, `ModerationAction` (moderator decision log) |
@@ -328,6 +329,48 @@ and the `.agents/skills/semver-checker/` skill.
   shell styles them, and the allauth scripts arrive through the `extra_body` → `extra_js`
   block. Check them after a package update: without those scripts the address management
   buttons do not work.
+
+### Team create and edit
+
+- A team is created by a user as a **draft** (`status=draft`) with `created_by`; a moderator
+  publishes it. Until then only the author and moderators see it, everyone else gets 404 —
+  the `get_visible_or_404` rule already covers this.
+- A team is edited by its author and by moderators; everyone else gets **404, not 403**: we
+  do not reveal that someone else's draft exists. The check lives in `can_edit_team()` and
+  applies to both GET and POST; even the author cannot edit a deleted team (the object comes
+  from `Team.public`).
+- Editing a **published** team does **not** reset its status: author changes must not wait for
+  a moderator, but everything is written to history (`django-simple-history`). We will return
+  to re-moderation if vandalism appears.
+- **The sport is not shown in the form** — the product is single-sport (invariant 1). The value
+  comes from `default_sport()` (`apps/core/shortcuts.py`): the first active sport by sort order.
+  No active sports — the form is unavailable with a clear message, not a 500 error.
+- **Duplicate names are not blocked.** "Соколы" exist in different cities, and the decision
+  "duplicate or namesake team" is made by a human. The form
+  (`TeamForm.find_duplicates()`) searches for teams with the same name (`iexact`) in the same
+  sport, **including other users' drafts** — otherwise three identical teams would appear
+  while moderation is pending. If found, the "I checked: this is a different team" checkbox is
+  required. Someone else's draft is shown by name and status only, without a link; a published
+  team gets a link. Real duplicates are merged by a moderator.
+- **The team slug is unique within a sport**, so it is generated through `_unique_slug()` with
+  a numeric suffix (`динамо`, `динамо-2`). The lookup scope is `Team.objects`, not `public`:
+  the `UniqueConstraint` knows nothing about `deleted_at`, and a slug that looks free to
+  `public` would still fail at the database level. Renaming does not change the existing slug —
+  URLs must not break.
+- **A club with several teams** is created as separate entries: "Русстар", "Русстар-2",
+  "Русстар (юноши 1992 г. р.)". A hint about this is the help text of the name field. A
+  separate "club" entity with a `parent` field is deferred (idea I-9 in the backlog):
+  navigation in the archive goes by years and people, and "all photos of a club" will be
+  collected by search.
+- The moderator notification (`apps/catalog/emails.py`) goes to recipients from the database
+  (role moderator or admin, active), not from a setting: the moderator list changes. An SMTP
+  error is logged and **does not cancel** team creation; with no moderators the email is not
+  sent and a warning is logged.
+- The `teams/new/` and `teams/mine/` routes are declared **before** `teams/<uslug:slug>/`:
+  the `uslug` converter accepts any letters and dashes and would otherwise capture both.
+- `BootstrapFormMixin` lives in `apps/core/forms.py`, not in `accounts`: team forms need
+  styled fields too, and importing from `accounts` into `catalog` would be a needless link
+  between apps.
 
 ### Admin rules
 

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ form_title }} — {{ SPORTMEMO_SITE_NAME }}{% endblock %}
+{% block description %}{% trans "Создание и редактирование команды в архиве SportMemo." %}{% endblock %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1 class="page-header__title">{{ form_title }}</h1>
+        {% if team and team.is_published %}
+            <p class="page-header__lead">
+                {% trans "Команда опубликована: изменения появятся на сайте сразу." %}
+            </p>
+        {% else %}
+            <p class="page-header__lead">
+                {% trans "Публикует команду модератор — обычно в течение дня." %}
+            </p>
+        {% endif %}
+    </header>
+
+    {% if not form %}
+        {% comment %}
+        Активных видов спорта нет — это состояние настройки проекта, а не
+        ошибка пользователя. Пустая форма с обязательным `sport` упала бы
+        на сохранении.
+        {% endcomment %}
+        <div class="empty-state">
+            <i class="bi bi-cone-striped empty-state__icon" aria-hidden="true"></i>
+            <p class="empty-state__title">{% trans "Создание команд пока недоступно" %}</p>
+            <p class="mb-0">{% trans "Раздел ещё настраивается. Загляните позже." %}</p>
+        </div>
+    {% else %}
+        <form class="team-form" method="post" action="{{ form_action }}"
+              enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            {% if form.duplicates %}
+                <div class="duplicate-notice" role="status">
+                    <p class="duplicate-notice__title">
+                        {% trans "Команда с таким названием уже есть в архиве" %}
+                    </p>
+                    <ul class="duplicate-notice__list">
+                        {% for duplicate in form.duplicates %}
+                            <li>
+                                {% if duplicate.is_published %}
+                                    <a href="{{ duplicate.get_absolute_url }}">{{ duplicate.name }}</a>
+                                {% else %}
+                                    {{ duplicate.name }}
+                                {% endif %}
+                                {% if duplicate.city %}— {{ duplicate.city }}{% endif %}
+                                {% if not duplicate.is_published %}
+                                    <span class="text-body-secondary">
+                                        ({% trans "ожидает проверки модератором" %})
+                                    </span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <p class="duplicate-notice__text">
+                        {% trans "Если это разные команды (например, одноимённые в разных городах), отметьте подтверждение ниже." %}
+                    </p>
+                </div>
+            {% endif %}
+
+            {% for field in form %}
+                {% if field.name == "confirm_duplicate" %}
+                    {% if form.duplicates %}
+                        <div class="form-check team-form__checkbox">
+                            {{ field }}
+                            <label class="form-check-label" for="{{ field.id_for_label }}">
+                                {{ field.label }}
+                            </label>
+                            {{ field.errors }}
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="team-form__field">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+                        {{ field.errors }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+            <div class="team-form__actions">
+                <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
+                <a class="btn btn-outline-secondary"
+                   href="{% if team %}{{ team.get_absolute_url }}{% else %}{% url 'catalog:team_list' %}{% endif %}">
+                    {% trans "Отмена" %}
+                </a>
+            </div>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}

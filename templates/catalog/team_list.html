@@ -15,6 +15,14 @@
         <p class="page-header__lead">
             {% blocktranslate count counter=page_obj.paginator.count %}Найдена {{ counter }} команда{% plural %}Найдено {{ counter }} команд{% endblocktranslate %}
         </p>
+        {% if user.is_authenticated %}
+            <p>
+                <a class="btn btn-outline-primary btn-sm" href="{% url 'catalog:team_create' %}">
+                    <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                    {% trans "Создать команду" %}
+                </a>
+            </p>
+        {% endif %}
     </header>
 
     {% if page_obj.object_list %}

@@ -42,6 +42,51 @@ class TestTeamSlug:
         assert other.slug == team.slug
         assert other.sport != team.sport
 
+    def test_same_name_gets_numeric_suffix(self, team, baseball, user):
+        """Две команды с одинаковым названием — не ошибка.
+
+        «Соколы» есть в разных городах: пользователь создаёт вторую команду
+        с тем же названием, и страница не должна падать на IntegrityError.
+        """
+        other = Team.objects.create(
+            sport=baseball, name="Динамо", city="Тверь", created_by=user
+        )
+
+        assert team.slug == "динамо"
+        assert other.slug == "динамо-2"
+
+    def test_suffix_counts_from_two(self, team, baseball, user):
+        Team.objects.create(
+            sport=baseball, name="Динамо", city="Тверь", created_by=user
+        )
+        third = Team.objects.create(
+            sport=baseball, name="Динамо", city="Тула", created_by=user
+        )
+
+        assert third.slug == "динамо-3"
+
+    def test_renaming_keeps_existing_slug(self, team):
+        """Slug — часть URL: правка названия не должна ломать ссылки."""
+        slug = team.slug
+        team.name = "Динамо Москва"
+        team.save()
+
+        team.refresh_from_db()
+        assert team.slug == slug
+
+    def test_deleted_team_still_blocks_slug(self, team, baseball, user):
+        """Мягко удалённая команда slug не освобождает.
+
+        `UniqueConstraint` про `deleted_at` не знает: если выдать тот же slug
+        второй команде, вставка упадёт на уровне базы.
+        """
+        team.soft_delete(reason="проверка")
+        other = Team.objects.create(
+            sport=baseball, name="Динамо", city="Тверь", created_by=user
+        )
+
+        assert other.slug == "динамо-2"
+
 
 class TestTeamMerge:
     def test_merge_moves_memberships_photos_and_event_teams(

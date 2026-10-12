@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Мои команды" %} — {{ SPORTMEMO_SITE_NAME }}{% endblock %}
+{% block description %}{% trans "Команды, созданные вами в архиве SportMemo." %}{% endblock %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1 class="page-header__title">{% trans "Мои команды" %}</h1>
+        {% comment %}
+        Пояснение снимает главный вопрос автора: «я создал, почему не видно?»
+        Ответ — команду публикует модератор.
+        {% endcomment %}
+        <p class="page-header__lead">
+            {% trans "Публикует команду модератор — обычно в течение дня. До публикации команду видите только вы и модератор." %}
+        </p>
+    </header>
+
+    {% if teams %}
+        <ul class="entity-list">
+            {% for team in teams %}
+                <li class="entity-list__item">
+                    <a class="entity-list__name" href="{{ team.get_absolute_url }}">{{ team.name }}</a>
+                    <span class="entity-list__note">
+                        {% if team.city %}{{ team.city }} · {% endif %}
+                        {% if team.founded_year %}{{ team.founded_year }} · {% endif %}
+                        {{ team.created_at|date:"j E Y" }}
+                    </span>
+                    <span class="badge-status badge-status--{{ team.status }}">
+                        {{ team.get_status_display }}
+                    </span>
+                    <a class="btn btn-outline-secondary btn-sm"
+                       href="{% url 'catalog:team_update' team.slug %}">
+                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                        {% trans "Редактировать" %}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-shield-plus empty-state__icon" aria-hidden="true"></i>
+            <p class="empty-state__title">{% trans "Вы ещё не создавали команд" %}</p>
+            <p class="mb-3">
+                {% trans "Если вашей команды нет в архиве — заведите её. Публикует модератор." %}
+            </p>
+            <a class="btn btn-primary" href="{% url 'catalog:team_create' %}">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                {% trans "Создать команду" %}
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -123,3 +123,43 @@ class TestHealthz:
 
     def test_rejects_post(self, client):
         assert client.post(reverse("healthz")).status_code == 405
+
+
+class TestDefaultSport:
+    """Вид спорта по умолчанию для объектов, создаваемых пользователем."""
+
+    def test_returns_first_active_by_sort_order(self, baseball):
+        from apps.core.models import Sport
+        from apps.core.shortcuts import default_sport
+
+        Sport.objects.create(name="Крикет", slug="cricket", sort_order=5)
+        Sport.objects.create(name="Лапта", slug="lapta", sort_order=-1)
+
+        assert default_sport().slug == "lapta"
+
+    def test_inactive_sport_is_skipped(self, baseball):
+        from apps.core.models import Sport
+        from apps.core.shortcuts import default_sport
+
+        baseball.is_active = False
+        baseball.save(update_fields=["is_active"])
+        Sport.objects.create(name="Крикет", slug="cricket", sort_order=5)
+
+        assert default_sport().slug == "cricket"
+
+    def test_returns_none_without_active_sports(self, baseball):
+        from apps.core.shortcuts import default_sport
+
+        baseball.is_active = False
+        baseball.save(update_fields=["is_active"])
+
+        assert default_sport() is None
+
+    def test_returns_none_without_any_sports(self, db):
+        from apps.core.models import Sport
+        from apps.core.shortcuts import default_sport
+
+        # Бейсбол создаётся data-миграцией, поэтому таблицу чистим явно.
+        Sport.objects.all().delete()
+
+        assert default_sport() is None

@@ -1,20 +1,27 @@
 """Представления публичного каталога.
 
-Списки и страницы команд, событий и людей.
+Списки и страницы команд, событий и людей, а также создание и правка команды
+зарегистрированным пользователем.
 """
 
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.db.models import F
-from django.http import QueryDict
-from django.shortcuts import render
+from django.http import Http404, QueryDict
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_http_methods
 
+from apps.catalog.emails import notify_moderators_new_team
+from apps.catalog.forms import TeamForm
 from apps.catalog.models import Event, Person, Team
 from apps.catalog.roster import memberships_in_year, roster_years
+from apps.core.models import Status
 from apps.core.shortcuts import (
     PHOTO_ORDERING,
     PHOTO_PAGE_SIZE,
+    default_sport,
     get_visible_or_404,
     paginate,
     photos_count,
@@ -122,6 +129,34 @@ def roster_year(request, years):
     return year if year in years else None
 
 
+def can_edit_team(user, team) -> bool:
+    """Может ли пользователь править команду.
+
+    Правит автор и модератор. Всем остальным — 404, а не 403: не раскрываем
+    существование чужого черновика. Та же проверка, что в
+    `get_visible_or_404`, — правила не должны расходиться.
+    """
+    if user is None or not user.is_authenticated:
+        return False
+    return bool(getattr(user, "is_moderator", False)) or team.created_by_id == user.pk
+
+
+def get_editable_team_or_404(request, slug):
+    """Команда для правки или 404.
+
+    Объект берётся из `public` (без удалённых и слитых), право проверяется
+    отдельно: удалённую команду не должен править даже автор.
+    """
+    try:
+        team = Team.public.select_related("sport").get(slug=slug)
+    except Team.DoesNotExist as exc:
+        raise Http404("Команда не найдена") from exc
+
+    if not can_edit_team(request.user, team):
+        raise Http404("Команда не найдена")
+    return team
+
+
 def team_list(request):
     """Список опубликованных команд, по алфавиту."""
     teams = (
@@ -216,6 +251,7 @@ def team_detail(request, slug):
         "roster_years": years,
         "selected_year": selected_year,
         "attribute_items": attribute_items(team.attributes),
+        "can_edit": can_edit_team(request.user, team),
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},
             {"url": reverse("catalog:team_list"), "label": _("Команды")},
@@ -300,3 +336,109 @@ def person_detail(request, slug):
         ],
     }
     return render(request, "catalog/person_detail.html", context)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def team_create(request):
+    """Создание команды: сохраняется черновиком и ждёт модератора.
+
+    Вид спорта берётся из `default_sport()`: выбора в интерфейсе нет, схема
+    мультиспортная (инвариант № 1). Активных видов спорта нет — форма
+    недоступна: показать сообщение честнее, чем падать на пустом `sport`.
+    """
+    sport = default_sport()
+
+    if request.method == "POST" and sport is not None:
+        form = TeamForm(request.POST, request.FILES, sport=sport)
+        if form.is_valid():
+            team = form.save(commit=False)
+            team.sport = sport
+            team.status = Status.DRAFT
+            team.created_by = request.user
+            team.save()
+            notify_moderators_new_team(team)
+            messages.success(
+                request,
+                _("Команда создана и отправлена на проверку модератору."),
+            )
+            return redirect(team.get_absolute_url())
+    elif sport is not None:
+        form = TeamForm(sport=sport)
+    else:
+        form = None
+
+    context = {
+        "form": form,
+        "team": None,
+        "form_action": reverse("catalog:team_create"),
+        "form_title": _("Новая команда"),
+        "submit_label": _("Создать"),
+        "sport": sport,
+        "breadcrumbs": [
+            {"url": reverse("core:home"), "label": _("Главная")},
+            {"url": reverse("catalog:team_list"), "label": _("Команды")},
+            {"label": _("Новая команда")},
+        ],
+    }
+    return render(request, "catalog/team_form.html", context)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def team_update(request, slug):
+    """Правка своей команды.
+
+    Опубликованная команда остаётся опубликованной: правки автора не должны
+    ждать модератора, а изменение всё равно попадает в историю. Вернуться
+    к повторной модерации можно, если появится вандализм.
+    """
+    team = get_editable_team_or_404(request, slug)
+
+    if request.method == "POST":
+        form = TeamForm(request.POST, request.FILES, instance=team, sport=team.sport)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _("Изменения сохранены."))
+            return redirect(team.get_absolute_url())
+    else:
+        form = TeamForm(instance=team, sport=team.sport)
+
+    context = {
+        "form": form,
+        "team": team,
+        "form_action": reverse("catalog:team_update", args=[team.slug]),
+        "form_title": _("Редактирование команды"),
+        "submit_label": _("Сохранить"),
+        "sport": team.sport,
+        "breadcrumbs": [
+            {"url": reverse("core:home"), "label": _("Главная")},
+            {"url": reverse("catalog:team_list"), "label": _("Команды")},
+            {"url": team.get_absolute_url(), "label": team.name},
+            {"label": _("Редактирование")},
+        ],
+    }
+    return render(request, "catalog/team_form.html", context)
+
+
+@login_required
+@require_GET
+def my_teams(request):
+    """Свои команды: любые статусы, включая мягко удалённые.
+
+    Менеджер по умолчанию, а не `public`: автор должен видеть и то, что
+    модератор убрал, — иначе команда исчезнет без объяснения.
+    """
+    teams = (
+        Team.objects.filter(created_by=request.user)
+        .select_related("sport")
+        .order_by("-created_at")
+    )
+    context = {
+        "teams": teams,
+        "breadcrumbs": [
+            {"url": reverse("core:home"), "label": _("Главная")},
+            {"label": _("Мои команды")},
+        ],
+    }
+    return render(request, "catalog/my_teams.html", context)
