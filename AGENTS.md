@@ -154,14 +154,14 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.8.0
+- Version: 0.8.1
 - Development branch: `master`
 - Stage: 1 (repository foundation and data model) — **complete**;
   stage 2 (public archive) — **in progress**, sub-stages 2.1 (demo data), 2.2
   (public UI skeleton), 2.3 (public queries and lists), 2.4 (gallery component), 2.5
   (team and event pages), 2.6 (person and photo pages), 2.7 (team roster filter by year) and
   2.8a (sign-up, login and password) complete
-- Tests: 512, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
+- Tests: 513, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
 
 ### What exists now
 

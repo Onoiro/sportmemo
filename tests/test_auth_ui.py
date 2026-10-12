@@ -74,6 +74,13 @@ class TestLayout:
 
         assert html.count("form-check-input") == 3
 
+    def test_signup_fields_have_labels(self, client):
+        html = client.get(SIGNUP_URL).content.decode()
+
+        assert "Адрес электронной почты" in html
+        assert "Как к вам обращаться" in html
+        assert "Пароль (ещё раз)" in html
+
 
 class TestAnonymousAccess:
     @pytest.mark.parametrize(
