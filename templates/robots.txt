@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /accounts/
+Disallow: /search/
+Disallow: /healthz/
+Disallow: /teams/new/
+Disallow: /teams/mine/
+
+Sitemap: {{ sitemap_url }}

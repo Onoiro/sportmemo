@@ -1,5 +1,6 @@
 """Служебные представления приложения core."""
 
+from django.contrib.sites.shortcuts import get_current_site
 from django.db import connection
 from django.db.models import Count, F
 from django.http import Http404, JsonResponse, QueryDict
@@ -9,6 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
+from apps.core.schema import compact, website_schema
 from apps.core.seo import SITE_NAME, page_meta
 from apps.core.shortcuts import (
     PHOTO_ORDERING,
@@ -44,6 +46,31 @@ def healthz(request):
     return JsonResponse(checks, status=status)
 
 
+@require_GET
+def robots_txt(request):
+    """`robots.txt` отдаёт Django, а не nginx.
+
+    Так адрес карты сайта и список закрытых разделов лежат рядом с кодом
+    и попадают в репозиторий. Домен берётся из `django.contrib.sites`,
+    а не из `request.get_host()`: за сайтом стоит nginx, и адрес зависел бы
+    от настроек прокси, а не от проекта.
+
+    Это вежливая просьба, а не защита: страницу можно открыть по прямой
+    ссылке. Черновики защищает `get_visible_or_404`.
+    """
+    site = get_current_site(request)
+    sitemap_url = (
+        f"{request.scheme}://{site.domain}"
+        f"{reverse('django.contrib.sitemaps.views.index')}"
+    )
+    return render(
+        request,
+        "robots.txt",
+        {"sitemap_url": sitemap_url},
+        content_type="text/plain",
+    )
+
+
 def home(request):
     """Главная страница: поиск, статистика и последние фото."""
     context = {
@@ -61,6 +88,7 @@ def home(request):
             title=f"{SITE_NAME} — {_('архив спортивных фотографий')}",
             append_site_name=False,
         ),
+        "jsonld_blocks": compact(website_schema(request)),
     }
     return render(request, "core/home.html", context)
 

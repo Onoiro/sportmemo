@@ -18,6 +18,7 @@ from apps.catalog.forms import TeamForm
 from apps.catalog.models import Event, Person, Team
 from apps.catalog.roster import memberships_in_year, roster_years
 from apps.core.models import Status
+from apps.core.schema import compact, event_schema, person_schema, team_schema
 from apps.core.seo import page_meta
 from apps.core.shortcuts import (
     PHOTO_ORDERING,
@@ -276,6 +277,11 @@ def team_detail(request, slug):
             # в поиске ей делать нечего.
             noindex=not team.is_published,
         ),
+        # Разметка только у опубликованной команды: черновик открыт автору
+        # и модератору, но поисковику в нём делать нечего.
+        "jsonld_blocks": compact(
+            team_schema(request, team) if team.is_published else None
+        ),
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},
             {"url": reverse("catalog:team_list"), "label": _("Команды")},
@@ -310,6 +316,9 @@ def event_detail(request, slug):
             description=event.description
             or _("Событие «%(name)s» в архиве SportMemo.") % {"name": event.name},
             noindex=not event.is_published,
+        ),
+        "jsonld_blocks": compact(
+            event_schema(request, event) if event.is_published else None
         ),
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},
@@ -376,6 +385,11 @@ def person_detail(request, slug):
             image=hero_photo.preview if hero_photo else None,
             image_alt=person.public_name,
             noindex=not person.is_published,
+        ),
+        # `person_schema` сам возвращает `None` для скрытого имени:
+        # правило живёт в сборке разметки, а не в представлении.
+        "jsonld_blocks": compact(
+            person_schema(request, person) if person.is_published else None
         ),
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},

@@ -1,0 +1,8 @@
+{% load jsonld %}
+{% comment %}
+Микроразметка страницы. Блоки приходят готовыми из `apps/core/schema.py`:
+логика приватности имени и выбора картинки живёт в Python, партиал только
+выводит. Страницы без разметки не задают `jsonld_blocks` — тогда пусто.
+{% endcomment %}
+{% for block in jsonld_blocks %}{% jsonld block %}
+{% endfor %}

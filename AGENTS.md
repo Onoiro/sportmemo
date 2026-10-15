@@ -58,7 +58,7 @@ stays tidy.
 
 | App | Contents |
 |---|---|
-| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public query helpers (`shortcuts.py`), public views (home page, years, search), the `uslug` URL converter (`converters.py`), the pagination tag, `core/urls.py`, shared form helpers (`forms.py`: `BootstrapFormMixin`) |
+| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public query helpers (`shortcuts.py`), public views (home page, years, search, `robots.txt`), the `uslug` URL converter (`converters.py`), the pagination tag, `core/urls.py`, shared form helpers (`forms.py`: `BootstrapFormMixin`), SEO meta tags (`seo.py`), sitemap (`sitemaps.py`), Schema.org markup (`schema.py`) |
 | `apps/accounts` | custom `User` (email as `USERNAME_FIELD`), consents, roles, link to `Person` |
 | `apps/catalog` | `Team`, `TeamMembership` (with `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (roster filter by year), `forms.py` (`TeamForm`), `emails.py` (moderator notification), list views and team, event and person detail pages, team create and edit views |
 | `apps/photos` | `Source`, `Photo`, `PhotoPerson`, public views (`photo_detail`, the `grid` fragment), `photos/urls.py` |
@@ -145,8 +145,9 @@ as a separate file when work on it starts (`plans/public-archive-2.N-<name>.md`)
 the list of sub-stages are in the master plan. Sub-stages 2.1 (demo data), 2.2 (public UI
 skeleton), 2.3 (public queries and lists), 2.4 (gallery component), 2.5 (team and event pages),
 2.6 (person and photo pages), 2.7 (team roster filter by year), 2.8a (sign-up, login and
-password), 2.8b (user profile and menu) and 2.9 (user-created team) are complete; the next
-one is 2.10 (meta tags and Open Graph).
+password), 2.8b (user profile and menu), 2.9 (user-created team), 2.10 (meta tags and
+Open Graph) and 2.11 (sitemap, robots and Schema.org) are complete; the next one is 2.12
+(search: infrastructure).
 
 ## Deliberately deferred
 
@@ -155,21 +156,21 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.11.0
+- Version: 0.12.0
 - Development branch: `master`
 - Stage: 1 (repository foundation and data model) — **complete**;
   stage 2 (public archive) — **in progress**, sub-stages 2.1 (demo data), 2.2
   (public UI skeleton), 2.3 (public queries and lists), 2.4 (gallery component), 2.5
   (team and event pages), 2.6 (person and photo pages), 2.7 (team roster filter by year),
-  2.8a (sign-up, login and password), 2.8b (user profile and menu), 2.9 (user-created team)
-  and 2.10 (meta tags and Open Graph) complete
-- Tests: 636, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
+  2.8a (sign-up, login and password), 2.8b (user profile and menu), 2.9 (user-created team),
+  2.10 (meta tags and Open Graph) and 2.11 (sitemap, robots and Schema.org) complete
+- Tests: 695, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
 
 ### What exists now
 
 | App | Contents |
 |---|---|
-| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public views (home page, years, search), `core/urls.py`, shared form helpers (`forms.py`: `BootstrapFormMixin`), SEO meta tags (`seo.py`) |
+| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public queries (`shortcuts.py`), public views (home page, years, search, `robots.txt`), `core/urls.py`, shared form helpers (`forms.py`: `BootstrapFormMixin`), SEO meta tags (`seo.py`), sitemap (`sitemaps.py`), Schema.org markup (`schema.py`) |
 | `apps/accounts` | email-based `User`, `UserManager`, consents (terms/privacy/PD law + version), roles, `User.person` link, allauth forms with Bootstrap classes, allauth adapter |
 | `apps/catalog` | `Team`, `TeamMembership` (with `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (roster filter by year), `forms.py` (`TeamForm`), `emails.py` (moderator notification), list views and team, event and person detail pages, team create and edit views |
 | `apps/photos` | `Source`, `Photo` (rights, `processing_status`, `phash`, `duplicate_of`), `PhotoPerson`, thumbnails via `ImageSpecField`, the photo page and the gallery fragment |
@@ -429,6 +430,26 @@ and the `.agents/skills/semver-checker/` skill.
   of the `seo_meta` context processor for pages that set no `meta` of their own: a new page
   stays out of search engines until its author describes it. The view context overrides the
   processor, so the `meta` dict from `page_meta()` must be complete, never partial.
+- Schema.org markup is built in `apps/core/schema.py`, not in templates, for the same reason
+  as meta tags: the name privacy rule and the image choice must live in one place. The
+  `{% jsonld %}` tag (`apps/core/templatetags/jsonld.py`) serialises the dict and escapes `<`,
+  `>`, `&`, U+2028 and U+2029: without that a name like `</script>` would break the page.
+  The partial `templates/partials/jsonld.html` renders the blocks from the `jsonld_blocks`
+  context variable; a page without markup never sets it, so the partial stays empty. A `Person`
+  is marked up for `full` and `first_name_only`, and has no block for `hidden`: the last name
+  must never reach machine-readable data in any variant.
+- The sitemap (`apps/core/sitemaps.py`) lists public objects only and takes its queries from
+  `apps/core/shortcuts.py` instead of rebuilding `public.published()`: the address list in the
+  sitemap and the list on the page must match. The domain for the sitemap and `robots.txt` comes
+  from `django.contrib.sites`, not from `request.get_host()`: nginx sits in front of the site,
+  so the address would depend on proxy settings. Sitemap route names stay as Django defines
+  them — `views.index` builds section links from those names, and renaming them would produce
+  broken links. `i18n = False` is required: URLs have no language prefix, and `i18n = True`
+  would duplicate every address once per language in `LANGUAGES`.
+- Django serves `/robots.txt` and `/sitemap.xml`, not nginx: the sitemap address and the list
+  of closed sections must live next to the code and go into the repository. `robots.txt` is
+  a polite request, not protection; drafts are protected by `get_visible_or_404`, which returns
+  404 to outsiders.
 - UI strings go through `gettext` only. Run `make i18n` after adding strings. `makemessages`
   marks new strings as `fuzzy` when it finds a similar old one, and `msgfmt` skips fuzzy
   entries — check the fuzzy blocks after extraction and clear the flags.

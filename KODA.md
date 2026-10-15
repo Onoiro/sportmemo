@@ -58,7 +58,7 @@ Docker Compose + Nginx (инфраструктура).
 
 | Приложение | Содержимое |
 |---|---|
-| `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, миксины админки (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, команда `seed_demo`, публичные выборки (`shortcuts.py`), публичные представления (главная, годы, поиск), конвертер URL `uslug` (`converters.py`), тег пагинации, `core/urls.py` |
+| `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, миксины админки (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, команда `seed_demo`, публичные выборки (`shortcuts.py`), публичные представления (главная, годы, поиск, `robots.txt`), конвертер URL `uslug` (`converters.py`), тег пагинации, `core/urls.py`, SEO-метатеги (`seo.py`), карта сайта (`sitemaps.py`), микроразметка (`schema.py`) |
 | `apps/accounts` | кастомный `User` (email как `USERNAME_FIELD`), согласия, роли, связь с `Person` |
 | `apps/catalog` | `Team`, `TeamMembership` (с `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (фильтр состава по годам), представления и маршруты списков, страниц команды, события и человека |
 | `apps/photos` | `Source`, `Photo`, `PhotoPerson`, публичные представления (страница фото, фрагмент галереи), `photos/urls.py` |
@@ -146,8 +146,8 @@ Docker Compose + Nginx (инфраструктура).
 2.3 (публичные выборки и списки), 2.4 (компонент галереи), 2.5 (страницы команды и события),
 2.6 (страницы человека и фотографии), 2.7 (фильтр состава команды по годам), 2.8а (вход,
 регистрация и пароль), 2.8б (профиль и меню пользователя), 2.9 (создание команды
-пользователем) и 2.10 (метатеги и Open Graph) завершены; следующий — 2.11 (sitemap, robots
-и Schema.org).
+пользователем), 2.10 (метатеги и Open Graph) и 2.11 (sitemap, robots и Schema.org)
+завершены; следующий — 2.12 (поиск: инфраструктура).
 
 ## Отложено осознанно
 
@@ -156,21 +156,22 @@ UI, «конструктор видов спорта». Обработка фо�
 
 ## Текущее состояние
 
-- Версия: 0.11.0
+- Версия: 0.12.0
 - Ветка разработки: `master`
 - Этап: 1 (фундамент репозитория и модель данных) — **завершён**;
   этап 2 (публичный архив) — **в работе**, подэтапы 2.1 (демо-данные), 2.2 (каркас
   публичного UI), 2.3 (публичные выборки и списки), 2.4 (компонент галереи), 2.5
   (страницы команды и события), 2.6 (страницы человека и фотографии), 2.7 (фильтр состава
   команды по годам), 2.8а (вход, регистрация и пароль), 2.8б (профиль и меню пользователя),
-  2.9 (создание команды пользователем) и 2.10 (метатеги и Open Graph) завершены
-- Тесты: 636, проходят на Python 3.12 и 3.13 (`make test`), линтер чист (`make lint`)
+  2.9 (создание команды пользователем), 2.10 (метатеги и Open Graph) и 2.11 (sitemap,
+  robots и Schema.org) завершены
+- Тесты: 695, проходят на Python 3.12 и 3.13 (`make test`), линтер чист (`make lint`)
 
 ### Что уже есть
 
 | Приложение | Содержимое |
 |---|---|
-| `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, миксины админки (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, команда `seed_demo`, публичные выборки (`shortcuts.py`), публичные представления (главная, годы, поиск), конвертер URL `uslug` (`converters.py`), тег пагинации, `core/urls.py`, общие приёмы форм (`forms.py`: `BootstrapFormMixin`), SEO-метатеги (`seo.py`) |
+| `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, миксины админки (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, команда `seed_demo`, публичные выборки (`shortcuts.py`), публичные представления (главная, годы, поиск, `robots.txt`), конвертер URL `uslug` (`converters.py`), тег пагинации, `core/urls.py`, общие приёмы форм (`forms.py`: `BootstrapFormMixin`), SEO-метатеги (`seo.py`), карта сайта (`sitemaps.py`), микроразметка Schema.org (`schema.py`, `templatetags/jsonld.py`) |
 | `apps/accounts` | `User` по email, `UserManager`, согласия (terms/privacy/152-ФЗ + версия), роли, связь `User.person`, формы allauth с Bootstrap-классами, адаптер allauth |
 | `apps/catalog` | `Team`, `TeamMembership` (с `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (фильтр состава по годам), `forms.py` (`TeamForm`), `emails.py` (письмо модераторам), представления и маршруты списков, страниц команды, события и человека, создания и правки команды |
 | `apps/photos` | `Source`, `Photo` (права, `processing_status`, `phash`, `duplicate_of`), `PhotoPerson`, превью через `ImageSpecField`, страница фото и фрагмент галереи |
@@ -421,6 +422,25 @@ CI (`.github/workflows/ci.yml`: ruff, проверка миграций, pytest 
   процессора `seo_meta` для страниц, которые не задали свой `meta`: новая страница не попадёт
   в поисковики, пока автор не опишет её явно. Контекст представления перекрывает процессор,
   поэтому `meta` из `page_meta()` должен быть полным, а не частичным.
+- Микроразметка Schema.org собирается в `apps/core/schema.py`, а не в шаблонах, — по тому же
+  правилу, что метатеги: правило приватности имени и выбор картинки живут в одном месте.
+  Тег `{% jsonld %}` (`apps/core/templatetags/jsonld.py`) сериализует словарь и экранирует
+  `<`, `>`, `&`, U+2028 и U+2029: без этого название вида `</script>` разорвало бы страницу.
+  Партиал `templates/partials/jsonld.html` выводит блоки из контекста `jsonld_blocks`; страница
+  без разметки переменную не задаёт, и партиал пуст. `Person` в разметку попадает при `full`
+  и `first_name_only`, при `hidden` блока нет: фамилия не должна попадать в машинное описание
+  ни при каком варианте.
+- Карта сайта (`apps/core/sitemaps.py`) отдаёт только публичное и берёт выборки из
+  `apps/core/shortcuts.py`, а не собирает цепочку `public.published()` заново: список адресов
+  в карте и список на странице обязаны совпадать. Домен карты и `robots.txt` берётся
+  из `django.contrib.sites`, а не из `request.get_host()`: за сайтом стоит nginx, и адрес
+  зависел бы от настроек прокси. Имена маршрутов sitemap — штатные Django, `views.index`
+  строит ссылки на секции по ним; переименование дало бы битые ссылки в индексе. `i18n = False`
+  обязателен: языковых префиксов в адресах нет, и `i18n = True` продублировал бы каждый адрес
+  по числу языков в `LANGUAGES`.
+- `/robots.txt` и `/sitemap.xml` обслуживает Django, а не nginx: адрес карты и список закрытых
+  разделов должны лежать рядом с кодом и попадать в репозиторий. `robots.txt` — вежливая
+  просьба, а не защита; черновики защищает `get_visible_or_404`, который отдаёт посторонним 404.
 - Строки интерфейса — только через `gettext`. После добавления строк выполняется `make i18n`;
   `makemessages` помечает новые строки `fuzzy`, если нашёл похожую старую, а `msgfmt`
   пропускает fuzzy — после извлечения проверяйте fuzzy-блоки и снимайте флаги. Для русского

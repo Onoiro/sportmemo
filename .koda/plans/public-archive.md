@@ -682,7 +682,7 @@ Django рендерит её без `request`, процессор не рабо�
 
 ---
 
-### 2.11 [ ] sitemap, robots и Schema.org
+### 2.11 [x] sitemap, robots и Schema.org
 
 **Цель.** Сайт нормально индексируется, а карточки получают расширенную выдачу.
 
@@ -694,14 +694,34 @@ Django рендерит её без `request`, процессор не рабо�
 - JSON-LD: `WebSite` (с `SearchAction`), `SportsTeam`, `Person`, `SportsEvent`, `ImageObject`;
   фамилия несовершеннолетних в разметку не попадает.
 
-**Файлы:** `apps/core/sitemaps.py`, `templates/robots.txt`, `templates/partials/jsonld/*.html`,
-`config/urls.py`, `config/settings.py`, `tests/test_seo.py`
+**Файлы:** `apps/core/sitemaps.py`, `apps/core/schema.py`, `apps/core/templatetags/jsonld.py`,
+`templates/robots.txt`, `templates/partials/jsonld.html`, `config/urls.py`, `config/settings.py`,
+`tests/test_seo.py`
 
 **Критерии готовности.** `/sitemap.xml` содержит только опубликованные объекты и валиден;
 `/robots.txt` отдаёт корректный текст; JSON-LD проходит проверку синтаксиса, приватные имена
 в него не попадают.
 
 **Навыки:** koda-coder, semver-checker. **Размер:** S. **Semver:** minor.
+**Детальный план:** [`public-archive-2.11-sitemap-robots-schema.md`](public-archive-2.11-sitemap-robots-schema.md)
+(утверждён 2026-10-15; карта сайта — индекс + пять секций, домен из Sites, микроразметка
+собирается в `apps/core/schema.py`, `BreadcrumbList` не делаем).
+
+**Итог (2026-10-15).** Карта сайта — индекс `/sitemap.xml` и пять секций
+(`pages`, `teams`, `events`, `people`, `photos`); выборки берутся из `apps/core/shortcuts.py`
+и `public.published()`, поэтому черновики, скрытое, отклонённое, удалённое, слитое и фото
+без подтверждённых прав в карту не попадают. Домен карты задаёт `django.contrib.sites`
+(`sportmemo.ru`), схему — запрос: за сайтом стоит nginx, и адрес не должен зависеть
+от настроек прокси. `robots.txt` отдаёт Django (`templates/robots.txt`), а не nginx:
+список закрытых разделов и адрес карты лежат рядом с кодом. Микроразметка собирается
+в Python (`apps/core/schema.py`) по тому же правилу, что метатеги: правило приватности имени
+и выбор картинки живут в одном месте. Тег `{% jsonld %}` экранирует `<`, `>`, `&`,
+U+2028 и U+2029 — название вида `</script>` не ломает страницу. Отклонение от мастер-плана:
+один партиал `templates/partials/jsonld.html` вместо папки `jsonld/*.html` — данные и так
+собираются в Python, пять шаблонов с одним и тем же `<script>` не нужны. `django.contrib.sitemaps`
+добавлено в `INSTALLED_APPS` ради штатных шаблонов пакета. Годы жизни в разметку не выводим:
+в модели только год, а `birthDate` по стандарту — дата. Тесты: `tests/test_seo.py` (59),
+всего 695 (было 636). Версия 0.12.0.
 
 ---
 
@@ -856,7 +876,7 @@ Django рендерит её без `request`, процессор не рабо�
 | 2.8б | Профиль и меню пользователя | S | minor | [x] |
 | 2.9 | Создание команды пользователем | S | minor | [x] |
 | 2.10 | Метатеги и Open Graph | S | minor | [x] |
-| 2.11 | sitemap, robots и Schema.org | S | minor | [ ] |
+| 2.11 | sitemap, robots и Schema.org | S | minor | [x] |
 | 2.12 | Поиск: инфраструктура | M | minor | [ ] |
 | 2.13 | Поиск: интерфейс | M | minor | [ ] |
 | 2.14 | Комментарии и жалобы в UI | M | minor | [ ] |

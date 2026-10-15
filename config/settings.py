@@ -45,6 +45,9 @@ DJANGO_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
+    # Нужно ради штатных шаблонов `sitemap.xml` и `sitemap_index.xml`:
+    # без приложения в `INSTALLED_APPS` Django их не найдёт.
+    "django.contrib.sitemaps",
 ]
 
 THIRD_PARTY_APPS = [

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-15 07:48+0300\n"
+"POT-Creation-Date: 2026-10-15 18:13+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -119,12 +119,12 @@ msgstr "пользователи"
 msgid "Профиль обновлён"
 msgstr "Профиль обновлён"
 
-#: apps/accounts/views.py:38 apps/catalog/views.py:179
-#: apps/catalog/views.py:206 apps/catalog/views.py:280
-#: apps/catalog/views.py:315 apps/catalog/views.py:381
-#: apps/catalog/views.py:432 apps/catalog/views.py:474
-#: apps/catalog/views.py:505 apps/core/views.py:106 apps/core/views.py:154
-#: apps/photos/views.py:43 templates/core/placeholder.html:7
+#: apps/accounts/views.py:38 apps/catalog/views.py:180
+#: apps/catalog/views.py:207 apps/catalog/views.py:286
+#: apps/catalog/views.py:324 apps/catalog/views.py:395
+#: apps/catalog/views.py:446 apps/catalog/views.py:488
+#: apps/catalog/views.py:519 apps/core/views.py:134 apps/core/views.py:182
+#: apps/photos/views.py:44 templates/core/placeholder.html:7
 #: templates/partials/footer.html:20
 msgid "Главная"
 msgstr "Главная"
@@ -494,93 +494,93 @@ msgstr "участие команды"
 msgid "участие команд"
 msgstr "участие команд"
 
-#: apps/catalog/views.py:42
+#: apps/catalog/views.py:43
 msgid "Этап"
 msgstr "Этап"
 
-#: apps/catalog/views.py:43
+#: apps/catalog/views.py:44
 msgid "Счёт"
 msgstr "Счёт"
 
-#: apps/catalog/views.py:44
+#: apps/catalog/views.py:45
 msgid "Результат"
 msgstr "Результат"
 
-#: apps/catalog/views.py:45
+#: apps/catalog/views.py:46
 msgid "Иннингов"
 msgstr "Иннингов"
 
-#: apps/catalog/views.py:46
+#: apps/catalog/views.py:47
 msgid "Команд"
 msgstr "Команд"
 
-#: apps/catalog/views.py:173 apps/catalog/views.py:180
-#: apps/catalog/views.py:281 apps/catalog/views.py:433
-#: apps/catalog/views.py:475 templates/catalog/team_list.html:11
+#: apps/catalog/views.py:174 apps/catalog/views.py:181
+#: apps/catalog/views.py:287 apps/catalog/views.py:447
+#: apps/catalog/views.py:489 templates/catalog/team_list.html:11
 #: templates/core/home.html:46 templates/partials/footer.html:12
 #: templates/partials/navbar.html:14
 msgid "Команды"
 msgstr "Команды"
 
-#: apps/catalog/views.py:175
+#: apps/catalog/views.py:176
 msgid "Команды архива SportMemo: города, годы основания и фотографии."
 msgstr "Команды архива SportMemo: города, годы основания и фотографии."
 
-#: apps/catalog/views.py:202 apps/catalog/views.py:207
-#: apps/catalog/views.py:316 templates/catalog/event_list.html:11
+#: apps/catalog/views.py:203 apps/catalog/views.py:208
+#: apps/catalog/views.py:325 templates/catalog/event_list.html:11
 #: templates/partials/footer.html:13 templates/partials/navbar.html:17
 msgid "События"
 msgstr "События"
 
-#: apps/catalog/views.py:203
+#: apps/catalog/views.py:204
 msgid "Турниры, серии и товарищеские встречи в архиве SportMemo."
 msgstr "Турниры, серии и товарищеские встречи в архиве SportMemo."
 
-#: apps/catalog/views.py:272
+#: apps/catalog/views.py:273
 #, python-format
 msgid "Команда «%(name)s» в архиве SportMemo."
 msgstr "Команда «%(name)s» в архиве SportMemo."
 
-#: apps/catalog/views.py:311
+#: apps/catalog/views.py:317
 #, python-format
 msgid "Событие «%(name)s» в архиве SportMemo."
 msgstr "Событие «%(name)s» в архиве SportMemo."
 
-#: apps/catalog/views.py:372
+#: apps/catalog/views.py:381
 #, python-format
 msgid "Человек %(name)s в архиве SportMemo."
 msgstr "Человек %(name)s в архиве SportMemo."
 
-#: apps/catalog/views.py:410
+#: apps/catalog/views.py:424
 msgid "Команда создана и отправлена на проверку модератору."
 msgstr "Команда создана и отправлена на проверку модератору."
 
-#: apps/catalog/views.py:422 apps/catalog/views.py:427
-#: apps/catalog/views.py:434
+#: apps/catalog/views.py:436 apps/catalog/views.py:441
+#: apps/catalog/views.py:448
 msgid "Новая команда"
 msgstr "Новая команда"
 
-#: apps/catalog/views.py:423
+#: apps/catalog/views.py:437
 msgid "Создать"
 msgstr "Создать"
 
-#: apps/catalog/views.py:455
+#: apps/catalog/views.py:469
 msgid "Изменения сохранены."
 msgstr "Изменения сохранены."
 
-#: apps/catalog/views.py:464 apps/catalog/views.py:469
+#: apps/catalog/views.py:478 apps/catalog/views.py:483
 msgid "Редактирование команды"
 msgstr "Редактирование команды"
 
-#: apps/catalog/views.py:465 templates/accounts/profile.html:91
+#: apps/catalog/views.py:479 templates/accounts/profile.html:91
 msgid "Сохранить"
 msgstr "Сохранить"
 
-#: apps/catalog/views.py:477
+#: apps/catalog/views.py:491
 msgid "Редактирование"
 msgstr "Редактирование"
 
-#: apps/catalog/views.py:500 apps/catalog/views.py:506
+#: apps/catalog/views.py:514 apps/catalog/views.py:520
 #: templates/accounts/profile.html:59 templates/accounts/profile.html:65
 #: templates/catalog/my_teams.html:11 templates/partials/navbar.html:55
 msgid "Мои команды"
@@ -766,6 +766,11 @@ msgstr "порядок сортировки"
 msgid "виды спорта"
 msgstr "виды спорта"
 
+#: apps/core/schema.py:148 apps/photos/views.py:53 apps/photos/views.py:57
+#: templates/photos/photo_detail.html:37
+msgid "Фотография"
+msgstr "Фотография"
+
 #: apps/core/seo.py:19 templates/base.html:27
 msgid "Публичный архив спортивных фотографий: команды, события, люди"
 msgstr "Публичный архив спортивных фотографий: команды, события, люди"
@@ -774,34 +779,34 @@ msgstr "Публичный архив спортивных фотографий:
 msgid "архив спортивных фотографий"
 msgstr "архив спортивных фотографий"
 
-#: apps/core/views.py:100 apps/core/views.py:107 apps/core/views.py:155
-#: apps/photos/views.py:46 templates/core/home.html:55
+#: apps/core/views.py:128 apps/core/views.py:135 apps/core/views.py:183
+#: apps/photos/views.py:47 templates/core/home.html:55
 #: templates/core/year_list.html:11 templates/partials/footer.html:14
 #: templates/partials/navbar.html:20
 msgid "Годы"
 msgstr "Годы"
 
-#: apps/core/views.py:102
+#: apps/core/views.py:130
 msgid "Хронология архива SportMemo: годы и фотографии каждого года."
 msgstr "Хронология архива SportMemo: годы и фотографии каждого года."
 
-#: apps/core/views.py:149 apps/core/views.py:156 apps/photos/views.py:49
+#: apps/core/views.py:177 apps/core/views.py:184 apps/photos/views.py:50
 #: templates/core/year_detail.html:12
 #, python-format
 msgid "%(year)s год"
 msgstr "%(year)s год"
 
-#: apps/core/views.py:150
+#: apps/core/views.py:178
 #, python-format
 msgid "Фотографии %(year)s года в архиве SportMemo."
 msgstr "Фотографии %(year)s года в архиве SportMemo."
 
-#: apps/core/views.py:165 templates/partials/footer.html:21
+#: apps/core/views.py:193 templates/partials/footer.html:21
 #: templates/partials/navbar.html:29
 msgid "Поиск"
 msgstr "Поиск"
 
-#: apps/core/views.py:166
+#: apps/core/views.py:194
 msgid "Здесь появится поиск по командам, событиям, людям и фотографиям."
 msgstr "Здесь появится поиск по командам, событиям, людям и фотографиям."
 
@@ -1135,12 +1140,7 @@ msgstr "человек на фото"
 msgid "люди на фото"
 msgstr "люди на фото"
 
-#: apps/photos/views.py:52 apps/photos/views.py:56
-#: templates/photos/photo_detail.html:37
-msgid "Фотография"
-msgstr "Фотография"
-
-#: apps/photos/views.py:65
+#: apps/photos/views.py:66
 msgid "Фотография из архива SportMemo"
 msgstr "Фотография из архива SportMemo"
 
@@ -1154,16 +1154,16 @@ msgid ""
 msgstr ""
 "Возможно, ссылка устарела или в адресе опечатка. Попробуйте поиск по архиву."
 
-#: templates/404.html:20 templates/500.html:20
+#: templates/404.html:20 templates/500.html:27
 #: templates/core/placeholder.html:33
 msgid "На главную"
 msgstr "На главную"
 
-#: templates/500.html:6 templates/500.html:14
+#: templates/500.html:6 templates/500.html:21
 msgid "Ошибка сервера"
 msgstr "Ошибка сервера"
 
-#: templates/500.html:16
+#: templates/500.html:23
 msgid ""
 "Что-то сломалось на нашей стороне. Мы уже знаем о проблеме и починим её."
 msgstr ""
