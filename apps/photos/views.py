@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_GET
 
+from apps.core.seo import page_meta
 from apps.core.shortcuts import (
     PHOTO_ORDERING,
     PHOTO_PAGE_SIZE,
@@ -50,9 +51,25 @@ def photo_detail(request, pk):
         ]
     breadcrumbs.append({"label": photo.title or _("Фотография")})
 
+    # Заголовок и подпись фото — авторский текст, он и попадает в карточку.
+    # Обрезку до 160 символов и абсолютные адреса делает `page_meta`.
+    title = photo.title or str(_("Фотография"))
     context = {
         "photo": photo,
         "photo_persons": photo.photo_persons.all(),
+        "meta": page_meta(
+            request,
+            title=title,
+            description=photo.caption
+            or photo.title
+            or _("Фотография из архива SportMemo"),
+            image=photo.preview if photo.preview else photo.original,
+            image_alt=title,
+            og_type="article",
+            # Черновик и фото без подтверждённых прав открываются только
+            # автору и модератору — в поиске им делать нечего.
+            noindex=not photo.is_public,
+        ),
         "breadcrumbs": breadcrumbs,
     }
     return render(request, "photos/photo_detail.html", context)

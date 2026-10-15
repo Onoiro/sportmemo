@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
+from apps.core.seo import SITE_NAME, page_meta
 from apps.core.shortcuts import (
     PHOTO_ORDERING,
     PHOTO_PAGE_SIZE,
@@ -52,6 +53,14 @@ def home(request):
             .select_related("team", "event")
             .order_by("-created_at")[:HOME_PHOTO_LIMIT]
         ),
+        # Имя сайта на главной стоит первым, а не суффиксом: «SportMemo —
+        # архив спортивных фотографий» читается как название, а не как
+        # страница сайта SportMemo. Описание берётся общее, из `page_meta`.
+        "meta": page_meta(
+            request,
+            title=f"{SITE_NAME} — {_('архив спортивных фотографий')}",
+            append_site_name=False,
+        ),
     }
     return render(request, "core/home.html", context)
 
@@ -61,7 +70,14 @@ def placeholder(request, *, heading, note=""):
 
     Осталось только для поиска: он появляется в подэтапе 2.13.
     """
-    return render(request, "core/placeholder.html", {"heading": heading, "note": note})
+    context = {
+        "heading": heading,
+        "note": note,
+        # Раздел-заглушка индексировать незачем: страница пустая и скоро
+        # сменится настоящей.
+        "meta": page_meta(request, title=str(heading), noindex=True, nofollow=True),
+    }
+    return render(request, "core/placeholder.html", context)
 
 
 def year_list(request):
@@ -79,6 +95,13 @@ def year_list(request):
     )
     context = {
         "years": years,
+        "meta": page_meta(
+            request,
+            title=_("Годы"),
+            description=_(
+                "Хронология архива SportMemo: годы и фотографии каждого года."
+            ),
+        ),
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},
             {"label": _("Годы")},
@@ -121,6 +144,12 @@ def year_detail(request, year):
         # «показать ещё» передаётся в галерею явно.
         "gallery_query": QueryDict(f"year={year}"),
         "events": events,
+        "meta": page_meta(
+            request,
+            title=_("%(year)s год") % {"year": year},
+            description=_("Фотографии %(year)s года в архиве SportMemo.")
+            % {"year": year},
+        ),
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},
             {"url": reverse("core:year_list"), "label": _("Годы")},

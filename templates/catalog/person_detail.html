@@ -1,14 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{{ person.public_name }} — {{ SPORTMEMO_SITE_NAME }}{% endblock %}
-{% comment %}
-Описание строится из `public_name`. При скрытом имени именная фраза
-читалась бы как ошибка («Человек Имя не указано…»), поэтому берём
-общее описание сайта — та же строка, что в `base.html`.
-{% endcomment %}
-{% block description %}{% if person.is_full_name_public %}{% blocktranslate with name=person.public_name %}Человек {{ name }} в архиве SportMemo.{% endblocktranslate %}{% else %}{% trans "Публичный архив спортивных фотографий: команды, события, люди" %}{% endif %}{% endblock %}
-
 {% block breadcrumbs %}
     {% include "partials/breadcrumbs.html" %}
 {% endblock %}

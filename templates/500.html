@@ -5,6 +5,13 @@
 
 {% block title %}{% trans "Ошибка сервера" %} — SportMemo{% endblock %}
 
+{% comment %}
+Django рендерит эту страницу без `request`, поэтому контекстный процессор
+`seo_meta` не работает и партиал метатегов пуст. `noindex` ставим прямо
+здесь: страница ошибки не должна попадать в поиск.
+{% endcomment %}
+{% block extra_head %}<meta name="robots" content="noindex, follow">{% endblock %}
+
 {% block breadcrumbs %}{% endblock %}
 
 {% block content %}

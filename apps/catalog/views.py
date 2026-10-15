@@ -18,6 +18,7 @@ from apps.catalog.forms import TeamForm
 from apps.catalog.models import Event, Person, Team
 from apps.catalog.roster import memberships_in_year, roster_years
 from apps.core.models import Status
+from apps.core.seo import page_meta
 from apps.core.shortcuts import (
     PHOTO_ORDERING,
     PHOTO_PAGE_SIZE,
@@ -167,6 +168,13 @@ def team_list(request):
     )
     context = {
         "page_obj": paginate(request, teams, TEAM_PAGE_SIZE),
+        "meta": page_meta(
+            request,
+            title=_("Команды"),
+            description=_(
+                "Команды архива SportMemo: города, годы основания и фотографии."
+            ),
+        ),
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},
             {"label": _("Команды")},
@@ -189,6 +197,11 @@ def event_list(request):
     )
     context = {
         "page_obj": paginate(request, events, EVENT_PAGE_SIZE),
+        "meta": page_meta(
+            request,
+            title=_("События"),
+            description=_("Турниры, серии и товарищеские встречи в архиве SportMemo."),
+        ),
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},
             {"label": _("События")},
@@ -252,6 +265,17 @@ def team_detail(request, slug):
         "selected_year": selected_year,
         "attribute_items": attribute_items(team.attributes),
         "can_edit": can_edit_team(request.user, team),
+        "meta": page_meta(
+            request,
+            title=team.full_name,
+            description=team.description
+            or _("Команда «%(name)s» в архиве SportMemo.") % {"name": team.name},
+            image=team.logo,
+            image_alt=team.full_name,
+            # Страницу черновика открывают только автор и модератор:
+            # в поиске ей делать нечего.
+            noindex=not team.is_published,
+        ),
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},
             {"url": reverse("catalog:team_list"), "label": _("Команды")},
@@ -280,6 +304,13 @@ def event_detail(request, slug):
         "gallery_query": gallery_filter(event=event.slug),
         "participants": participants,
         "attribute_items": attribute_items(event.attributes),
+        "meta": page_meta(
+            request,
+            title=f"{event.name} ({event.year})" if event.year else event.name,
+            description=event.description
+            or _("Событие «%(name)s» в архиве SportMemo.") % {"name": event.name},
+            noindex=not event.is_published,
+        ),
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},
             {"url": reverse("catalog:event_list"), "label": _("События")},
@@ -330,6 +361,22 @@ def person_detail(request, slug):
         ),
         "gallery_query": gallery_filter(person=person.slug),
         "attribute_items": attribute_items(person.attributes),
+        # Заголовок и описание строятся только из `public_name`:
+        # `display_name` содержит полную фамилию и в метатеги не попадает.
+        # При скрытом имени именная фраза читалась бы как ошибка
+        # («Человек Имя не указано…»), поэтому берём общее описание сайта.
+        "meta": page_meta(
+            request,
+            title=person.public_name,
+            description=(
+                _("Человек %(name)s в архиве SportMemo.") % {"name": person.public_name}
+                if person.is_full_name_public
+                else ""
+            ),
+            image=hero_photo.preview if hero_photo else None,
+            image_alt=person.public_name,
+            noindex=not person.is_published,
+        ),
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},
             {"label": person.public_name},
@@ -375,6 +422,12 @@ def team_create(request):
         "form_title": _("Новая команда"),
         "submit_label": _("Создать"),
         "sport": sport,
+        "meta": page_meta(
+            request,
+            title=_("Новая команда"),
+            noindex=True,
+            nofollow=True,
+        ),
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},
             {"url": reverse("catalog:team_list"), "label": _("Команды")},
@@ -411,6 +464,12 @@ def team_update(request, slug):
         "form_title": _("Редактирование команды"),
         "submit_label": _("Сохранить"),
         "sport": team.sport,
+        "meta": page_meta(
+            request,
+            title=_("Редактирование команды"),
+            noindex=True,
+            nofollow=True,
+        ),
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},
             {"url": reverse("catalog:team_list"), "label": _("Команды")},
@@ -436,6 +495,12 @@ def my_teams(request):
     )
     context = {
         "teams": teams,
+        "meta": page_meta(
+            request,
+            title=_("Мои команды"),
+            noindex=True,
+            nofollow=True,
+        ),
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},
             {"label": _("Мои команды")},

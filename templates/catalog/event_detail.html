@@ -1,9 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{{ event.name }}{% if event.year %} ({{ event.year }}){% endif %} — {{ SPORTMEMO_SITE_NAME }}{% endblock %}
-{% block description %}{% if event.description %}{{ event.description|truncatechars:160 }}{% else %}{% blocktranslate with name=event.name %}Событие «{{ name }}» в архиве SportMemo.{% endblocktranslate %}{% endif %}{% endblock %}
-
 {% block breadcrumbs %}
     {% include "partials/breadcrumbs.html" %}
 {% endblock %}

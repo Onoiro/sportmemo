@@ -1,9 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktranslate with year=year %}{{ year }} год{% endblocktranslate %} — {{ SPORTMEMO_SITE_NAME }}{% endblock %}
-{% block description %}{% blocktranslate with year=year %}Фотографии {{ year }} года в архиве SportMemo.{% endblocktranslate %}{% endblock %}
-
 {% block breadcrumbs %}
     {% include "partials/breadcrumbs.html" %}
 {% endblock %}

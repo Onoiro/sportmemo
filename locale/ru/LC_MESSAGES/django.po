@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-13 00:57+0300\n"
+"POT-Creation-Date: 2026-10-15 07:48+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,13 +19,13 @@ msgstr ""
 "n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
 "(n%100>=11 && n%100<=14)? 2 : 3);\n"
 
-#: apps/accounts/admin.py:34 apps/accounts/views.py:35
-#: templates/accounts/profile.html:4 templates/accounts/profile.html:14
+#: apps/accounts/admin.py:34 apps/accounts/views.py:36
+#: apps/accounts/views.py:39 templates/accounts/profile.html:11
 #: templates/partials/navbar.html:58
 msgid "Профиль"
 msgstr "Профиль"
 
-#: apps/accounts/admin.py:36 templates/accounts/profile.html:100
+#: apps/accounts/admin.py:36 templates/accounts/profile.html:97
 msgid "Согласия"
 msgstr "Согласия"
 
@@ -115,16 +115,16 @@ msgstr "дата регистрации"
 msgid "пользователи"
 msgstr "пользователи"
 
-#: apps/accounts/views.py:25
+#: apps/accounts/views.py:26
 msgid "Профиль обновлён"
 msgstr "Профиль обновлён"
 
-#: apps/accounts/views.py:34 apps/catalog/views.py:171
-#: apps/catalog/views.py:193 apps/catalog/views.py:256
-#: apps/catalog/views.py:284 apps/catalog/views.py:334
-#: apps/catalog/views.py:379 apps/catalog/views.py:415
-#: apps/catalog/views.py:440 apps/core/views.py:83 apps/core/views.py:125
-#: apps/photos/views.py:42 templates/core/placeholder.html:9
+#: apps/accounts/views.py:38 apps/catalog/views.py:179
+#: apps/catalog/views.py:206 apps/catalog/views.py:280
+#: apps/catalog/views.py:315 apps/catalog/views.py:381
+#: apps/catalog/views.py:432 apps/catalog/views.py:474
+#: apps/catalog/views.py:505 apps/core/views.py:106 apps/core/views.py:154
+#: apps/photos/views.py:43 templates/core/placeholder.html:7
 #: templates/partials/footer.html:20
 msgid "Главная"
 msgstr "Главная"
@@ -147,7 +147,7 @@ msgstr "Служебное"
 msgid "Приватность"
 msgstr "Приватность"
 
-#: apps/catalog/admin.py:127 templates/catalog/person_detail.html:56
+#: apps/catalog/admin.py:127 templates/catalog/person_detail.html:48
 msgid "Биография"
 msgstr "Биография"
 
@@ -494,71 +494,95 @@ msgstr "участие команды"
 msgid "участие команд"
 msgstr "участие команд"
 
-#: apps/catalog/views.py:41
+#: apps/catalog/views.py:42
 msgid "Этап"
 msgstr "Этап"
 
-#: apps/catalog/views.py:42
+#: apps/catalog/views.py:43
 msgid "Счёт"
 msgstr "Счёт"
 
-#: apps/catalog/views.py:43
+#: apps/catalog/views.py:44
 msgid "Результат"
 msgstr "Результат"
 
-#: apps/catalog/views.py:44
+#: apps/catalog/views.py:45
 msgid "Иннингов"
 msgstr "Иннингов"
 
-#: apps/catalog/views.py:45
+#: apps/catalog/views.py:46
 msgid "Команд"
 msgstr "Команд"
 
-#: apps/catalog/views.py:172 apps/catalog/views.py:257
-#: apps/catalog/views.py:380 apps/catalog/views.py:416
-#: templates/catalog/team_list.html:4 templates/catalog/team_list.html:14
-#: templates/core/home.html:48 templates/partials/footer.html:12
+#: apps/catalog/views.py:173 apps/catalog/views.py:180
+#: apps/catalog/views.py:281 apps/catalog/views.py:433
+#: apps/catalog/views.py:475 templates/catalog/team_list.html:11
+#: templates/core/home.html:46 templates/partials/footer.html:12
 #: templates/partials/navbar.html:14
 msgid "Команды"
 msgstr "Команды"
 
-#: apps/catalog/views.py:194 apps/catalog/views.py:285
-#: templates/catalog/event_list.html:4 templates/catalog/event_list.html:14
+#: apps/catalog/views.py:175
+msgid "Команды архива SportMemo: города, годы основания и фотографии."
+msgstr "Команды архива SportMemo: города, годы основания и фотографии."
+
+#: apps/catalog/views.py:202 apps/catalog/views.py:207
+#: apps/catalog/views.py:316 templates/catalog/event_list.html:11
 #: templates/partials/footer.html:13 templates/partials/navbar.html:17
 msgid "События"
 msgstr "События"
 
-#: apps/catalog/views.py:363
+#: apps/catalog/views.py:203
+msgid "Турниры, серии и товарищеские встречи в архиве SportMemo."
+msgstr "Турниры, серии и товарищеские встречи в архиве SportMemo."
+
+#: apps/catalog/views.py:272
+#, python-format
+msgid "Команда «%(name)s» в архиве SportMemo."
+msgstr "Команда «%(name)s» в архиве SportMemo."
+
+#: apps/catalog/views.py:311
+#, python-format
+msgid "Событие «%(name)s» в архиве SportMemo."
+msgstr "Событие «%(name)s» в архиве SportMemo."
+
+#: apps/catalog/views.py:372
+#, python-format
+msgid "Человек %(name)s в архиве SportMemo."
+msgstr "Человек %(name)s в архиве SportMemo."
+
+#: apps/catalog/views.py:410
 msgid "Команда создана и отправлена на проверку модератору."
 msgstr "Команда создана и отправлена на проверку модератору."
 
-#: apps/catalog/views.py:375 apps/catalog/views.py:381
+#: apps/catalog/views.py:422 apps/catalog/views.py:427
+#: apps/catalog/views.py:434
 msgid "Новая команда"
 msgstr "Новая команда"
 
-#: apps/catalog/views.py:376
+#: apps/catalog/views.py:423
 msgid "Создать"
 msgstr "Создать"
 
-#: apps/catalog/views.py:402
+#: apps/catalog/views.py:455
 msgid "Изменения сохранены."
 msgstr "Изменения сохранены."
 
-#: apps/catalog/views.py:411
+#: apps/catalog/views.py:464 apps/catalog/views.py:469
 msgid "Редактирование команды"
 msgstr "Редактирование команды"
 
-#: apps/catalog/views.py:412 templates/accounts/profile.html:94
+#: apps/catalog/views.py:465 templates/accounts/profile.html:91
 msgid "Сохранить"
 msgstr "Сохранить"
 
-#: apps/catalog/views.py:418
+#: apps/catalog/views.py:477
 msgid "Редактирование"
 msgstr "Редактирование"
 
-#: apps/catalog/views.py:441 templates/accounts/profile.html:62
-#: templates/accounts/profile.html:68 templates/catalog/my_teams.html:4
-#: templates/catalog/my_teams.html:14 templates/partials/navbar.html:55
+#: apps/catalog/views.py:500 apps/catalog/views.py:506
+#: templates/accounts/profile.html:59 templates/accounts/profile.html:65
+#: templates/catalog/my_teams.html:11 templates/partials/navbar.html:55
 msgid "Мои команды"
 msgstr "Мои команды"
 
@@ -742,25 +766,42 @@ msgstr "порядок сортировки"
 msgid "виды спорта"
 msgstr "виды спорта"
 
-#: apps/core/views.py:84 apps/core/views.py:126 apps/photos/views.py:45
-#: templates/core/home.html:57 templates/core/year_list.html:4
-#: templates/core/year_list.html:14 templates/partials/footer.html:14
+#: apps/core/seo.py:19 templates/base.html:27
+msgid "Публичный архив спортивных фотографий: команды, события, люди"
+msgstr "Публичный архив спортивных фотографий: команды, события, люди"
+
+#: apps/core/seo.py:104
+msgid "архив спортивных фотографий"
+msgstr "архив спортивных фотографий"
+
+#: apps/core/views.py:100 apps/core/views.py:107 apps/core/views.py:155
+#: apps/photos/views.py:46 templates/core/home.html:55
+#: templates/core/year_list.html:11 templates/partials/footer.html:14
 #: templates/partials/navbar.html:20
 msgid "Годы"
 msgstr "Годы"
 
-#: apps/core/views.py:127 apps/photos/views.py:48
-#: templates/core/year_detail.html:4 templates/core/year_detail.html:15
+#: apps/core/views.py:102
+msgid "Хронология архива SportMemo: годы и фотографии каждого года."
+msgstr "Хронология архива SportMemo: годы и фотографии каждого года."
+
+#: apps/core/views.py:149 apps/core/views.py:156 apps/photos/views.py:49
+#: templates/core/year_detail.html:12
 #, python-format
 msgid "%(year)s год"
 msgstr "%(year)s год"
 
-#: apps/core/views.py:136 templates/partials/footer.html:21
+#: apps/core/views.py:150
+#, python-format
+msgid "Фотографии %(year)s года в архиве SportMemo."
+msgstr "Фотографии %(year)s года в архиве SportMemo."
+
+#: apps/core/views.py:165 templates/partials/footer.html:21
 #: templates/partials/navbar.html:29
 msgid "Поиск"
 msgstr "Поиск"
 
-#: apps/core/views.py:137
+#: apps/core/views.py:166
 msgid "Здесь появится поиск по командам, событиям, людям и фотографиям."
 msgstr "Здесь появится поиск по командам, событиям, людям и фотографиям."
 
@@ -1094,10 +1135,14 @@ msgstr "человек на фото"
 msgid "люди на фото"
 msgstr "люди на фото"
 
-#: apps/photos/views.py:51 templates/photos/photo_detail.html:4
-#: templates/photos/photo_detail.html:40
+#: apps/photos/views.py:52 apps/photos/views.py:56
+#: templates/photos/photo_detail.html:37
 msgid "Фотография"
 msgstr "Фотография"
+
+#: apps/photos/views.py:65
+msgid "Фотография из архива SportMemo"
+msgstr "Фотография из архива SportMemo"
 
 #: templates/404.html:6 templates/404.html:14
 msgid "Страница не найдена"
@@ -1110,7 +1155,7 @@ msgstr ""
 "Возможно, ссылка устарела или в адресе опечатка. Попробуйте поиск по архиву."
 
 #: templates/404.html:20 templates/500.html:20
-#: templates/core/placeholder.html:35
+#: templates/core/placeholder.html:33
 msgid "На главную"
 msgstr "На главную"
 
@@ -1262,7 +1307,7 @@ msgstr "Выход"
 msgid "Выйти из аккаунта?"
 msgstr "Выйти из аккаунта?"
 
-#: templates/account/logout.html:20 templates/accounts/profile.html:74
+#: templates/account/logout.html:20 templates/accounts/profile.html:71
 #: templates/partials/navbar.html:65
 msgid "Выйти"
 msgstr "Выйти"
@@ -1273,7 +1318,7 @@ msgid "Смена пароля"
 msgstr "Смена пароля"
 
 #: templates/account/password_change.html:20
-#: templates/accounts/profile.html:116 templates/partials/navbar.html:61
+#: templates/accounts/profile.html:113 templates/partials/navbar.html:61
 msgid "Сменить пароль"
 msgstr "Сменить пароль"
 
@@ -1324,7 +1369,7 @@ msgid "Сохранить пароль"
 msgstr "Сохранить пароль"
 
 #: templates/account/password_reset_from_key.html:34
-#: templates/admin/core/merge_form.html:46 templates/catalog/team_form.html:102
+#: templates/admin/core/merge_form.html:46 templates/catalog/team_form.html:99
 msgid "Отмена"
 msgstr "Отмена"
 
@@ -1375,67 +1420,63 @@ msgstr "Письма нет? Загляните в папку «спам» — �
 msgid "Вернуться на главную"
 msgstr "Вернуться на главную"
 
-#: templates/accounts/profile.html:5
-msgid "Личный профиль SportMemo: имя, согласия и безопасность аккаунта."
-msgstr "Личный профиль SportMemo: имя, согласия и безопасность аккаунта."
-
-#: templates/accounts/profile.html:20
+#: templates/accounts/profile.html:17
 msgid "Аккаунт"
 msgstr "Аккаунт"
 
-#: templates/accounts/profile.html:22
+#: templates/accounts/profile.html:19
 msgid "Email"
 msgstr "Email"
 
-#: templates/accounts/profile.html:24
+#: templates/accounts/profile.html:21
 msgid "Дата регистрации"
 msgstr "Дата регистрации"
 
-#: templates/accounts/profile.html:32
+#: templates/accounts/profile.html:29
 msgid "Роль"
 msgstr "Роль"
 
-#: templates/accounts/profile.html:39
+#: templates/accounts/profile.html:36
 msgid "Мой профиль в архиве"
 msgstr "Мой профиль в архиве"
 
-#: templates/accounts/profile.html:42
+#: templates/accounts/profile.html:39
 msgid "Ваш аккаунт связан со страницей человека в архиве."
 msgstr "Ваш аккаунт связан со страницей человека в архиве."
 
-#: templates/accounts/profile.html:56
+#: templates/accounts/profile.html:53
 msgid "Аккаунт пока не связан ни с одним человеком в архиве."
 msgstr "Аккаунт пока не связан ни с одним человеком в архиве."
 
-#: templates/accounts/profile.html:64
+#: templates/accounts/profile.html:61
 msgid "Команды, которые вы завели в архиве."
 msgstr "Команды, которые вы завели в архиве."
 
-#: templates/accounts/profile.html:80
+#: templates/accounts/profile.html:77
 msgid "Обращение"
 msgstr "Обращение"
 
-#: templates/accounts/profile.html:102
+#: templates/accounts/profile.html:99
 msgid "Пользовательское соглашение"
 msgstr "Пользовательское соглашение"
 
-#: templates/accounts/profile.html:104
+#: templates/accounts/profile.html:101
 msgid "Политика конфиденциальности"
 msgstr "Политика конфиденциальности"
 
-#: templates/accounts/profile.html:106
+#: templates/accounts/profile.html:103
 msgid "Обработка персональных данных"
 msgstr "Обработка персональных данных"
 
-#: templates/accounts/profile.html:108
+#: templates/accounts/profile.html:105
 msgid "Версия согласия"
 msgstr "Версия согласия"
 
-#: templates/accounts/profile.html:114
+#: templates/accounts/profile.html:111
 msgid "Безопасность"
 msgstr "Безопасность"
 
-#: templates/accounts/profile.html:117
+#: templates/accounts/profile.html:114
 msgid "Изменить адрес почты"
 msgstr "Изменить адрес почты"
 
@@ -1474,10 +1515,6 @@ msgstr "— выберите —"
 msgid "Слить"
 msgstr "Слить"
 
-#: templates/base.html:27 templates/catalog/person_detail.html:10
-msgid "Публичный архив спортивных фотографий: команды, события, люди"
-msgstr "Публичный архив спортивных фотографий: команды, события, люди"
-
 #: templates/catalog/email/new_team_notification.txt:1
 #, python-format
 msgid "Новая команда в архиве SportMemo: %(name)s"
@@ -1499,28 +1536,19 @@ msgstr "В админке"
 msgid "Команда создана в статусе «черновик» и ждёт проверки."
 msgstr "Команда создана в статусе «черновик» и ждёт проверки."
 
-#: templates/catalog/event_detail.html:5
-#, python-format
-msgid "Событие «%(name)s» в архиве SportMemo."
-msgstr "Событие «%(name)s» в архиве SportMemo."
-
-#: templates/catalog/event_detail.html:39
+#: templates/catalog/event_detail.html:36
 msgid "Итоги"
 msgstr "Итоги"
 
-#: templates/catalog/event_detail.html:46
+#: templates/catalog/event_detail.html:43
 msgid "Команды-участники"
 msgstr "Команды-участники"
 
-#: templates/catalog/event_detail.html:72
+#: templates/catalog/event_detail.html:69
 msgid "Фотографии события"
 msgstr "Фотографии события"
 
-#: templates/catalog/event_list.html:5
-msgid "Турниры, серии и товарищеские встречи в архиве SportMemo."
-msgstr "Турниры, серии и товарищеские встречи в архиве SportMemo."
-
-#: templates/catalog/event_list.html:16
+#: templates/catalog/event_list.html:13
 #, python-format
 msgid "Найдено %(counter)s событие"
 msgid_plural "Найдено %(counter)s событий"
@@ -1529,19 +1557,15 @@ msgstr[1] "Найдено %(counter)s события"
 msgstr[2] "Найдено %(counter)s событий"
 msgstr[3] "Найдено %(counter)s событий"
 
-#: templates/catalog/event_list.html:30
+#: templates/catalog/event_list.html:27
 msgid "В архиве пока нет событий"
 msgstr "В архиве пока нет событий"
 
-#: templates/catalog/event_list.html:32
+#: templates/catalog/event_list.html:29
 msgid "События появятся здесь, когда их добавят и опубликуют."
 msgstr "События появятся здесь, когда их добавят и опубликуют."
 
-#: templates/catalog/my_teams.html:5
-msgid "Команды, созданные вами в архиве SportMemo."
-msgstr "Команды, созданные вами в архиве SportMemo."
-
-#: templates/catalog/my_teams.html:21
+#: templates/catalog/my_teams.html:18
 msgid ""
 "Публикует команду модератор — обычно в течение дня. До публикации команду "
 "видите только вы и модератор."
@@ -1549,25 +1573,25 @@ msgstr ""
 "Публикует команду модератор — обычно в течение дня. До публикации команду "
 "видите только вы и модератор."
 
-#: templates/catalog/my_teams.html:41 templates/catalog/team_detail.html:41
+#: templates/catalog/my_teams.html:38 templates/catalog/team_detail.html:38
 msgid "Редактировать"
 msgstr "Редактировать"
 
-#: templates/catalog/my_teams.html:49
+#: templates/catalog/my_teams.html:46
 msgid "Вы ещё не создавали команд"
 msgstr "Вы ещё не создавали команд"
 
-#: templates/catalog/my_teams.html:51
+#: templates/catalog/my_teams.html:48
 msgid "Если вашей команды нет в архиве — заведите её. Публикует модератор."
 msgstr "Если вашей команды нет в архиве — заведите её. Публикует модератор."
 
-#: templates/catalog/my_teams.html:55 templates/catalog/team_list.html:22
+#: templates/catalog/my_teams.html:52 templates/catalog/team_list.html:19
 msgid "Создать команду"
 msgstr "Создать команду"
 
 #: templates/catalog/partials/event_card.html:16
 #: templates/catalog/partials/team_card.html:17
-#: templates/core/year_list.html:26
+#: templates/core/year_list.html:23
 #, python-format
 msgid "%(counter)s фото"
 msgid_plural "%(counter)s фото"
@@ -1577,7 +1601,7 @@ msgstr[2] "%(counter)s фото"
 msgstr[3] "%(counter)s фото"
 
 #: templates/catalog/partials/roster_form.html:11
-#: templates/photos/photo_detail.html:47
+#: templates/photos/photo_detail.html:44
 msgid "Год"
 msgstr "Год"
 
@@ -1598,70 +1622,60 @@ msgstr "Показать все годы"
 msgid "осн. %(year)s"
 msgstr "осн. %(year)s"
 
-#: templates/catalog/person_detail.html:10
-#, python-format
-msgid "Человек %(name)s в архиве SportMemo."
-msgstr "Человек %(name)s в архиве SportMemo."
-
-#: templates/catalog/person_detail.html:27
+#: templates/catalog/person_detail.html:19
 msgid "Главное фото"
 msgstr "Главное фото"
 
-#: templates/catalog/person_detail.html:42
+#: templates/catalog/person_detail.html:34
 #, python-format
 msgid "род. %(year)s"
 msgstr "род. %(year)s"
 
-#: templates/catalog/person_detail.html:46
+#: templates/catalog/person_detail.html:38
 #, python-format
 msgid "ум. %(year)s"
 msgstr "ум. %(year)s"
 
-#: templates/catalog/person_detail.html:63
-#: templates/catalog/team_detail.html:54
+#: templates/catalog/person_detail.html:55
+#: templates/catalog/team_detail.html:51
 msgid "Дополнительно"
 msgstr "Дополнительно"
 
-#: templates/catalog/person_detail.html:70
+#: templates/catalog/person_detail.html:62
 msgid "Команды и роли"
 msgstr "Команды и роли"
 
-#: templates/catalog/person_detail.html:102
+#: templates/catalog/person_detail.html:94
 msgid "Фотографии"
 msgstr "Фотографии"
 
-#: templates/catalog/person_detail.html:115
+#: templates/catalog/person_detail.html:107
 msgid "Также известен как"
 msgstr "Также известен как"
 
-#: templates/catalog/team_detail.html:5
-#, python-format
-msgid "Команда «%(name)s» в архиве SportMemo."
-msgstr "Команда «%(name)s» в архиве SportMemo."
-
-#: templates/catalog/team_detail.html:26
+#: templates/catalog/team_detail.html:23
 #, python-format
 msgid "основана в %(year)s"
 msgstr "основана в %(year)s"
 
-#: templates/catalog/team_detail.html:61
+#: templates/catalog/team_detail.html:58
 msgid "Фотографии команды"
 msgstr "Фотографии команды"
 
-#: templates/catalog/team_detail.html:68
+#: templates/catalog/team_detail.html:65
 msgid "События команды"
 msgstr "События команды"
 
-#: templates/catalog/team_detail.html:86
+#: templates/catalog/team_detail.html:83
 #, python-format
 msgid "Люди в команде, %(year)s год"
 msgstr "Люди в команде, %(year)s год"
 
-#: templates/catalog/team_detail.html:88
+#: templates/catalog/team_detail.html:85
 msgid "Состав"
 msgstr "Состав"
 
-#: templates/catalog/team_detail.html:97
+#: templates/catalog/team_detail.html:94
 #, python-format
 msgid "В команде известен %(counter)s человек"
 msgid_plural "В команде известны %(counter)s человек"
@@ -1670,39 +1684,35 @@ msgstr[1] "В команде известны %(counter)s человека"
 msgstr[2] "В команде известны %(counter)s человек"
 msgstr[3] "В команде известны %(counter)s человек"
 
-#: templates/catalog/team_detail.html:99
+#: templates/catalog/team_detail.html:96
 msgid "В архиве указаны не все, кто играл."
 msgstr "В архиве указаны не все, кто играл."
 
-#: templates/catalog/team_form.html:5
-msgid "Создание и редактирование команды в архиве SportMemo."
-msgstr "Создание и редактирование команды в архиве SportMemo."
-
-#: templates/catalog/team_form.html:17
+#: templates/catalog/team_form.html:14
 msgid "Команда опубликована: изменения появятся на сайте сразу."
 msgstr "Команда опубликована: изменения появятся на сайте сразу."
 
-#: templates/catalog/team_form.html:21
+#: templates/catalog/team_form.html:18
 msgid "Публикует команду модератор — обычно в течение дня."
 msgstr "Публикует команду модератор — обычно в течение дня."
 
-#: templates/catalog/team_form.html:35
+#: templates/catalog/team_form.html:32
 msgid "Создание команд пока недоступно"
 msgstr "Создание команд пока недоступно"
 
-#: templates/catalog/team_form.html:36
+#: templates/catalog/team_form.html:33
 msgid "Раздел ещё настраивается. Загляните позже."
 msgstr "Раздел ещё настраивается. Загляните позже."
 
-#: templates/catalog/team_form.html:50
+#: templates/catalog/team_form.html:47
 msgid "Команда с таким названием уже есть в архиве"
 msgstr "Команда с таким названием уже есть в архиве"
 
-#: templates/catalog/team_form.html:63
+#: templates/catalog/team_form.html:60
 msgid "ожидает проверки модератором"
 msgstr "ожидает проверки модератором"
 
-#: templates/catalog/team_form.html:70
+#: templates/catalog/team_form.html:67
 msgid ""
 "Если это разные команды (например, одноимённые в разных городах), отметьте "
 "подтверждение ниже."
@@ -1710,11 +1720,7 @@ msgstr ""
 "Если это разные команды (например, одноимённые в разных городах), отметьте "
 "подтверждение ниже."
 
-#: templates/catalog/team_list.html:5
-msgid "Команды архива SportMemo: города, годы основания и фотографии."
-msgstr "Команды архива SportMemo: города, годы основания и фотографии."
-
-#: templates/catalog/team_list.html:16
+#: templates/catalog/team_list.html:13
 #, python-format
 msgid "Найдена %(counter)s команда"
 msgid_plural "Найдено %(counter)s команд"
@@ -1723,19 +1729,15 @@ msgstr[1] "Найдено %(counter)s команды"
 msgstr[2] "Найдено %(counter)s команд"
 msgstr[3] "Найдено %(counter)s команд"
 
-#: templates/catalog/team_list.html:38
+#: templates/catalog/team_list.html:35
 msgid "В архиве пока нет команд"
 msgstr "В архиве пока нет команд"
 
-#: templates/catalog/team_list.html:40
+#: templates/catalog/team_list.html:37
 msgid "Команды появятся здесь, когда их добавят и опубликуют."
 msgstr "Команды появятся здесь, когда их добавят и опубликуют."
 
-#: templates/core/home.html:4
-msgid "архив спортивных фотографий"
-msgstr "архив спортивных фотографий"
-
-#: templates/core/home.html:11
+#: templates/core/home.html:9
 msgid ""
 "Архив спортивных фотографий: команды, турниры и люди. Бейсбол в России — от "
 "дворовых секций до ветеранских встреч."
@@ -1743,68 +1745,63 @@ msgstr ""
 "Архив спортивных фотографий: команды, турниры и люди. Бейсбол в России — от "
 "дворовых секций до ветеранских встреч."
 
-#: templates/core/home.html:16 templates/partials/navbar.html:27
+#: templates/core/home.html:14 templates/partials/navbar.html:27
 msgid "Поиск по архиву"
 msgstr "Поиск по архиву"
 
-#: templates/core/home.html:19
+#: templates/core/home.html:17
 msgid "Фамилия, команда, турнир"
 msgstr "Фамилия, команда, турнир"
 
-#: templates/core/home.html:22
+#: templates/core/home.html:20
 msgid "Найти"
 msgstr "Найти"
 
-#: templates/core/home.html:30
+#: templates/core/home.html:28
 msgid "команд"
 msgstr "команд"
 
-#: templates/core/home.html:34
+#: templates/core/home.html:32
 msgid "фотографий"
 msgstr "фотографий"
 
-#: templates/core/home.html:38
+#: templates/core/home.html:36
 msgid "лет в архиве"
 msgstr "лет в архиве"
 
-#: templates/core/home.html:50
+#: templates/core/home.html:48
 msgid "Состав по годам, города и история клубов."
 msgstr "Состав по годам, города и история клубов."
 
-#: templates/core/home.html:59
+#: templates/core/home.html:57
 msgid "Хронология архива: что происходило в каждом году."
 msgstr "Хронология архива: что происходило в каждом году."
 
-#: templates/core/home.html:67
+#: templates/core/home.html:65
 msgid "Последние фотографии"
 msgstr "Последние фотографии"
 
-#: templates/core/home.html:73
+#: templates/core/home.html:71
 msgid "Архив пока пуст"
 msgstr "Архив пока пуст"
 
-#: templates/core/home.html:75
+#: templates/core/home.html:73
 msgid "Фотографии появятся здесь, когда их добавят и опубликуют."
 msgstr "Фотографии появятся здесь, когда их добавят и опубликуют."
 
-#: templates/core/placeholder.html:7 templates/partials/breadcrumbs.html:3
+#: templates/core/placeholder.html:5 templates/partials/breadcrumbs.html:3
 msgid "Хлебные крошки"
 msgstr "Хлебные крошки"
 
-#: templates/core/placeholder.html:20
+#: templates/core/placeholder.html:18
 msgid "Раздел появится позже — каркас сайта уже готов, наполнение в работе."
 msgstr "Раздел появится позже — каркас сайта уже готов, наполнение в работе."
 
-#: templates/core/placeholder.html:26
+#: templates/core/placeholder.html:24
 msgid "Раздел в разработке"
 msgstr "Раздел в разработке"
 
-#: templates/core/year_detail.html:5
-#, python-format
-msgid "Фотографии %(year)s года в архиве SportMemo."
-msgstr "Фотографии %(year)s года в архиве SportMemo."
-
-#: templates/core/year_detail.html:18
+#: templates/core/year_detail.html:15
 #, python-format
 msgid "Найдена %(counter)s фотография"
 msgid_plural "Найдено %(counter)s фотографий"
@@ -1813,27 +1810,23 @@ msgstr[1] "Найдено %(counter)s фотографии"
 msgstr[2] "Найдено %(counter)s фотографий"
 msgstr[3] "Найдено %(counter)s фотографий"
 
-#: templates/core/year_detail.html:27
+#: templates/core/year_detail.html:24
 msgid "Фотографий за этот год нет"
 msgstr "Фотографий за этот год нет"
 
-#: templates/core/year_detail.html:33
+#: templates/core/year_detail.html:30
 msgid "События года"
 msgstr "События года"
 
-#: templates/core/year_list.html:5
-msgid "Хронология архива SportMemo: годы и фотографии каждого года."
-msgstr "Хронология архива SportMemo: годы и фотографии каждого года."
-
-#: templates/core/year_list.html:16
+#: templates/core/year_list.html:13
 msgid "Хронология архива: выберите год, чтобы увидеть его фотографии."
 msgstr "Хронология архива: выберите год, чтобы увидеть его фотографии."
 
-#: templates/core/year_list.html:34
+#: templates/core/year_list.html:31
 msgid "В архиве пока нет фотографий"
 msgstr "В архиве пока нет фотографий"
 
-#: templates/core/year_list.html:36
+#: templates/core/year_list.html:33
 msgid "Годы появятся здесь, когда фотографии добавят и опубликуют."
 msgstr "Годы появятся здесь, когда фотографии добавят и опубликуют."
 
@@ -1914,46 +1907,42 @@ msgstr "Не удалось загрузить фотографии. Ссылк�
 msgid "Показать ещё"
 msgstr "Показать ещё"
 
-#: templates/photos/photo_detail.html:5
-msgid "Фотография из архива SportMemo"
-msgstr "Фотография из архива SportMemo"
-
-#: templates/photos/photo_detail.html:53
+#: templates/photos/photo_detail.html:50
 msgid "Дата съёмки"
 msgstr "Дата съёмки"
 
-#: templates/photos/photo_detail.html:62
+#: templates/photos/photo_detail.html:59
 msgid "Команда"
 msgstr "Команда"
 
-#: templates/photos/photo_detail.html:72
+#: templates/photos/photo_detail.html:69
 msgid "Событие"
 msgstr "Событие"
 
-#: templates/photos/photo_detail.html:81
+#: templates/photos/photo_detail.html:78
 msgid "Просмотров"
 msgstr "Просмотров"
 
-#: templates/photos/photo_detail.html:87
+#: templates/photos/photo_detail.html:84
 msgid "Источник"
 msgstr "Источник"
 
-#: templates/photos/photo_detail.html:89
+#: templates/photos/photo_detail.html:86
 msgid "Тип"
 msgstr "Тип"
 
-#: templates/photos/photo_detail.html:92
+#: templates/photos/photo_detail.html:89
 msgid "Издание"
 msgstr "Издание"
 
-#: templates/photos/photo_detail.html:96
+#: templates/photos/photo_detail.html:93
 msgid "Дата источника"
 msgstr "Дата источника"
 
-#: templates/photos/photo_detail.html:100
+#: templates/photos/photo_detail.html:97
 msgid "Владелец оригинала"
 msgstr "Владелец оригинала"
 
-#: templates/photos/photo_detail.html:109
+#: templates/photos/photo_detail.html:106
 msgid "Люди на фото"
 msgstr "Люди на фото"

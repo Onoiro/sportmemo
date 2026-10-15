@@ -1,9 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% if photo.title %}{{ photo.title }}{% else %}{% trans "Фотография" %}{% endif %} — {{ SPORTMEMO_SITE_NAME }}{% endblock %}
-{% block description %}{% if photo.caption %}{{ photo.caption }}{% elif photo.title %}{{ photo.title }}{% else %}{% trans "Фотография из архива SportMemo" %}{% endif %}{% endblock %}
-
 {% block breadcrumbs %}
     {% include "partials/breadcrumbs.html" %}
 {% endblock %}

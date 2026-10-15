@@ -23,8 +23,9 @@
             root.classList.toggle("theme-sepia", theme !== "dark");
         })();
     </script>
-    <title>{% block title %}{{ SPORTMEMO_SITE_NAME|default:"SportMemo" }}{% endblock %}</title>
-    <meta name="description" content="{% block description %}{% trans "Публичный архив спортивных фотографий: команды, события, люди" %}{% endblock %}">
+    <title>{% block title %}{{ meta.title|default:SPORTMEMO_SITE_NAME }}{% endblock %}</title>
+    <meta name="description" content="{% block description %}{% if meta.description %}{{ meta.description }}{% else %}{% trans "Публичный архив спортивных фотографий: команды, события, люди" %}{% endif %}{% endblock %}">
+    {% include "partials/meta.html" %}
     <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/sportmemo.css' %}">

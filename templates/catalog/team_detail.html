@@ -1,9 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{{ team.name }}{% if team.city %} ({{ team.city }}){% endif %} — {{ SPORTMEMO_SITE_NAME }}{% endblock %}
-{% block description %}{% if team.description %}{{ team.description|truncatechars:160 }}{% else %}{% blocktranslate with name=team.name %}Команда «{{ name }}» в архиве SportMemo.{% endblocktranslate %}{% endif %}{% endblock %}
-
 {% block breadcrumbs %}
     {% include "partials/breadcrumbs.html" %}
 {% endblock %}

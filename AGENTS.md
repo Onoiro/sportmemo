@@ -155,21 +155,21 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.10.0
+- Version: 0.11.0
 - Development branch: `master`
 - Stage: 1 (repository foundation and data model) — **complete**;
   stage 2 (public archive) — **in progress**, sub-stages 2.1 (demo data), 2.2
   (public UI skeleton), 2.3 (public queries and lists), 2.4 (gallery component), 2.5
   (team and event pages), 2.6 (person and photo pages), 2.7 (team roster filter by year),
-  2.8a (sign-up, login and password), 2.8b (user profile and menu) and 2.9 (user-created
-  team) complete
-- Tests: 600, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
+  2.8a (sign-up, login and password), 2.8b (user profile and menu), 2.9 (user-created team)
+  and 2.10 (meta tags and Open Graph) complete
+- Tests: 636, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
 
 ### What exists now
 
 | App | Contents |
 |---|---|
-| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public views (home page, years, search), `core/urls.py`, shared form helpers (`forms.py`: `BootstrapFormMixin`) |
+| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public views (home page, years, search), `core/urls.py`, shared form helpers (`forms.py`: `BootstrapFormMixin`), SEO meta tags (`seo.py`) |
 | `apps/accounts` | email-based `User`, `UserManager`, consents (terms/privacy/PD law + version), roles, `User.person` link, allauth forms with Bootstrap classes, allauth adapter |
 | `apps/catalog` | `Team`, `TeamMembership` (with `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (roster filter by year), `forms.py` (`TeamForm`), `emails.py` (moderator notification), list views and team, event and person detail pages, team create and edit views |
 | `apps/photos` | `Source`, `Photo` (rights, `processing_status`, `phash`, `duplicate_of`), `PhotoPerson`, thumbnails via `ImageSpecField`, the photo page and the gallery fragment |
@@ -422,6 +422,13 @@ and the `.agents/skills/semver-checker/` skill.
   the URL.
 - The view counter of a photo grows with `QuerySet.update()` on purpose: `save()` would write
   a history record on every page open and flood the audit log.
+- SEO meta tags (`title`, `description`, `canonical`, `og:*`) are built in views through
+  `page_meta()` (`apps/core/seo.py`), not in templates: the card image depends on page data,
+  and the name privacy rule must live in one place. The partial
+  `templates/partials/meta.html` only renders the ready `meta` dict. `noindex` is the default
+  of the `seo_meta` context processor for pages that set no `meta` of their own: a new page
+  stays out of search engines until its author describes it. The view context overrides the
+  processor, so the `meta` dict from `page_meta()` must be complete, never partial.
 - UI strings go through `gettext` only. Run `make i18n` after adding strings. `makemessages`
   marks new strings as `fuzzy` when it finds a similar old one, and `msgfmt` skips fuzzy
   entries — check the fuzzy blocks after extraction and clear the flags.
