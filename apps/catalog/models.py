@@ -8,6 +8,8 @@
 from datetime import date
 
 from django.conf import settings
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVectorField
 from django.db import models
 from django.utils.dateparse import parse_date
 from django.utils.formats import date_format
@@ -108,6 +110,10 @@ class Team(TimeStampedModel, SlugModel, StatusModel, SoftDeleteModel, MergeableM
     attributes = models.JSONField(
         _("дополнительные атрибуты"), default=dict, blank=True
     )
+    # Полнотекстовый индекс. Заполняется сигналом (`apps/search/signals.py`)
+    # и командой `search_reindex`; вручную не редактируется. Поле в истории
+    # остаётся пустым: пересчёт идёт через `update()`, а не через `save()`.
+    search_vector = SearchVectorField(_("поисковый индекс"), null=True, editable=False)
 
     history = HistoricalRecords()
 
@@ -123,6 +129,17 @@ class Team(TimeStampedModel, SlugModel, StatusModel, SoftDeleteModel, MergeableM
         indexes = [
             models.Index(fields=["sport", "status"]),
             models.Index(fields=["city"]),
+            GinIndex(fields=["search_vector"], name="team_search_vector_gin"),
+            GinIndex(
+                fields=["name"],
+                name="team_name_trgm",
+                opclasses=["gin_trgm_ops"],
+            ),
+            GinIndex(
+                fields=["city"],
+                name="team_city_trgm",
+                opclasses=["gin_trgm_ops"],
+            ),
         ]
 
     def __str__(self):
@@ -276,6 +293,10 @@ class Person(TimeStampedModel, SlugModel, StatusModel, SoftDeleteModel, Mergeabl
     attributes = models.JSONField(
         _("дополнительные атрибуты"), default=dict, blank=True
     )
+    # Полнотекстовый индекс: `public_name`, биография, имя и отчество,
+    # а фамилия и варианты имён — только при полной видимости имени.
+    # Правило живёт в `apps/search/indexing.py`, здесь только поле.
+    search_vector = SearchVectorField(_("поисковый индекс"), null=True, editable=False)
 
     history = HistoricalRecords()
 
@@ -289,6 +310,17 @@ class Person(TimeStampedModel, SlugModel, StatusModel, SoftDeleteModel, Mergeabl
         indexes = [
             models.Index(fields=["last_name", "first_name"]),
             models.Index(fields=["status"]),
+            GinIndex(fields=["search_vector"], name="person_search_vector_gin"),
+            GinIndex(
+                fields=["first_name"],
+                name="person_first_name_trgm",
+                opclasses=["gin_trgm_ops"],
+            ),
+            GinIndex(
+                fields=["last_name"],
+                name="person_last_name_trgm",
+                opclasses=["gin_trgm_ops"],
+            ),
         ]
 
     def __str__(self):
@@ -381,6 +413,14 @@ class PersonName(TimeStampedModel):
                 fields=["person", "value"], name="unique_person_name"
             ),
         ]
+        indexes = [
+            # Триграммы по варианту имени: поиск по прозвищу и «похоже на».
+            GinIndex(
+                fields=["value"],
+                name="personname_value_trgm",
+                opclasses=["gin_trgm_ops"],
+            ),
+        ]
 
     def __str__(self):
         return f"{self.value} ({self.get_kind_display()})"
@@ -430,6 +470,8 @@ class Event(TimeStampedModel, SlugModel, StatusModel, SoftDeleteModel, Mergeable
         _("дополнительные атрибуты"), default=dict, blank=True
     )
     description = models.TextField(_("описание"), blank=True)
+    # Полнотекстовый индекс: название, место, тип, описание и атрибуты.
+    search_vector = SearchVectorField(_("поисковый индекс"), null=True, editable=False)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("создатель"),
@@ -453,6 +495,17 @@ class Event(TimeStampedModel, SlugModel, StatusModel, SoftDeleteModel, Mergeable
         indexes = [
             models.Index(fields=["sport", "year"]),
             models.Index(fields=["sport", "status"]),
+            GinIndex(fields=["search_vector"], name="event_search_vector_gin"),
+            GinIndex(
+                fields=["name"],
+                name="event_name_trgm",
+                opclasses=["gin_trgm_ops"],
+            ),
+            GinIndex(
+                fields=["city"],
+                name="event_city_trgm",
+                opclasses=["gin_trgm_ops"],
+            ),
         ]
 
     def __str__(self):

@@ -62,6 +62,7 @@ stays tidy.
 | `apps/accounts` | custom `User` (email as `USERNAME_FIELD`), consents, roles, link to `Person` |
 | `apps/catalog` | `Team`, `TeamMembership` (with `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (roster filter by year), `forms.py` (`TeamForm`), `emails.py` (moderator notification), list views and team, event and person detail pages, team create and edit views |
 | `apps/photos` | `Source`, `Photo`, `PhotoPerson`, public views (`photo_detail`, the `grid` fragment), `photos/urls.py` |
+| `apps/search` | search index: the `pg_trgm` extension, search text and query building (`indexing.py`), signals, the `search_reindex` command; it has no models of its own — the index fields live in `catalog` and `photos` |
 | `apps/comments` | `Comment` (generic FK, replies) |
 | `apps/moderation` | `Report`, `ModerationAction` |
 
@@ -146,8 +147,8 @@ the list of sub-stages are in the master plan. Sub-stages 2.1 (demo data), 2.2 (
 skeleton), 2.3 (public queries and lists), 2.4 (gallery component), 2.5 (team and event pages),
 2.6 (person and photo pages), 2.7 (team roster filter by year), 2.8a (sign-up, login and
 password), 2.8b (user profile and menu), 2.9 (user-created team), 2.10 (meta tags and
-Open Graph) and 2.11 (sitemap, robots and Schema.org) are complete; the next one is 2.12
-(search: infrastructure).
+Open Graph), 2.11 (sitemap, robots and Schema.org) and 2.12 (search: infrastructure) are
+complete; the next one is 2.13 (search: interface).
 
 ## Deliberately deferred
 
@@ -156,15 +157,16 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.12.0
+- Version: 0.13.0
 - Development branch: `master`
 - Stage: 1 (repository foundation and data model) — **complete**;
   stage 2 (public archive) — **in progress**, sub-stages 2.1 (demo data), 2.2
   (public UI skeleton), 2.3 (public queries and lists), 2.4 (gallery component), 2.5
   (team and event pages), 2.6 (person and photo pages), 2.7 (team roster filter by year),
   2.8a (sign-up, login and password), 2.8b (user profile and menu), 2.9 (user-created team),
-  2.10 (meta tags and Open Graph) and 2.11 (sitemap, robots and Schema.org) complete
-- Tests: 695, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
+  2.10 (meta tags and Open Graph), 2.11 (sitemap, robots and Schema.org) and 2.12
+  (search: infrastructure) complete
+- Tests: 736, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
 
 ### What exists now
 
@@ -174,6 +176,7 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 | `apps/accounts` | email-based `User`, `UserManager`, consents (terms/privacy/PD law + version), roles, `User.person` link, allauth forms with Bootstrap classes, allauth adapter |
 | `apps/catalog` | `Team`, `TeamMembership` (with `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (roster filter by year), `forms.py` (`TeamForm`), `emails.py` (moderator notification), list views and team, event and person detail pages, team create and edit views |
 | `apps/photos` | `Source`, `Photo` (rights, `processing_status`, `phash`, `duplicate_of`), `PhotoPerson`, thumbnails via `ImageSpecField`, the photo page and the gallery fragment |
+| `apps/search` | `pg_trgm` extension, `search_vector` fields and GIN indexes, search text and query building (`indexing.py`), signals, the `search_reindex` command |
 | `apps/comments` | `Comment` (generic FK, replies, statuses) |
 | `apps/moderation` | `Report`, `ModerationAction` (moderator decision log) |
 
@@ -271,7 +274,9 @@ and the `.agents/skills/semver-checker/` skill.
   pagination; the photo counter in the card uses the shared `photos_count()` annotation from
   `apps/core/shortcuts.py`.
 - Sections that do not exist yet (`/search/`) render a shared placeholder template; the real
-  search arrives in sub-stage 2.13.
+  search arrives in sub-stage 2.13. The search infrastructure (the `pg_trgm` extension,
+  `search_vector` fields, GIN indexes, signals, the `search_reindex` command) was built
+  in 2.12.
 - `apps/core/migrations/0003_site_domain.py` sets the `django.contrib.sites` domain to
   `sportmemo.ru` — absolute links in emails and sitemaps must not point at `example.com`.
 
@@ -459,6 +464,29 @@ and the `.agents/skills/semver-checker/` skill.
 - `django-imagekit` caches the fact that a thumbnail exists in the Django cache. In tests each
   test has its own `MEDIA_ROOT`, so `tests/conftest.py` has a `cleared_cache` fixture; without
   it thumbnail tests fail while reading a file from another test.
+- The search index is a derived field, and code keeps it up to date: signals
+  (`apps/search/signals.py`) on object save, and the `make search-reindex` command for a full
+  pass. Write through `queryset.update()`, not `save()`: `save()` would add a row to
+  `django-simple-history` and move `updated_at` (which feeds `lastmod` in the sitemap)
+  on every reindex.
+- One function, `build_search_text()` (`apps/search/indexing.py`), builds the indexed text:
+  the name privacy rule must live in one place. With `first_name_only` the last name and name
+  variants stay out of the text; with `hidden` the text is empty; `display_name` is never
+  indexed. The trigram index keeps the raw fields, so hiding there is done by the query
+  filter: public search results must go through `public.published()` and respect
+  `name_visibility`.
+- Drafts and photos without confirmed rights are indexed as usual: publication is filtered by
+  the queryset, not by the index. Reindexing on every status change would mean extra writes.
+- User input is turned into a query by `build_search_query()`: words are cleaned with a
+  regular expression (`&`, `|`, `!`, `:` are part of the `tsquery` language), and each word
+  gets a `:*` prefix. Without the prefix a partial word does not match: the Russian
+  dictionary reduces "Громовцы" to "громовц" while the query "гром" becomes "гром".
+- Index fields live in the `catalog` and `photos` models, not in `apps/search`: `makemigrations`
+  writes `AddField` only into the app that owns the model. The `search` app owns the `pg_trgm`
+  extension, text building, signals and the reindex command.
+- Search works on PostgreSQL only (`tsvector`, `pg_trgm`); search tests are marked with
+  a vendor `skipif`. `CREATE EXTENSION` needs superuser rights — on the production server it is
+  a separate line in the deploy checklist.
 - Account pages are styled through the layout and elements, not by copying templates: every
   extra copied file is one more place to fix when the package updates. Write an own template
   only where the text must be ours.

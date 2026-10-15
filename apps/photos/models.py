@@ -1,6 +1,8 @@
 """Модели фотографий: источник, фото, люди на фото."""
 
 from django.conf import settings
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVectorField
 from django.db import models
 from django.utils.dateparse import parse_date
 from django.utils.translation import gettext_lazy as _
@@ -165,6 +167,10 @@ class Photo(TimeStampedModel, StatusModel, SoftDeleteModel):
     rights_confirmed_at = models.DateTimeField(
         _("дата подтверждения прав"), null=True, blank=True
     )
+    # Полнотекстовый индекс по заголовку и подписи. Индексируются все фото,
+    # включая черновики: публичность обеспечивает фильтр запроса
+    # (`visible_photos()`), а не индекс.
+    search_vector = SearchVectorField(_("поисковый индекс"), null=True, editable=False)
     exif = models.JSONField(_("EXIF"), default=dict, blank=True)
     views_count = models.PositiveIntegerField(_("просмотров"), default=0)
     uploaded_by = models.ForeignKey(
@@ -199,6 +205,12 @@ class Photo(TimeStampedModel, StatusModel, SoftDeleteModel):
             models.Index(fields=["sport", "status"]),
             models.Index(fields=["team", "year"]),
             models.Index(fields=["event"]),
+            GinIndex(fields=["search_vector"], name="photo_search_vector_gin"),
+            GinIndex(
+                fields=["title"],
+                name="photo_title_trgm",
+                opclasses=["gin_trgm_ops"],
+            ),
         ]
         constraints = [
             models.CheckConstraint(

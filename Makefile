@@ -2,7 +2,7 @@ MANAGE := uv run python manage.py
 DC := docker compose
 
 .PHONY: help install lint format format-check test test-cov migrate migrations shell superuser \
-        run collectstatic messages compile i18n seed-demo seed-demo-flush \
+        run collectstatic messages compile i18n seed-demo seed-demo-flush search-reindex \
         up down down-clean restart build rebuild logs ps
 
 help: ## Показать доступные команды
@@ -55,6 +55,13 @@ seed-demo: ## Создать демонстрационный архив для 
 
 seed-demo-flush: ## Удалить демо-данные и их файлы
 	$(MANAGE) seed_demo --flush
+
+# ======================================================================
+# Поиск
+# ======================================================================
+
+search-reindex: ## Пересчитать поисковый индекс архива
+	$(MANAGE) search_reindex
 
 # ======================================================================
 # Локализация

@@ -48,6 +48,10 @@ DJANGO_APPS = [
     # Нужно ради штатных шаблонов `sitemap.xml` и `sitemap_index.xml`:
     # без приложения в `INSTALLED_APPS` Django их не найдёт.
     "django.contrib.sitemaps",
+    # Регистрирует `SearchVectorField`, `GinIndex` и лукапы `trigram_similar`
+    # и `SearchLookup`: без приложения поиск по `tsvector` и триграммам
+    # не соберётся.
+    "django.contrib.postgres",
 ]
 
 THIRD_PARTY_APPS = [
@@ -65,6 +69,10 @@ LOCAL_APPS = [
     "apps.photos",
     "apps.comments",
     "apps.moderation",
+    # Моделей у приложения нет: поля поиска живут в моделях каталога и фото,
+    # а здесь — расширение базы, сборка индекса, сигналы и переиндексация.
+    # Стоит после `catalog` и `photos`: сигналы подключаются к их моделям.
+    "apps.search",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
