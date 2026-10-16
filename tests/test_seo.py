@@ -454,7 +454,7 @@ class TestPhotoSchema:
 class TestServicePagesHaveNoSchema:
     @pytest.mark.parametrize(
         "name",
-        ["core:search", "account_login", "account_signup", "catalog:team_list"],
+        ["search:index", "account_login", "account_signup", "catalog:team_list"],
     )
     def test_page_has_no_blocks(self, client, name):
         assert jsonld_blocks(client.get(reverse(name)).content.decode()) == []

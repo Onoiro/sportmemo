@@ -1,4 +1,4 @@
-"""Маршруты публичных страниц: главная, годы, поиск."""
+"""Маршруты публичных страниц: главная и годы."""
 
 from django.urls import path
 
@@ -10,5 +10,4 @@ urlpatterns = [
     path("", views.home, name="home"),
     path("years/", views.year_list, name="year_list"),
     path("years/<int:year>/", views.year_detail, name="year_detail"),
-    path("search/", views.search, name="search"),
 ]

@@ -35,8 +35,8 @@ def _page_url(request, obj) -> str:
 def website_schema(request) -> dict:
     """`WebSite` с поисковой строкой — только для главной.
 
-    `urlTemplate` ведёт на `/search/?q=...`: поиск появится в подэтапе 2.13,
-    но адрес уже объявлен, и разметку менять не придётся.
+    `urlTemplate` ведёт на `/search/?q=...`: по этому адресу открывается
+    страница результатов (`search:index`).
     """
     return {
         "@context": SCHEMA_CONTEXT,
@@ -48,7 +48,7 @@ def website_schema(request) -> dict:
             "target": {
                 "@type": "EntryPoint",
                 "urlTemplate": (
-                    f"{absolute(request, reverse('core:search'))}"
+                    f"{absolute(request, reverse('search:index'))}"
                     "?q={search_term_string}"
                 ),
             },

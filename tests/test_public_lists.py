@@ -353,7 +353,7 @@ class TestEventPagesAreReal:
 
         assert "Раздел в разработке" not in html
 
-    def test_search_is_still_a_placeholder(self, client):
-        html = client.get(reverse("core:search")).content.decode()
+    def test_search_is_not_a_placeholder(self, client):
+        html = client.get(reverse("search:index")).content.decode()
 
-        assert "Раздел в разработке" in html
+        assert "Раздел в разработке" not in html

@@ -1,0 +1,21 @@
+{% load i18n %}
+
+{% comment %}
+Подсказки «возможно, вы искали». Показываются только при полностью пустой
+выдаче: сравнение триграммами дороже полнотекстового поиска, и при
+результатах оно бесполезно.
+
+Подсказки сравнивают только безопасные поля — правило живёт
+в `apps/search/services.py`, шаблон выводит готовые строки.
+{% endcomment %}
+<section class="search-suggestions">
+    <h2 class="search-suggestions__title h6">{% trans "Возможно, вы искали" %}</h2>
+    <ul class="search-suggestions__list">
+        {% for suggestion in suggestions %}
+            <li class="search-suggestions__item">
+                <a class="search-suggestions__link" href="{{ suggestion.url }}">{{ suggestion.label }}</a>
+                <span class="search-suggestions__kind">{{ suggestion.kind }}</span>
+            </li>
+        {% endfor %}
+    </ul>
+</section>

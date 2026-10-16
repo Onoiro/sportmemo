@@ -23,7 +23,7 @@
 
             {% if not hide_search %}
             <form class="d-flex search-form me-lg-3" role="search" method="get"
-                  action="{% url 'core:search' %}">
+                  action="{% url 'search:index' %}">
                 <label class="visually-hidden" for="navbar-search">{% trans "Поиск по архиву" %}</label>
                 <input class="form-control me-2" type="search" id="navbar-search" name="q"
                        value="{{ request.GET.q|default:'' }}" placeholder="{% trans "Поиск" %}"

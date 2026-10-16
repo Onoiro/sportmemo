@@ -93,21 +93,6 @@ def home(request):
     return render(request, "core/home.html", context)
 
 
-def placeholder(request, *, heading, note=""):
-    """Временное представление для разделов, которых ещё нет.
-
-    Осталось только для поиска: он появляется в подэтапе 2.13.
-    """
-    context = {
-        "heading": heading,
-        "note": note,
-        # Раздел-заглушка индексировать незачем: страница пустая и скоро
-        # сменится настоящей.
-        "meta": page_meta(request, title=str(heading), noindex=True, nofollow=True),
-    }
-    return render(request, "core/placeholder.html", context)
-
-
 def year_list(request):
     """Годы архива: только те, в которых есть видимые фото.
 
@@ -185,11 +170,3 @@ def year_detail(request, year):
         ],
     }
     return render(request, "core/year_detail.html", context)
-
-
-def search(request):
-    return placeholder(
-        request,
-        heading=_("Поиск"),
-        note=_("Здесь появится поиск по командам, событиям, людям и фотографиям."),
-    )

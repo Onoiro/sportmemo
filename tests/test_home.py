@@ -1,4 +1,4 @@
-"""Тесты главной страницы и страниц-заглушек.
+"""Тесты главной страницы и каркаса сайта.
 
 Проверяем код ответа и ключевые блоки, а не вёрстку: разметка меняется
 чаще, чем смысл страницы.
@@ -13,10 +13,6 @@ from apps.core.views import HOME_PHOTO_LIMIT
 from tests.factories import PhotoFactory, TeamFactory
 
 pytestmark = pytest.mark.django_db
-
-PLACEHOLDERS = [
-    ("core:search", "/search/"),
-]
 
 
 class TestHome:
@@ -99,7 +95,7 @@ class TestHome:
         response = client.get(reverse("core:home"))
         html = response.content.decode()
 
-        assert reverse("core:search") in html
+        assert reverse("search:index") in html
         assert reverse("catalog:team_list") in html
         assert reverse("core:year_list") in html
 
@@ -158,23 +154,18 @@ class TestBaseTemplate:
             assert "{#" not in html, name
 
 
-class TestPlaceholders:
-    @pytest.mark.parametrize("name,url", PLACEHOLDERS)
-    def test_reverse_and_status(self, client, name, url):
-        assert reverse(name) == url
-        assert client.get(reverse(name)).status_code == 200
+class TestNavbarSearch:
+    """Форма поиска в navbar ведёт на настоящую страницу результатов."""
 
-    @pytest.mark.parametrize("name,url", PLACEHOLDERS)
-    def test_shows_heading_and_link_home(self, client, name, url):
-        html = client.get(reverse(name)).content.decode()
+    def test_form_action_points_to_search_page(self, client):
+        html = client.get(reverse("core:home")).content.decode()
 
-        assert "Раздел в разработке" in html
-        assert reverse("core:home") in html
+        assert f'action="{reverse("search:index")}"' in html
 
-    def test_search_keeps_query_string(self, client):
-        response = client.get(reverse("core:search"), {"q": "Громов"})
+    def test_search_link_is_not_a_placeholder(self, client):
+        html = client.get(reverse("search:index")).content.decode()
 
-        assert response.status_code == 200
+        assert "Раздел в разработке" not in html
 
 
 class TestSiteDomain:

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% comment %}
+Страница результатов поиска. Три состояния:
+пустой запрос — форма и подсказка, что можно искать;
+есть результаты — группы карточек со счётчиками;
+ничего не найдено — сообщение и, если запрос осмысленный, подсказки.
+
+Форма на странице результатов повторяет navbar: без неё запрос нельзя
+уточнить, не возвращаясь на главную.
+{% endcomment %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container search-page">
+    <header class="page-header">
+        <h1 class="page-header__title">{% trans "Поиск" %}</h1>
+        <form class="search-page__form" role="search" method="get"
+              action="{% url 'search:index' %}">
+            <label class="visually-hidden" for="page-search">{% trans "Поиск по архиву" %}</label>
+            <div class="input-group">
+                <input class="form-control" type="search" id="page-search" name="q"
+                       value="{{ q }}" placeholder="{% trans "Фамилия, команда, турнир" %}"
+                       autocomplete="off">
+                <button class="btn btn-primary" type="submit">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <span class="ms-1">{% trans "Найти" %}</span>
+                </button>
+            </div>
+        </form>
+        {% if result %}
+            <p class="page-header__lead">
+                {% blocktranslate count counter=result.total %}Найден {{ counter }} результат{% plural %}Найдено {{ counter }} результатов{% endblocktranslate %}
+            </p>
+        {% endif %}
+    </header>
+
+    {% if not result %}
+        <div class="empty-state">
+            <i class="bi bi-search empty-state__icon" aria-hidden="true"></i>
+            <p class="empty-state__title">{% trans "Что можно найти" %}</p>
+            <p class="mb-0">
+                {% trans "Введите фамилию или имя человека, название команды, турнира или подпись к фотографии." %}
+            </p>
+        </div>
+    {% elif result.total %}
+        {% for group in result.groups %}
+            {% if group.total %}
+                {% include "search/partials/group.html" with group=group %}
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-emoji-neutral empty-state__icon" aria-hidden="true"></i>
+            <p class="empty-state__title">{% trans "Ничего не найдено" %}</p>
+            <p class="mb-0">
+                {% trans "Попробуйте другое слово или проверьте написание." %}
+            </p>
+        </div>
+        {% if result.suggestions %}
+            {% include "search/partials/suggestions.html" with suggestions=result.suggestions %}
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

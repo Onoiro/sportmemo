@@ -1,0 +1,42 @@
+{% load i18n %}
+
+{% comment %}
+Группа выдачи: заголовок со счётчиком и сетка карточек.
+
+Шаблон карточки приходит в `group.template`, а имя переменной карточки
+у каждого типа своё (`team`, `event`, `person`, `photo`). Динамического
+имени переменной в `{% include %}` не бывает, поэтому передаются все четыре
+имени сразу: карточка берёт нужное, остальные не трогает. Так партиал
+обходится без ветвлений по типу, а карточки переиспользуются как есть.
+
+Подпись об обрезке появляется, когда в группе нашлось больше, чем
+показываем (`GROUP_LIMIT`).
+{% endcomment %}
+<section class="search-group" id="search-{{ group.key }}">
+    <div class="search-group__head">
+        <h2 class="search-group__title h5">{{ group.title }}</h2>
+        <span class="search-group__count">
+            {% blocktranslate count counter=group.total %}{{ counter }} результат{% plural %}{{ counter }} результатов{% endblocktranslate %}
+        </span>
+    </div>
+
+    {% if group.key == "photos" %}
+        <div class="photo-grid">
+            {% for item in group.items %}
+                {% include group.template with photo=item %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="entity-grid">
+            {% for item in group.items %}
+                {% include group.template with team=item event=item person=item %}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if group.truncated %}
+        <p class="search-group__note">
+            {% blocktranslate with shown=group.items|length total=group.total %}Показаны первые {{ shown }} из {{ total }}{% endblocktranslate %}
+        </p>
+    {% endif %}
+</section>

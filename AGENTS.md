@@ -58,11 +58,11 @@ stays tidy.
 
 | App | Contents |
 |---|---|
-| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public query helpers (`shortcuts.py`), public views (home page, years, search, `robots.txt`), the `uslug` URL converter (`converters.py`), the pagination tag, `core/urls.py`, shared form helpers (`forms.py`: `BootstrapFormMixin`), SEO meta tags (`seo.py`), sitemap (`sitemaps.py`), Schema.org markup (`schema.py`) |
+| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public query helpers (`shortcuts.py`), public views (home page, years, `robots.txt`), the `uslug` URL converter (`converters.py`), the pagination tag, `core/urls.py`, shared form helpers (`forms.py`: `BootstrapFormMixin`), SEO meta tags (`seo.py`), sitemap (`sitemaps.py`), Schema.org markup (`schema.py`) |
 | `apps/accounts` | custom `User` (email as `USERNAME_FIELD`), consents, roles, link to `Person` |
 | `apps/catalog` | `Team`, `TeamMembership` (with `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (roster filter by year), `forms.py` (`TeamForm`), `emails.py` (moderator notification), list views and team, event and person detail pages, team create and edit views |
 | `apps/photos` | `Source`, `Photo`, `PhotoPerson`, public views (`photo_detail`, the `grid` fragment), `photos/urls.py` |
-| `apps/search` | search index: the `pg_trgm` extension, search text and query building (`indexing.py`), signals, the `search_reindex` command; it has no models of its own — the index fields live in `catalog` and `photos` |
+| `apps/search` | search: the `pg_trgm` extension, search text and query building (`indexing.py`), results and suggestions (`services.py`), the results page (`views.py`, `urls.py`), signals, the `search_reindex` command; it has no models of its own — the index fields live in `catalog` and `photos` |
 | `apps/comments` | `Comment` (generic FK, replies) |
 | `apps/moderation` | `Report`, `ModerationAction` |
 
@@ -147,8 +147,8 @@ the list of sub-stages are in the master plan. Sub-stages 2.1 (demo data), 2.2 (
 skeleton), 2.3 (public queries and lists), 2.4 (gallery component), 2.5 (team and event pages),
 2.6 (person and photo pages), 2.7 (team roster filter by year), 2.8a (sign-up, login and
 password), 2.8b (user profile and menu), 2.9 (user-created team), 2.10 (meta tags and
-Open Graph), 2.11 (sitemap, robots and Schema.org) and 2.12 (search: infrastructure) are
-complete; the next one is 2.13 (search: interface).
+Open Graph), 2.11 (sitemap, robots and Schema.org), 2.12 (search: infrastructure) and
+2.13 (search: interface) are complete; the next one is 2.14 (comments and reports in the UI).
 
 ## Deliberately deferred
 
@@ -157,26 +157,26 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.13.0
+- Version: 0.14.0
 - Development branch: `master`
 - Stage: 1 (repository foundation and data model) — **complete**;
   stage 2 (public archive) — **in progress**, sub-stages 2.1 (demo data), 2.2
   (public UI skeleton), 2.3 (public queries and lists), 2.4 (gallery component), 2.5
   (team and event pages), 2.6 (person and photo pages), 2.7 (team roster filter by year),
   2.8a (sign-up, login and password), 2.8b (user profile and menu), 2.9 (user-created team),
-  2.10 (meta tags and Open Graph), 2.11 (sitemap, robots and Schema.org) and 2.12
-  (search: infrastructure) complete
-- Tests: 736, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
+  2.10 (meta tags and Open Graph), 2.11 (sitemap, robots and Schema.org), 2.12
+  (search: infrastructure) and 2.13 (search: interface) complete
+- Tests: 799, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
 
 ### What exists now
 
 | App | Contents |
 |---|---|
-| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public queries (`shortcuts.py`), public views (home page, years, search, `robots.txt`), `core/urls.py`, shared form helpers (`forms.py`: `BootstrapFormMixin`), SEO meta tags (`seo.py`), sitemap (`sitemaps.py`), Schema.org markup (`schema.py`) |
+| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public queries (`shortcuts.py`), public views (home page, years, `robots.txt`), `core/urls.py`, shared form helpers (`forms.py`: `BootstrapFormMixin`), SEO meta tags (`seo.py`), sitemap (`sitemaps.py`), Schema.org markup (`schema.py`) |
 | `apps/accounts` | email-based `User`, `UserManager`, consents (terms/privacy/PD law + version), roles, `User.person` link, allauth forms with Bootstrap classes, allauth adapter |
 | `apps/catalog` | `Team`, `TeamMembership` (with `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (roster filter by year), `forms.py` (`TeamForm`), `emails.py` (moderator notification), list views and team, event and person detail pages, team create and edit views |
 | `apps/photos` | `Source`, `Photo` (rights, `processing_status`, `phash`, `duplicate_of`), `PhotoPerson`, thumbnails via `ImageSpecField`, the photo page and the gallery fragment |
-| `apps/search` | `pg_trgm` extension, `search_vector` fields and GIN indexes, search text and query building (`indexing.py`), signals, the `search_reindex` command |
+| `apps/search` | `pg_trgm` extension, `search_vector` fields and GIN indexes, search text and query building (`indexing.py`), results and suggestions (`services.py`), the results page (`views.py`), signals, the `search_reindex` command |
 | `apps/comments` | `Comment` (generic FK, replies, statuses) |
 | `apps/moderation` | `Report`, `ModerationAction` (moderator decision log) |
 
@@ -273,10 +273,9 @@ and the `.agents/skills/semver-checker/` skill.
 - The "Events of the year" block on `/years/<year>/` shows published events of that year without
   pagination; the photo counter in the card uses the shared `photos_count()` annotation from
   `apps/core/shortcuts.py`.
-- Sections that do not exist yet (`/search/`) render a shared placeholder template; the real
-  search arrives in sub-stage 2.13. The search infrastructure (the `pg_trgm` extension,
-  `search_vector` fields, GIN indexes, signals, the `search_reindex` command) was built
-  in 2.12.
+- `/search/` is opened by the results page (`search:index`, the `apps/search` app): the search
+  infrastructure (the `pg_trgm` extension, `search_vector` fields, GIN indexes, signals, the
+  `search_reindex` command) was built in 2.12, the interface in 2.13.
 - `apps/core/migrations/0003_site_domain.py` sets the `django.contrib.sites` domain to
   `sportmemo.ru` — absolute links in emails and sitemaps must not point at `example.com`.
 
@@ -487,6 +486,33 @@ and the `.agents/skills/semver-checker/` skill.
 - Search works on PostgreSQL only (`tsvector`, `pg_trgm`); search tests are marked with
   a vendor `skipif`. `CREATE EXTENSION` needs superuser rights — on the production server it is
   a separate line in the deploy checklist.
+- The search page lives in `apps/search` (`search:index`), not in `core`: `core` is the bottom
+  layer in this project, and a link from it to catalog models would create a reverse dependency.
+  The result set is built by `apps/search/services.py` (`search_page()`, `suggestions()`), and
+  the view only parses the input: `SearchGroup` knows the card template name, so the group
+  partial does not branch by object type, and `Suggestion` carries a ready label, URL and kind —
+  the template never learns which model a suggestion came from.
+- Search is a public result set: a draft is shown to nobody, not even to its author or
+  a moderator. `get_visible_or_404` is not used here: the author would see a draft on a random
+  query and would not understand why others cannot.
+- Suggestions ("did you mean") compare safe fields only: name and city for a team and an event;
+  for a person `first_name` always, while `last_name` and name variants (`PersonName.value`)
+  are compared only when `name_visibility=full` (a `Case/When` condition, not a filter:
+  a `first_name_only` person must stay in the suggestions by first name), and people with
+  a hidden name are excluded at all. The trigram index keeps the raw last name, so the rule
+  lives in `services.py` and is covered by tests.
+- Suggestions are computed only when the whole result set is empty: trigram queries cost more
+  than full-text ones and are useless once something is found. Non-empty input that leaves no
+  words (`!!!`) gives "nothing found" without the suggestion block — there is nothing to compare
+  by trigrams. Input is cut to `MAX_QUERY_LENGTH` (100) before the `tsquery` is built.
+- The results page is closed to indexing (`noindex, follow`): addresses with an arbitrary query
+  must not appear in search engines, while the found cards still lead to real archive pages.
+  Search cards are reused as they are; for people a new
+  `templates/catalog/partials/person_card.html` uses the shared `.entity-card` style and never
+  renders `display_name` — only `public_name`.
+- A result group shows up to `GROUP_LIMIT` (20) cards plus the total counter; when the group is
+  cut, the note "Showing the first N of M" appears under the grid. There is no pagination on the
+  results page: it is an overview, not a list.
 - Account pages are styled through the layout and elements, not by copying templates: every
   extra copied file is one more place to fix when the package updates. Write an own template
   only where the text must be ours.

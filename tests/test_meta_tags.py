@@ -298,7 +298,7 @@ class TestNoindex:
 
     @pytest.mark.parametrize(
         "name",
-        ["core:search", "catalog:my_teams", "catalog:team_create", "accounts:profile"],
+        ["catalog:my_teams", "catalog:team_create", "accounts:profile"],
     )
     def test_closed_pages_are_noindex_nofollow(self, client, user, name):
         client.force_login(user)
@@ -306,6 +306,16 @@ class TestNoindex:
         html = client.get(reverse(name)).content.decode()
 
         assert robots_content(html) == "noindex, nofollow"
+
+    def test_search_page_is_noindex_follow(self, client):
+        """Страница результатов закрыта от индексации, но ссылки — нет.
+
+        Адресов с произвольным запросом в поиске быть не должно, однако
+        найденные карточки ведут на настоящие страницы архива.
+        """
+        html = client.get(reverse("search:index"), {"q": "Громов"}).content.decode()
+
+        assert robots_content(html) == "noindex, follow"
 
     def test_login_page_is_noindex(self, client):
         html = client.get(LOGIN_URL).content.decode()

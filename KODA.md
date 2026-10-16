@@ -58,11 +58,11 @@ Docker Compose + Nginx (инфраструктура).
 
 | Приложение | Содержимое |
 |---|---|
-| `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, миксины админки (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, команда `seed_demo`, публичные выборки (`shortcuts.py`), публичные представления (главная, годы, поиск, `robots.txt`), конвертер URL `uslug` (`converters.py`), тег пагинации, `core/urls.py`, SEO-метатеги (`seo.py`), карта сайта (`sitemaps.py`), микроразметка (`schema.py`) |
+| `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, миксины админки (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, команда `seed_demo`, публичные выборки (`shortcuts.py`), публичные представления (главная, годы, `robots.txt`), конвертер URL `uslug` (`converters.py`), тег пагинации, `core/urls.py`, SEO-метатеги (`seo.py`), карта сайта (`sitemaps.py`), микроразметка (`schema.py`) |
 | `apps/accounts` | кастомный `User` (email как `USERNAME_FIELD`), согласия, роли, связь с `Person` |
 | `apps/catalog` | `Team`, `TeamMembership` (с `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (фильтр состава по годам), представления и маршруты списков, страниц команды, события и человека |
 | `apps/photos` | `Source`, `Photo`, `PhotoPerson`, публичные представления (страница фото, фрагмент галереи), `photos/urls.py` |
-| `apps/search` | поисковый индекс: расширение `pg_trgm`, сборка текста и запроса (`indexing.py`), сигналы пересчёта, команда `search_reindex`; моделей нет — поля живут в `catalog` и `photos` |
+| `apps/search` | поиск: расширение `pg_trgm`, сборка текста и запроса (`indexing.py`), выдача и подсказки (`services.py`), страница результатов (`views.py`, `urls.py`), сигналы пересчёта, команда `search_reindex`; моделей нет — поля живут в `catalog` и `photos` |
 | `apps/comments` | `Comment` (generic FK, ответы) |
 | `apps/moderation` | `Report`, `ModerationAction` |
 
@@ -147,8 +147,9 @@ Docker Compose + Nginx (инфраструктура).
 2.3 (публичные выборки и списки), 2.4 (компонент галереи), 2.5 (страницы команды и события),
 2.6 (страницы человека и фотографии), 2.7 (фильтр состава команды по годам), 2.8а (вход,
 регистрация и пароль), 2.8б (профиль и меню пользователя), 2.9 (создание команды
-пользователем), 2.10 (метатеги и Open Graph), 2.11 (sitemap, robots и Schema.org) и 2.12
-(поиск: инфраструктура) завершены; следующий — 2.13 (поиск: интерфейс).
+пользователем), 2.10 (метатеги и Open Graph), 2.11 (sitemap, robots и Schema.org), 2.12
+(поиск: инфраструктура) и 2.13 (поиск: интерфейс) завершены; следующий — 2.14 (комментарии
+и жалобы в UI).
 
 ## Отложено осознанно
 
@@ -157,7 +158,7 @@ UI, «конструктор видов спорта». Обработка фо�
 
 ## Текущее состояние
 
-- Версия: 0.13.0
+- Версия: 0.14.0
 - Ветка разработки: `master`
 - Этап: 1 (фундамент репозитория и модель данных) — **завершён**;
   этап 2 (публичный архив) — **в работе**, подэтапы 2.1 (демо-данные), 2.2 (каркас
@@ -165,18 +166,18 @@ UI, «конструктор видов спорта». Обработка фо�
   (страницы команды и события), 2.6 (страницы человека и фотографии), 2.7 (фильтр состава
   команды по годам), 2.8а (вход, регистрация и пароль), 2.8б (профиль и меню пользователя),
   2.9 (создание команды пользователем), 2.10 (метатеги и Open Graph), 2.11 (sitemap,
-  robots и Schema.org) и 2.12 (поиск: инфраструктура) завершены
-- Тесты: 736, проходят на Python 3.12 и 3.13 (`make test`), линтер чист (`make lint`)
+  robots и Schema.org), 2.12 (поиск: инфраструктура) и 2.13 (поиск: интерфейс) завершены
+- Тесты: 799, проходят на Python 3.12 и 3.13 (`make test`), линтер чист (`make lint`)
 
 ### Что уже есть
 
 | Приложение | Содержимое |
 |---|---|
-| `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, миксины админки (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, команда `seed_demo`, публичные выборки (`shortcuts.py`), публичные представления (главная, годы, поиск, `robots.txt`), конвертер URL `uslug` (`converters.py`), тег пагинации, `core/urls.py`, общие приёмы форм (`forms.py`: `BootstrapFormMixin`), SEO-метатеги (`seo.py`), карта сайта (`sitemaps.py`), микроразметка Schema.org (`schema.py`, `templatetags/jsonld.py`) |
+| `apps/core` | абстрактные модели (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, миксины админки (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, команда `seed_demo`, публичные выборки (`shortcuts.py`), публичные представления (главная, годы, `robots.txt`), конвертер URL `uslug` (`converters.py`), тег пагинации, `core/urls.py`, общие приёмы форм (`forms.py`: `BootstrapFormMixin`), SEO-метатеги (`seo.py`), карта сайта (`sitemaps.py`), микроразметка Schema.org (`schema.py`, `templatetags/jsonld.py`) |
 | `apps/accounts` | `User` по email, `UserManager`, согласия (terms/privacy/152-ФЗ + версия), роли, связь `User.person`, формы allauth с Bootstrap-классами, адаптер allauth |
 | `apps/catalog` | `Team`, `TeamMembership` (с `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (фильтр состава по годам), `forms.py` (`TeamForm`), `emails.py` (письмо модераторам), представления и маршруты списков, страниц команды, события и человека, создания и правки команды |
 | `apps/photos` | `Source`, `Photo` (права, `processing_status`, `phash`, `duplicate_of`), `PhotoPerson`, превью через `ImageSpecField`, страница фото и фрагмент галереи |
-| `apps/search` | расширение `pg_trgm`, поля `search_vector` и GIN-индексы, сборка текста и запроса (`indexing.py`), сигналы, команда `search_reindex` |
+| `apps/search` | расширение `pg_trgm`, поля `search_vector` и GIN-индексы, сборка текста и запроса (`indexing.py`), выдача и подсказки (`services.py`), страница результатов (`views.py`), сигналы, команда `search_reindex` |
 | `apps/comments` | `Comment` (generic FK, ответы, статусы) |
 | `apps/moderation` | `Report`, `ModerationAction` (журнал решений модератора) |
 
@@ -262,9 +263,9 @@ CI (`.github/workflows/ci.yml`: ruff, проверка миграций, pytest 
   `<slug:...>` пропускает только ASCII и уронил бы `reverse()` на кириллице.
 - Блок «События года» на `/years/<год>/` выводит опубликованные события года без пагинации;
   счётчик фото в карточке — общая аннотация `photos_count()` из `apps/core/shortcuts.py`.
-- Разделы, которых ещё нет (`/search/`), отдают общий шаблон-заглушку; настоящий поиск
-  появится в подэтапе 2.13. Поисковая инфраструктура (расширение `pg_trgm`, поля
-  `search_vector`, GIN-индексы, сигналы, команда `search_reindex`) сделана в 2.12.
+- Разделы `/search/` открывает страница результатов (`search:index`, приложение
+  `apps/search`): поисковая инфраструктура (расширение `pg_trgm`, поля `search_vector`,
+  GIN-индексы, сигналы, команда `search_reindex`) сделана в 2.12, интерфейс — в 2.13.
 - `apps/core/migrations/0003_site_domain.py` задаёт домен `django.contrib.sites` —
   `sportmemo.ru`. Иначе абсолютные ссылки в письмах и sitemap вели бы на `example.com`.
 
@@ -478,4 +479,31 @@ CI (`.github/workflows/ci.yml`: ruff, проверка миграций, pytest 
 - Поиск работает только на PostgreSQL (`tsvector`, `pg_trgm`); тесты поиска помечены
   `skipif` по вендору базы. `CREATE EXTENSION` требует прав суперпользователя — на боевом
   сервере это отдельный пункт чек-листа деплоя.
+- Страница поиска живёт в `apps/search` (`search:index`), а не в `core`: `core` в проекте —
+  нижний слой, и ссылка из него на модели каталога дала бы обратную зависимость.
+  Выдачу собирает `apps/search/services.py` (`search_page()`, `suggestions()`), представление
+  только разбирает ввод: `SearchGroup` знает имя шаблона карточки, поэтому партиал группы
+  не ветвится по типу объекта, а `Suggestion` несёт готовые подпись, адрес и тип — шаблон
+  не знает, из какой модели пришла подсказка.
+- Поиск — публичная выдача: черновик не показывается никому, включая автора и модератора.
+  `get_visible_or_404` здесь не применяется: автор увидел бы свой черновик по случайному
+  запросу и не понял бы, почему у остальных его нет.
+- Подсказки «возможно, вы искали» сравнивают только безопасные поля: у команды и события —
+  название и город, у человека — `first_name` всегда, `last_name` и варианты имён
+  (`PersonName.value`) только при `name_visibility=full` (условие `Case/When`, а не фильтр:
+  человек с `first_name_only` должен остаться в подсказках по имени), а люди со скрытым именем
+  исключены вовсе. Триграммный индекс хранит «сырую» фамилию, поэтому правило живёт
+  в `services.py` и проверяется тестами.
+- Подсказки считаются только при полностью пустой выдаче: триграммные запросы дороже
+  полнотекстовых, а при найденных результатах бесполезны. Непустой ввод, в котором не осталось
+  слов (`!!!`), даёт «ничего не найдено» без блока подсказок — сравнивать триграммами мусор
+  нечего. Ввод обрезается до `MAX_QUERY_LENGTH` (100) до сборки `tsquery`.
+- Страница результатов закрыта от индексации (`noindex, follow`): адресов с произвольным
+  запросом в поиске быть не должно, но найденные карточки ведут на настоящие страницы архива.
+  Карточки поиска переиспользуются как есть; для людей добавлен
+  `templates/catalog/partials/person_card.html` со стилем общей `.entity-card`,
+  и `display_name` в него не попадает никогда — только `public_name`.
+- Группа выдачи показывает до `GROUP_LIMIT` (20) карточек и общий счётчик; при обрезке
+  под сеткой стоит подпись «Показаны первые N из M». Пагинации на странице результатов нет:
+  она обзорная, а не список.
 

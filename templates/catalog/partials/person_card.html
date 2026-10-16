@@ -1,0 +1,27 @@
+{% load i18n %}
+
+{% comment %}
+Карточка человека. Стиль общий с карточками команды и события
+(`.entity-card`), отдельная сетка стилей не нужна.
+
+`display_name` не выводится никогда: он содержит полную фамилию,
+а публичный контекст использует только `public_name`.
+{% endcomment %}
+<a class="entity-card" href="{{ person.get_absolute_url }}">
+    <div class="entity-card__body">
+        <h2 class="entity-card__title">{{ person.public_name }}</h2>
+        {% if person.birth_year or person.death_year %}
+            <p class="entity-card__meta">
+                <span><i class="bi bi-calendar3" aria-hidden="true"></i>
+                    {% if person.birth_year and person.death_year %}
+                        {{ person.birth_year }} — {{ person.death_year }}
+                    {% elif person.birth_year %}
+                        {% blocktranslate with year=person.birth_year %}род. {{ year }}{% endblocktranslate %}
+                    {% else %}
+                        {% blocktranslate with year=person.death_year %}ум. {{ year }}{% endblocktranslate %}
+                    {% endif %}
+                </span>
+            </p>
+        {% endif %}
+    </div>
+</a>

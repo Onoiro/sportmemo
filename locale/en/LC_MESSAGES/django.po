@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 01:04+0300\n"
+"POT-Creation-Date: 2026-10-16 23:27+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -121,8 +121,8 @@ msgstr "Profile updated"
 #: apps/catalog/views.py:207 apps/catalog/views.py:286
 #: apps/catalog/views.py:324 apps/catalog/views.py:395
 #: apps/catalog/views.py:446 apps/catalog/views.py:488
-#: apps/catalog/views.py:519 apps/core/views.py:134 apps/core/views.py:182
-#: apps/photos/views.py:44 templates/core/placeholder.html:7
+#: apps/catalog/views.py:519 apps/core/views.py:119 apps/core/views.py:167
+#: apps/photos/views.py:44 apps/search/views.py:39
 #: templates/partials/footer.html:20
 msgid "Главная"
 msgstr "Home"
@@ -518,9 +518,9 @@ msgstr "Teams"
 
 #: apps/catalog/views.py:174 apps/catalog/views.py:181
 #: apps/catalog/views.py:287 apps/catalog/views.py:447
-#: apps/catalog/views.py:489 templates/catalog/team_list.html:11
-#: templates/core/home.html:46 templates/partials/footer.html:12
-#: templates/partials/navbar.html:14
+#: apps/catalog/views.py:489 apps/search/services.py:98
+#: templates/catalog/team_list.html:11 templates/core/home.html:46
+#: templates/partials/footer.html:12 templates/partials/navbar.html:14
 msgid "Команды"
 msgstr "Teams"
 
@@ -529,8 +529,9 @@ msgid "Команды архива SportMemo: города, годы основ�
 msgstr "Teams in the SportMemo archive: cities, founding years and photos."
 
 #: apps/catalog/views.py:203 apps/catalog/views.py:208
-#: apps/catalog/views.py:325 templates/catalog/event_list.html:11
-#: templates/partials/footer.html:13 templates/partials/navbar.html:17
+#: apps/catalog/views.py:325 apps/search/services.py:104
+#: templates/catalog/event_list.html:11 templates/partials/footer.html:13
+#: templates/partials/navbar.html:17
 msgid "События"
 msgstr "Events"
 
@@ -773,36 +774,27 @@ msgstr "A public archive of sports photos: teams, events, people"
 msgid "архив спортивных фотографий"
 msgstr "sports photo archive"
 
-#: apps/core/views.py:128 apps/core/views.py:135 apps/core/views.py:183
+#: apps/core/views.py:113 apps/core/views.py:120 apps/core/views.py:168
 #: apps/photos/views.py:47 templates/core/home.html:55
 #: templates/core/year_list.html:11 templates/partials/footer.html:14
 #: templates/partials/navbar.html:20
 msgid "Годы"
 msgstr "Years"
 
-#: apps/core/views.py:130
+#: apps/core/views.py:115
 msgid "Хронология архива SportMemo: годы и фотографии каждого года."
 msgstr "The SportMemo archive timeline: years and the photos of each year."
 
-#: apps/core/views.py:177 apps/core/views.py:184 apps/photos/views.py:50
+#: apps/core/views.py:162 apps/core/views.py:169 apps/photos/views.py:50
 #: templates/core/year_detail.html:12
 #, python-format
 msgid "%(year)s год"
 msgstr "%(year)s"
 
-#: apps/core/views.py:178
+#: apps/core/views.py:163
 #, python-format
 msgid "Фотографии %(year)s года в архиве SportMemo."
 msgstr "Photos from %(year)s in the SportMemo archive."
-
-#: apps/core/views.py:193 templates/partials/footer.html:21
-#: templates/partials/navbar.html:29
-msgid "Поиск"
-msgstr "Search"
-
-#: apps/core/views.py:194
-msgid "Здесь появится поиск по командам, событиям, людям и фотографиям."
-msgstr "Search across teams, events, people and photos will appear here."
 
 #: apps/moderation/admin.py:35
 msgid "Отметить решёнными"
@@ -1138,6 +1130,33 @@ msgstr "people in photos"
 msgid "Фотография из архива SportMemo"
 msgstr "A photo from the SportMemo archive"
 
+#: apps/search/services.py:110
+msgid "Люди"
+msgstr "People"
+
+#: apps/search/services.py:116 templates/catalog/person_detail.html:94
+msgid "Фотографии"
+msgstr "Photos"
+
+#: apps/search/services.py:150 templates/photos/photo_detail.html:59
+msgid "Команда"
+msgstr "Team"
+
+#: apps/search/services.py:156 templates/photos/photo_detail.html:69
+msgid "Событие"
+msgstr "Event"
+
+#: apps/search/services.py:162 apps/search/services.py:169
+#| msgid "человек"
+msgid "Человек"
+msgstr "Person"
+
+#: apps/search/views.py:37 apps/search/views.py:40
+#: templates/partials/footer.html:21 templates/partials/navbar.html:29
+#: templates/search/index.html:21
+msgid "Поиск"
+msgstr "Search"
+
 #: templates/404.html:6 templates/404.html:14
 msgid "Страница не найдена"
 msgstr "Page not found"
@@ -1150,7 +1169,6 @@ msgstr ""
 "search."
 
 #: templates/404.html:20 templates/500.html:27
-#: templates/core/placeholder.html:33
 msgid "На главную"
 msgstr "To the home page"
 
@@ -1593,6 +1611,18 @@ msgid_plural "%(counter)s фото"
 msgstr[0] "%(counter)s photo"
 msgstr[1] "%(counter)s photos"
 
+#: templates/catalog/partials/person_card.html:19
+#: templates/catalog/person_detail.html:34
+#, python-format
+msgid "род. %(year)s"
+msgstr "born %(year)s"
+
+#: templates/catalog/partials/person_card.html:21
+#: templates/catalog/person_detail.html:38
+#, python-format
+msgid "ум. %(year)s"
+msgstr "died %(year)s"
+
 #: templates/catalog/partials/roster_form.html:11
 #: templates/photos/photo_detail.html:44
 msgid "Год"
@@ -1619,16 +1649,6 @@ msgstr "founded %(year)s"
 msgid "Главное фото"
 msgstr "Main photo"
 
-#: templates/catalog/person_detail.html:34
-#, python-format
-msgid "род. %(year)s"
-msgstr "born %(year)s"
-
-#: templates/catalog/person_detail.html:38
-#, python-format
-msgid "ум. %(year)s"
-msgstr "died %(year)s"
-
 #: templates/catalog/person_detail.html:55
 #: templates/catalog/team_detail.html:51
 msgid "Дополнительно"
@@ -1637,10 +1657,6 @@ msgstr "More details"
 #: templates/catalog/person_detail.html:62
 msgid "Команды и роли"
 msgstr "Teams and roles"
-
-#: templates/catalog/person_detail.html:94
-msgid "Фотографии"
-msgstr "Photos"
 
 #: templates/catalog/person_detail.html:107
 msgid "Также известен как"
@@ -1735,14 +1751,15 @@ msgstr ""
 "Russia — from yard teams to veteran games."
 
 #: templates/core/home.html:14 templates/partials/navbar.html:27
+#: templates/search/index.html:24
 msgid "Поиск по архиву"
 msgstr "Search the archive"
 
-#: templates/core/home.html:17
+#: templates/core/home.html:17 templates/search/index.html:27
 msgid "Фамилия, команда, турнир"
 msgstr "Last name, team, tournament"
 
-#: templates/core/home.html:20
+#: templates/core/home.html:20 templates/search/index.html:31
 msgid "Найти"
 msgstr "Find"
 
@@ -1778,20 +1795,6 @@ msgstr "The archive is empty for now"
 msgid "Фотографии появятся здесь, когда их добавят и опубликуют."
 msgstr "Photos will appear here once they are added and published."
 
-#: templates/core/placeholder.html:5 templates/partials/breadcrumbs.html:3
-msgid "Хлебные крошки"
-msgstr "Breadcrumbs"
-
-#: templates/core/placeholder.html:18
-msgid "Раздел появится позже — каркас сайта уже готов, наполнение в работе."
-msgstr ""
-"This section comes later — the site framework is ready, the content is in "
-"progress."
-
-#: templates/core/placeholder.html:24
-msgid "Раздел в разработке"
-msgstr "Section in progress"
-
 #: templates/core/year_detail.html:15
 #, python-format
 msgid "Найдена %(counter)s фотография"
@@ -1818,6 +1821,10 @@ msgstr "There are no photos in the archive yet"
 #: templates/core/year_list.html:33
 msgid "Годы появятся здесь, когда фотографии добавят и опубликуют."
 msgstr "Years will appear here once photos are added and published."
+
+#: templates/partials/breadcrumbs.html:3
+msgid "Хлебные крошки"
+msgstr "Breadcrumbs"
 
 #: templates/partials/footer.html:7
 msgid ""
@@ -1899,14 +1906,6 @@ msgstr "Show more"
 msgid "Дата съёмки"
 msgstr "Date taken"
 
-#: templates/photos/photo_detail.html:59
-msgid "Команда"
-msgstr "Team"
-
-#: templates/photos/photo_detail.html:69
-msgid "Событие"
-msgstr "Event"
-
 #: templates/photos/photo_detail.html:78
 msgid "Просмотров"
 msgstr "Views"
@@ -1934,3 +1933,46 @@ msgstr "Original owner"
 #: templates/photos/photo_detail.html:106
 msgid "Люди на фото"
 msgstr "People in the photo"
+
+#: templates/search/index.html:37
+#| msgid "Найдено %(counter)s событие"
+#| msgid_plural "Найдено %(counter)s событий"
+msgid "Найден %(counter)s результат"
+msgid_plural "Найдено %(counter)s результатов"
+msgstr[0] "Found %(counter)s result"
+msgstr[1] "Found %(counter)s results"
+
+#: templates/search/index.html:45
+msgid "Что можно найти"
+msgstr "What you can find"
+
+#: templates/search/index.html:47
+msgid ""
+"Введите фамилию или имя человека, название команды, турнира или подпись к "
+"фотографии."
+msgstr "Enter a person's name, a team, a tournament or a photo caption."
+
+#: templates/search/index.html:59
+#| msgid "Ничего не выбрано"
+msgid "Ничего не найдено"
+msgstr "Nothing found"
+
+#: templates/search/index.html:61
+msgid "Попробуйте другое слово или проверьте написание."
+msgstr "Try another word or check the spelling."
+
+#: templates/search/partials/group.html:19
+#| msgid "результат"
+msgid "%(counter)s результат"
+msgid_plural "%(counter)s результатов"
+msgstr[0] "%(counter)s result"
+msgstr[1] "%(counter)s results"
+
+#: templates/search/partials/group.html:39
+#, python-format
+msgid "Показаны первые %(shown)s из %(total)s"
+msgstr "Showing the first %(shown)s of %(total)s"
+
+#: templates/search/partials/suggestions.html:12
+msgid "Возможно, вы искали"
+msgstr "Did you mean"
