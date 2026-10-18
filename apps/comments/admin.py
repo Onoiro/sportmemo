@@ -1,9 +1,11 @@
-"""Админка комментариев."""
+"""Админка комментариев и настройки премодерации."""
 
 from django.contrib import admin
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
-from apps.comments.models import Comment
+from apps.comments.models import Comment, CommentSettings
 from apps.core.admin_mixins import (
     MODERATION_ACTIONS,
     BaseHistoryAdmin,
@@ -42,3 +44,31 @@ class CommentAdmin(ModerationActionsMixin, BaseHistoryAdmin):
         ),
         (_("Служебное"), {"fields": ("deleted_at", "created_at", "updated_at")}),
     )
+
+
+@admin.register(CommentSettings)
+class CommentSettingsAdmin(admin.ModelAdmin):
+    """Настройка премодерации: одна строка, править — только её.
+
+    Добавлять и удалять записи нельзя: две строки настроек означали бы, что
+    неизвестно, какая из них действует. Список сразу ведёт на форму правки —
+    модератор увидел бы список из одной записи и не понял, что делать.
+    """
+
+    fields = ("premoderation",)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        settings_obj = CommentSettings.objects.order_by("pk").first()
+        if settings_obj is None:
+            # Строку создаёт data-миграция, но база могла её потерять —
+            # падать из-за этого админка не должна.
+            settings_obj = CommentSettings.objects.create()
+        return HttpResponseRedirect(
+            reverse("admin:comments_commentsettings_change", args=[settings_obj.pk])
+        )

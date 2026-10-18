@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 23:27+0300\n"
+"POT-Creation-Date: 2026-10-18 21:36+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -122,7 +122,7 @@ msgstr "Profile updated"
 #: apps/catalog/views.py:324 apps/catalog/views.py:395
 #: apps/catalog/views.py:446 apps/catalog/views.py:488
 #: apps/catalog/views.py:519 apps/core/views.py:119 apps/core/views.py:167
-#: apps/photos/views.py:44 apps/search/views.py:39
+#: apps/moderation/views.py:111 apps/photos/views.py:45 apps/search/views.py:40
 #: templates/partials/footer.html:20
 msgid "Главная"
 msgstr "Home"
@@ -132,12 +132,12 @@ msgid "Содержание"
 msgstr "Content"
 
 #: apps/catalog/admin.py:71 apps/catalog/admin.py:131 apps/catalog/admin.py:181
-#: apps/comments/admin.py:40 apps/photos/admin.py:106
+#: apps/comments/admin.py:42 apps/photos/admin.py:106
 msgid "Публикация"
 msgstr "Publication"
 
 #: apps/catalog/admin.py:75 apps/catalog/admin.py:135 apps/catalog/admin.py:185
-#: apps/comments/admin.py:43 apps/photos/admin.py:110
+#: apps/comments/admin.py:45 apps/photos/admin.py:110
 msgid "Служебное"
 msgstr "Service"
 
@@ -153,7 +153,7 @@ msgstr "Biography"
 msgid "Даты и место"
 msgstr "Dates and place"
 
-#: apps/catalog/emails.py:58
+#: apps/catalog/emails.py:20
 #, python-format
 msgid "Новая команда: %(name)s"
 msgstr "New team: %(name)s"
@@ -163,9 +163,9 @@ msgid ""
 "Если у клуба несколько команд, заводите их отдельными записями: «Русстар», "
 "«Русстар-2», «Русстар (юноши 1992 г. р.)». Основную команду указывайте без "
 "уточнения."
-msgstr ""
-"If a club has several teams, create them as separate entries: «Русстар», "
-"«Русстар-2», «Русстар (youth born 1992)». The main team goes without a note."
+msgstr "If a club has several teams, create them as separate entries: "
+"«Русстар», «Русстар-2», «Русстар (youth born 1992)». The main team "
+"goes without a note."
 
 #: apps/catalog/forms.py:40
 msgid "Я проверил(а), это другая команда"
@@ -213,7 +213,8 @@ msgstr "Supported formats: %(formats)s."
 
 #: apps/catalog/forms.py:156
 msgid "Команда с таким названием уже есть в архиве. Проверьте список выше."
-msgstr "A team with this name is already in the archive. Check the list above."
+msgstr "A team with this name is already in the archive. Check the list "
+"above."
 
 #: apps/catalog/models.py:75 apps/photos/models.py:258
 msgid "игрок"
@@ -518,7 +519,7 @@ msgstr "Teams"
 
 #: apps/catalog/views.py:174 apps/catalog/views.py:181
 #: apps/catalog/views.py:287 apps/catalog/views.py:447
-#: apps/catalog/views.py:489 apps/search/services.py:98
+#: apps/catalog/views.py:489 apps/search/services.py:103
 #: templates/catalog/team_list.html:11 templates/core/home.html:46
 #: templates/partials/footer.html:12 templates/partials/navbar.html:14
 msgid "Команды"
@@ -529,7 +530,7 @@ msgid "Команды архива SportMemo: города, годы основ�
 msgstr "Teams in the SportMemo archive: cities, founding years and photos."
 
 #: apps/catalog/views.py:203 apps/catalog/views.py:208
-#: apps/catalog/views.py:325 apps/search/services.py:104
+#: apps/catalog/views.py:325 apps/search/services.py:109
 #: templates/catalog/event_list.html:11 templates/partials/footer.html:13
 #: templates/partials/navbar.html:17
 msgid "События"
@@ -589,39 +590,88 @@ msgstr "Edit"
 msgid "Мои команды"
 msgstr "My teams"
 
-#: apps/comments/admin.py:38
+#: apps/comments/admin.py:40
+#: templates/moderation/email/new_report_notification.txt:5
+#: templates/moderation/report_form.html:19
 msgid "Объект"
 msgstr "Object"
 
-#: apps/comments/models.py:22
+#: apps/comments/forms.py:33
+msgid "Комментарий"
+msgstr "Comment"
+
+#: apps/comments/forms.py:38
+msgid "Что известно об этом фото или команде?"
+msgstr "What do you know about this photo or team?"
+
+#: apps/comments/forms.py:58
+msgid "Напишите текст комментария."
+msgstr "Please write the comment text."
+
+#: apps/comments/forms.py:83
+msgid "Комментарий, на который вы отвечаете, недоступен."
+msgstr "The comment you are replying to is not available."
+
+#: apps/comments/models.py:28
+msgid "премодерация комментариев"
+msgstr "comment premoderation"
+
+#: apps/comments/models.py:31
+msgid ""
+"Комментарий публикуется сразу. Включите, если поток потребует проверки перед "
+"публикацией."
+msgstr "A comment is published at once. Turn this on if the flow needs "
+"review before publishing."
+
+#: apps/comments/models.py:37 apps/comments/models.py:38
+msgid "настройки комментариев"
+msgstr "comment settings"
+
+#: apps/comments/models.py:41
+msgid "Настройки комментариев"
+msgstr "Comment settings"
+
+#: apps/comments/models.py:71
 msgid "автор"
 msgstr "author"
 
-#: apps/comments/models.py:26
+#: apps/comments/models.py:75
 msgid "текст"
 msgstr "text"
 
-#: apps/comments/models.py:29
+#: apps/comments/models.py:78
 msgid "ответ на"
 msgstr "reply to"
 
-#: apps/comments/models.py:38 apps/moderation/models.py:46
+#: apps/comments/models.py:87 apps/moderation/models.py:46
 #: apps/moderation/models.py:125
 msgid "тип объекта"
 msgstr "object type"
 
-#: apps/comments/models.py:41 apps/moderation/models.py:49
+#: apps/comments/models.py:90 apps/moderation/models.py:49
 #: apps/moderation/models.py:128
 msgid "id объекта"
 msgstr "object id"
 
-#: apps/comments/models.py:47 apps/moderation/models.py:59
+#: apps/comments/models.py:96 apps/moderation/models.py:59
 msgid "комментарий"
 msgstr "comment"
 
-#: apps/comments/models.py:48
+#: apps/comments/models.py:97
 msgid "комментарии"
 msgstr "comments"
+
+#: apps/comments/views.py:87
+msgid "Такой комментарий вы уже отправляли."
+msgstr "You have already sent this comment."
+
+#: apps/comments/views.py:111
+msgid "Комментарий отправлен на проверку модератору."
+msgstr "The comment is sent to a moderator for review."
+
+#: apps/comments/views.py:113
+msgid "Комментарий добавлен."
+msgstr "The comment is added."
 
 #: apps/core/admin_mixins.py:36
 msgid "Опубликовать выбранные"
@@ -761,7 +811,7 @@ msgstr "sort order"
 msgid "виды спорта"
 msgstr "sports"
 
-#: apps/core/schema.py:148 apps/photos/views.py:53 apps/photos/views.py:57
+#: apps/core/schema.py:148 apps/photos/views.py:54 apps/photos/views.py:58
 #: templates/photos/photo_detail.html:37
 msgid "Фотография"
 msgstr "Photo"
@@ -775,7 +825,7 @@ msgid "архив спортивных фотографий"
 msgstr "sports photo archive"
 
 #: apps/core/views.py:113 apps/core/views.py:120 apps/core/views.py:168
-#: apps/photos/views.py:47 templates/core/home.html:55
+#: apps/photos/views.py:48 templates/core/home.html:55
 #: templates/core/year_list.html:11 templates/partials/footer.html:14
 #: templates/partials/navbar.html:20
 msgid "Годы"
@@ -785,7 +835,7 @@ msgstr "Years"
 msgid "Хронология архива SportMemo: годы и фотографии каждого года."
 msgstr "The SportMemo archive timeline: years and the photos of each year."
 
-#: apps/core/views.py:162 apps/core/views.py:169 apps/photos/views.py:50
+#: apps/core/views.py:162 apps/core/views.py:169 apps/photos/views.py:51
 #: templates/core/year_detail.html:12
 #, python-format
 msgid "%(year)s год"
@@ -813,6 +863,24 @@ msgstr "Reject reports"
 #, python-format
 msgid "Отклонено жалоб: %(count)d"
 msgstr "Reports rejected: %(count)d"
+
+#: apps/moderation/emails.py:20
+#, python-format
+msgid "Жалоба на объект: %(reason)s"
+msgstr "Report about an object: %(reason)s"
+
+#: apps/moderation/forms.py:29
+#: templates/moderation/email/new_report_notification.txt:3
+msgid "Причина"
+msgstr "Reason"
+
+#: apps/moderation/forms.py:34
+msgid "Что не так"
+msgstr "What is wrong"
+
+#: apps/moderation/forms.py:41
+msgid "Опишите ошибку: что указано неверно и как правильно."
+msgstr "Describe the error: what is wrong and what is correct."
 
 #: apps/moderation/models.py:16
 msgid "неверно указан человек"
@@ -913,6 +981,20 @@ msgstr "moderator decision"
 #: apps/moderation/models.py:136
 msgid "решения модераторов"
 msgstr "moderator decisions"
+
+#: apps/moderation/views.py:72 apps/moderation/views.py:88
+msgid "Спасибо! Модератор проверит."
+msgstr "Thank you! A moderator will check it."
+
+#: apps/moderation/views.py:77
+msgid "Жалоба на этот объект уже отправлена."
+msgstr "A report about this object has already been sent."
+
+#: apps/moderation/views.py:106 apps/moderation/views.py:113
+#: templates/moderation/report_form.html:11
+#: templates/partials/report_link.html:15
+msgid "Сообщить об ошибке"
+msgstr "Report an error"
 
 #: apps/photos/admin.py:83
 msgid "Привязка"
@@ -1126,32 +1208,31 @@ msgstr "person in photo"
 msgid "люди на фото"
 msgstr "people in photos"
 
-#: apps/photos/views.py:66
+#: apps/photos/views.py:67
 msgid "Фотография из архива SportMemo"
 msgstr "A photo from the SportMemo archive"
 
-#: apps/search/services.py:110
+#: apps/search/services.py:115
 msgid "Люди"
 msgstr "People"
 
-#: apps/search/services.py:116 templates/catalog/person_detail.html:94
+#: apps/search/services.py:121 templates/catalog/person_detail.html:94
 msgid "Фотографии"
 msgstr "Photos"
 
-#: apps/search/services.py:150 templates/photos/photo_detail.html:59
+#: apps/search/services.py:153 templates/photos/photo_detail.html:59
 msgid "Команда"
 msgstr "Team"
 
-#: apps/search/services.py:156 templates/photos/photo_detail.html:69
+#: apps/search/services.py:159 templates/photos/photo_detail.html:69
 msgid "Событие"
 msgstr "Event"
 
-#: apps/search/services.py:162 apps/search/services.py:169
-#| msgid "человек"
+#: apps/search/services.py:165 apps/search/services.py:171
 msgid "Человек"
 msgstr "Person"
 
-#: apps/search/views.py:37 apps/search/views.py:40
+#: apps/search/views.py:38 apps/search/views.py:41
 #: templates/partials/footer.html:21 templates/partials/navbar.html:29
 #: templates/search/index.html:21
 msgid "Поиск"
@@ -1164,9 +1245,8 @@ msgstr "Page not found"
 #: templates/404.html:16
 msgid ""
 "Возможно, ссылка устарела или в адресе опечатка. Попробуйте поиск по архиву."
-msgstr ""
-"The link may be outdated, or there is a typo in the address. Try the archive "
-"search."
+msgstr "The link may be outdated, or there is a typo in the address. Try "
+"the archive search."
 
 #: templates/404.html:20 templates/500.html:27
 msgid "На главную"
@@ -1179,9 +1259,8 @@ msgstr "Server error"
 #: templates/500.html:23
 msgid ""
 "Что-то сломалось на нашей стороне. Мы уже знаем о проблеме и починим её."
-msgstr ""
-"Something broke on our side. We already know about the problem and will fix "
-"it."
+msgstr "Something broke on our side. We already know about the problem and "
+"will fix it."
 
 #: templates/account/account_inactive.html:4
 #: templates/account/account_inactive.html:8
@@ -1190,7 +1269,8 @@ msgstr "Account disabled"
 
 #: templates/account/account_inactive.html:10
 msgid "Этот аккаунт отключён. Напишите нам, если считаете, что это ошибка."
-msgstr "This account is disabled. Write to us if you think this is a mistake."
+msgstr "This account is disabled. Write to us if you think this is a "
+"mistake."
 
 #: templates/account/email/base_message.txt:1
 #, python-format
@@ -1203,18 +1283,16 @@ msgid ""
 "С уважением,\n"
 "архив спортивных фотографий %(site_name)s\n"
 "%(site_domain)s"
-msgstr ""
-"Best regards,\n"
-"%(site_name)s sports photo archive\n"
-"%(site_domain)s"
+msgstr "Best regards,\\n%(site_name)s sports photo "
+"archive\\n%(site_domain)s"
 
 #: templates/account/email/email_confirmation_message.txt:4
 msgid ""
 "Вы указали этот адрес при регистрации в архиве спортивных фотографий. "
 "Осталось подтвердить адрес — без этого вход в аккаунт не откроется."
-msgstr ""
-"You gave this address when you signed up in the sports photo archive. Please "
-"confirm the address. You cannot sign in before that."
+msgstr "You gave this address when you signed up in the sports photo "
+"archive. Please confirm the address. You cannot sign in before "
+"that."
 
 #: templates/account/email/email_confirmation_message.txt:6
 msgid "Код подтверждения:"
@@ -1228,9 +1306,8 @@ msgstr "Open the link to confirm the address:"
 msgid ""
 "Ссылка действует три дня. Если вы не регистрировались на сайте, просто "
 "удалите это письмо — ничего не произойдёт."
-msgstr ""
-"The link works for three days. If you did not sign up, just delete this "
-"message. Nothing will happen."
+msgstr "The link works for three days. If you did not sign up, just delete "
+"this message. Nothing will happen."
 
 #: templates/account/email/email_confirmation_subject.txt:1
 msgid "Подтвердите адрес электронной почты"
@@ -1240,17 +1317,15 @@ msgstr "Confirm your email address"
 msgid ""
 "Кто-то запросил сброс пароля для аккаунта с этим адресом. Если это были вы — "
 "откройте ссылку и задайте новый пароль:"
-msgstr ""
-"Someone asked to reset the password for the account with this address. If it "
-"was you, open the link and set a new password:"
+msgstr "Someone asked to reset the password for the account with this "
+"address. If it was you, open the link and set a new password:"
 
 #: templates/account/email/password_reset_key_message.txt:8
 msgid ""
 "Ссылка действует три дня. Если запрос был не от вас, ничего делать не нужно: "
 "пароль останется прежним."
-msgstr ""
-"The link works for three days. If the request was not yours, do nothing: the "
-"password stays the same."
+msgstr "The link works for three days. If the request was not yours, do "
+"nothing: the password stays the same."
 
 #: templates/account/email/password_reset_key_subject.txt:1
 #: templates/account/password_reset.html:4
@@ -1283,8 +1358,7 @@ msgstr "The address %(email)s is already confirmed by another account."
 msgid ""
 "Ссылка подтверждения устарела или не подходит. <a "
 "href=\"%(email_url)s\">Запросите новое письмо</a>."
-msgstr ""
-"The confirmation link is expired or invalid. <a "
+msgstr "The confirmation link is expired or invalid. <a "
 "href=\"%(email_url)s\">Request a new email</a>."
 
 #: templates/account/login.html:4 templates/account/login.html:8
@@ -1338,8 +1412,8 @@ msgstr "Change password"
 
 #: templates/account/password_reset.html:16
 msgid "Забыли пароль? Укажите адрес почты, и мы пришлём ссылку для сброса."
-msgstr ""
-"Forgot your password? Enter your email address and we will send a reset link."
+msgstr "Forgot your password? Enter your email address and we will send a "
+"reset link."
 
 #: templates/account/password_reset.html:28
 msgid "Сбросить пароль"
@@ -1357,9 +1431,8 @@ msgstr "Email sent"
 msgid ""
 "Мы отправили письмо со ссылкой для сброса пароля. Если письма нет, проверьте "
 "папку «спам»."
-msgstr ""
-"We sent an email with a password reset link. If there is no email, check the "
-"spam folder."
+msgstr "We sent an email with a password reset link. If there is no email, "
+"check the spam folder."
 
 #: templates/account/password_reset_from_key.html:4
 #: templates/account/password_reset_from_key.html:12
@@ -1375,9 +1448,8 @@ msgstr "The link is invalid"
 msgid ""
 "Ссылка для сброса пароля не подошла: возможно, ей уже воспользовались. "
 "Запросите <a href=\"%(passwd_reset_url)s\">новую ссылку</a>."
-msgstr ""
-"The password reset link is invalid: maybe it was already used. Request <a "
-"href=\"%(passwd_reset_url)s\">a new link</a>."
+msgstr "The password reset link is invalid: maybe it was already used. "
+"Request <a href=\"%(passwd_reset_url)s\">a new link</a>."
 
 #: templates/account/password_reset_from_key.html:31
 msgid "Сохранить пароль"
@@ -1385,6 +1457,7 @@ msgstr "Save password"
 
 #: templates/account/password_reset_from_key.html:34
 #: templates/admin/core/merge_form.html:46 templates/catalog/team_form.html:99
+#: templates/moderation/report_form.html:58
 msgid "Отмена"
 msgstr "Cancel"
 
@@ -1422,9 +1495,8 @@ msgstr "Check your email"
 msgid ""
 "Мы отправили письмо со ссылкой для подтверждения адреса. Перейдите по "
 "ссылке, чтобы завершить регистрацию."
-msgstr ""
-"We sent an email with a link to confirm the address. Open the link to finish "
-"the sign-up."
+msgstr "We sent an email with a link to confirm the address. Open the link "
+"to finish the sign-up."
 
 #: templates/account/verification_sent.html:13
 msgid "Письма нет? Загляните в папку «спам» — иногда оно попадает туда."
@@ -1504,10 +1576,9 @@ msgid ""
 "Будет слито объектов: %(count)s. Связи (фото, состав, события) будут "
 "перенесены в целевой объект, а источники помечены как удалённые. Операция "
 "обратима через историю изменений."
-msgstr ""
-"Objects to merge: %(count)s. Relations (photos, roster, events) will be "
-"moved to the target object, and the sources will be marked as deleted. The "
-"operation can be undone through the change history."
+msgstr "Objects to merge: %(count)s. Relations (photos, roster, events) "
+"will be moved to the target object, and the sources will be marked "
+"as deleted. The operation can be undone through the change history."
 
 #: templates/admin/core/merge_form.html:20
 msgid "Объекты к слиянию"
@@ -1543,6 +1614,7 @@ msgid "Страница"
 msgstr "Page"
 
 #: templates/catalog/email/new_team_notification.txt:8
+#: templates/moderation/email/new_report_notification.txt:8
 msgid "В админке"
 msgstr "In the admin"
 
@@ -1581,9 +1653,8 @@ msgstr "Events will appear here once they are added and published."
 msgid ""
 "Публикует команду модератор — обычно в течение дня. До публикации команду "
 "видите только вы и модератор."
-msgstr ""
-"A moderator publishes the team, usually within a day. Before that only you "
-"and the moderator can see it."
+msgstr "A moderator publishes the team, usually within a day. Before that "
+"only you and the moderator can see it."
 
 #: templates/catalog/my_teams.html:38 templates/catalog/team_detail.html:38
 msgid "Редактировать"
@@ -1595,8 +1666,8 @@ msgstr "You have not created any teams yet"
 
 #: templates/catalog/my_teams.html:48
 msgid "Если вашей команды нет в архиве — заведите её. Публикует модератор."
-msgstr ""
-"If your team is not in the archive, create it. A moderator publishes it."
+msgstr "If your team is not in the archive, create it. A moderator "
+"publishes it."
 
 #: templates/catalog/my_teams.html:52 templates/catalog/team_list.html:19
 msgid "Создать команду"
@@ -1723,9 +1794,8 @@ msgstr "waits for moderator review"
 msgid ""
 "Если это разные команды (например, одноимённые в разных городах), отметьте "
 "подтверждение ниже."
-msgstr ""
-"If these are different teams (for example, same name in different cities), "
-"tick the confirmation below."
+msgstr "If these are different teams (for example, same name in different "
+"cities), tick the confirmation below."
 
 #: templates/catalog/team_list.html:13
 #, python-format
@@ -1742,13 +1812,64 @@ msgstr "There are no teams in the archive yet"
 msgid "Команды появятся здесь, когда их добавят и опубликуют."
 msgstr "Teams will appear here once they are added and published."
 
+#: templates/comments/partials/comment.html:15
+msgid "на проверке"
+msgstr "under review"
+
+#: templates/comments/partials/comment.html:23
+msgid "Ответить"
+msgstr "Reply"
+
+#: templates/comments/partials/form.html:30
+msgid "Ответ"
+msgstr "Reply"
+
+#: templates/comments/partials/form.html:42
+#: templates/moderation/report_form.html:57
+msgid "Отправить"
+msgstr "Send"
+
+#: templates/comments/partials/form.html:42
+msgid "Добавить комментарий"
+msgstr "Add a comment"
+
+#: templates/comments/partials/list.html:14
+#, python-brace-format
+msgid "Комментарий добавлен. Всего: {count}"
+msgstr "Comment added. Total: {count}"
+
+#: templates/comments/partials/list.html:15
+msgid "Не удалось отправить. Попробуйте ещё раз."
+msgstr "Could not send the comment. Please try again."
+
+#: templates/comments/partials/list.html:18
+msgid "Комментарии"
+msgstr "Comments"
+
+#: templates/comments/partials/list.html:37
+msgid ""
+"Комментариев пока нет. Будьте первым: подскажите, кто на фото или что здесь "
+"за событие."
+msgstr "No comments yet. Be the first: tell us who is on the photo or what "
+"this event is."
+
+#: templates/comments/partials/list.html:48
+msgid ""
+"Комментарии оставляют зарегистрированные пользователи: так видно, кто что "
+"добавил."
+msgstr "Only registered users can leave comments: this way it is clear who "
+"added what."
+
+#: templates/comments/partials/list.html:52
+msgid "Войти и написать"
+msgstr "Log in and write"
+
 #: templates/core/home.html:9
 msgid ""
 "Архив спортивных фотографий: команды, турниры и люди. Бейсбол в России — от "
 "дворовых секций до ветеранских встреч."
-msgstr ""
-"An archive of sports photos: teams, tournaments and people. Baseball in "
-"Russia — from yard teams to veteran games."
+msgstr "An archive of sports photos: teams, tournaments and people. "
+"Baseball in Russia — from yard teams to veteran games."
 
 #: templates/core/home.html:14 templates/partials/navbar.html:27
 #: templates/search/index.html:24
@@ -1822,6 +1943,41 @@ msgstr "There are no photos in the archive yet"
 msgid "Годы появятся здесь, когда фотографии добавят и опубликуют."
 msgstr "Years will appear here once photos are added and published."
 
+#: templates/moderation/email/new_report_notification.txt:1
+msgid "Жалоба на объект в архиве SportMemo"
+msgstr "Report about an object in SportMemo"
+
+#: templates/moderation/email/new_report_notification.txt:4
+msgid "Пояснение"
+msgstr "Note"
+
+#: templates/moderation/email/new_report_notification.txt:6
+#: templates/moderation/email/new_report_notification.txt:7
+msgid "Заявитель"
+msgstr "Reporter"
+
+#: templates/moderation/email/new_report_notification.txt:7
+msgid "анонимно"
+msgstr "anonymous"
+
+#: templates/moderation/email/new_report_notification.txt:10
+msgid "Жалоба ждёт решения модератора."
+msgstr "The report is waiting for a moderator."
+
+#: templates/moderation/report_form.html:13
+msgid "Расскажите, что указано неверно: модератор проверит и поправит."
+msgstr "Tell us what is wrong: a moderator will check and fix it."
+
+#: templates/moderation/report_form.html:42
+msgid "Необязательно, но с пояснением разбираться быстрее."
+msgstr "Optional, but a note makes it faster to sort out."
+
+#: templates/moderation/report_form.html:62
+msgid ""
+"Жалоба не требует регистрации. Если вы вошли, модератор увидит, от кого она."
+msgstr "A report does not need registration. If you are logged in, the "
+"moderator will see who sent it."
+
 #: templates/partials/breadcrumbs.html:3
 msgid "Хлебные крошки"
 msgstr "Breadcrumbs"
@@ -1830,8 +1986,8 @@ msgstr "Breadcrumbs"
 msgid ""
 "Публичный архив спортивных фотографий. Бейсбол в России: команды, события, "
 "люди."
-msgstr ""
-"A public archive of sports photos. Baseball in Russia: teams, events, people."
+msgstr "A public archive of sports photos. Baseball in Russia: teams, "
+"events, people."
 
 #: templates/partials/footer.html:10
 msgid "Разделы"
@@ -1935,8 +2091,7 @@ msgid "Люди на фото"
 msgstr "People in the photo"
 
 #: templates/search/index.html:37
-#| msgid "Найдено %(counter)s событие"
-#| msgid_plural "Найдено %(counter)s событий"
+#, python-format
 msgid "Найден %(counter)s результат"
 msgid_plural "Найдено %(counter)s результатов"
 msgstr[0] "Found %(counter)s result"
@@ -1953,7 +2108,6 @@ msgid ""
 msgstr "Enter a person's name, a team, a tournament or a photo caption."
 
 #: templates/search/index.html:59
-#| msgid "Ничего не выбрано"
 msgid "Ничего не найдено"
 msgstr "Nothing found"
 
@@ -1962,7 +2116,7 @@ msgid "Попробуйте другое слово или проверьте н
 msgstr "Try another word or check the spelling."
 
 #: templates/search/partials/group.html:19
-#| msgid "результат"
+#, python-format
 msgid "%(counter)s результат"
 msgid_plural "%(counter)s результатов"
 msgstr[0] "%(counter)s result"

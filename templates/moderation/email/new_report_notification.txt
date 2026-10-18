@@ -1,0 +1,10 @@
+{% load i18n %}{% trans "Жалоба на объект в архиве SportMemo" %}
+
+{% trans "Причина" %}: {{ reason }}
+{% if report.comment %}{% trans "Пояснение" %}: {{ report.comment }}
+{% endif %}{% trans "Объект" %}: {{ target|default:"—" }}
+{% if report.reporter %}{% trans "Заявитель" %}: {{ report.reporter }}
+{% else %}{% trans "Заявитель" %}: {% trans "анонимно" %}
+{% endif %}{% trans "В админке" %}: {{ admin_url }}
+
+{% trans "Жалоба ждёт решения модератора." %}

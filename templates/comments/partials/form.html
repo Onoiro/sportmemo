@@ -1,0 +1,44 @@
+{% load i18n %}
+{% comment %}
+Форма комментария. Два режима:
+
+* без `parent` — основная форма под списком: рендерит `comment_form`
+  с ошибками и подсказкой;
+* с `parent` — форма ответа на конкретный комментарий (скрытое поле
+  `parent`).
+
+Работает и без JavaScript: `action` ведёт на тот же адрес, а `hx-post`
+дописывает поведение с htmx. `hx-target` — весь блок комментариев: после
+отправки список и формы перерисовываются целиком, и порядок не разъедется.
+{% endcomment %}
+<form class="comment-form{% if parent %} comment-form--reply{% endif %}"
+      method="post" action="{% url 'comments:add' %}"
+      hx-post="{% url 'comments:add' %}" hx-target="#comments-block" hx-swap="outerHTML">
+    {% csrf_token %}
+    <input type="hidden" name="target" value="{{ comment_target_key }}">
+    <input type="hidden" name="object_id" value="{{ comment_target.pk }}">
+    {% if parent %}
+        <input type="hidden" name="parent" value="{{ parent }}">
+    {% endif %}
+    <input type="hidden" name="next" value="{{ comments_next }}">
+
+    {% if comment_form.non_field_errors %}
+        <div class="alert alert-danger" role="alert">{{ comment_form.non_field_errors }}</div>
+    {% endif %}
+
+    <label class="form-label" for="{% if parent %}reply-text-{{ parent }}{% else %}comment-text{% endif %}">
+        {% if parent %}{% trans "Ответ" %}{% else %}{{ comment_form.text.label }}{% endif %}
+    </label>
+    <textarea class="form-control{% if comment_form.text.errors %} is-invalid{% endif %}"
+              id="{% if parent %}reply-text-{{ parent }}{% else %}comment-text{% endif %}"
+              name="text" rows="{% if parent %}2{% else %}3{% endif %}" maxlength="2000"
+              placeholder="{{ comment_form.text.field.widget.attrs.placeholder }}"
+              required>{% if not parent %}{{ comment_form.text.value|default:"" }}{% endif %}</textarea>
+    {% if comment_form.text.errors %}
+        <div class="invalid-feedback d-block">{{ comment_form.text.errors.0 }}</div>
+    {% endif %}
+
+    <button class="btn btn-primary btn-sm" type="submit">
+        {% if parent %}{% trans "Отправить" %}{% else %}{% trans "Добавить комментарий" %}{% endif %}
+    </button>
+</form>

@@ -124,7 +124,7 @@ class TestTeamCreate:
         def broken_send_mail(*args, **kwargs):
             raise OSError("SMTP недоступен")
 
-        monkeypatch.setattr("apps.catalog.emails.send_mail", broken_send_mail)
+        monkeypatch.setattr("apps.core.emails.send_mail", broken_send_mail)
 
         response = client.post(CREATE_URL, form_data())
 

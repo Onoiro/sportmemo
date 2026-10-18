@@ -1,0 +1,58 @@
+{% load i18n %}
+{% comment %}
+Блок комментариев целиком. Партиал используется и как часть страницы,
+и как ответ htmx (тогда он заменяет `#comments-block` целиком).
+
+Почему блок, а не только список: после отправки нужно очистить поле ввода,
+показать ошибки формы и пересчитать счётчик — всё это лежит внутри.
+
+Тексты для сообщений скрипта лежат в data-атрибутах: строки интерфейса
+остаются в gettext, а `comments.js` только подставляет число.
+{% endcomment %}
+<section class="comments" id="comments-block"
+         data-comments-count="{{ comments_total }}"
+         data-sent-text="{% trans "Комментарий добавлен. Всего: {count}" %}"
+         data-error-text="{% trans "Не удалось отправить. Попробуйте ещё раз." %}"
+         aria-labelledby="comments-title">
+    <h2 class="section-title h5" id="comments-title">
+        {% trans "Комментарии" %}
+        {% if comments_total %}<span class="comments__count">{{ comments_total }}</span>{% endif %}
+    </h2>
+
+    {% if comment_notice %}
+        <div class="alert alert-info" role="status">{{ comment_notice }}</div>
+    {% endif %}
+
+    {% if comments %}
+        <div class="comments__list">
+            {% for comment in comments %}
+                {% include "comments/partials/comment.html" with comment=comment comments_next=comments_next %}
+                {% for reply in comment.visible_replies %}
+                    {% include "comments/partials/comment.html" with comment=reply comments_next=comments_next is_reply=True %}
+                {% endfor %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="comments__empty">
+            {% trans "Комментариев пока нет. Будьте первым: подскажите, кто на фото или что здесь за событие." %}
+        </p>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+        <div class="comments__form">
+            {% include "comments/partials/form.html" %}
+        </div>
+    {% else %}
+        <div class="comments__login">
+            <p class="mb-2">
+                {% trans "Комментарии оставляют зарегистрированные пользователи: так видно, кто что добавил." %}
+            </p>
+            <a class="btn btn-outline-primary btn-sm"
+               href="{% url 'account_login' %}?next={{ comments_next|urlencode }}">
+                {% trans "Войти и написать" %}
+            </a>
+        </div>
+    {% endif %}
+
+    <p class="visually-hidden" id="comments-status" role="status" aria-live="polite"></p>
+</section>

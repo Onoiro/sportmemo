@@ -17,6 +17,7 @@ from apps.catalog.emails import notify_moderators_new_team
 from apps.catalog.forms import TeamForm
 from apps.catalog.models import Event, Person, Team
 from apps.catalog.roster import memberships_in_year, roster_years
+from apps.comments.services import comments_context
 from apps.core.models import Status
 from apps.core.schema import compact, event_schema, person_schema, team_schema
 from apps.core.seo import page_meta
@@ -287,6 +288,7 @@ def team_detail(request, slug):
             {"url": reverse("catalog:team_list"), "label": _("Команды")},
             {"label": team.name},
         ],
+        **comments_context(request, team),
     }
     return render(request, "catalog/team_detail.html", context)
 
@@ -325,6 +327,7 @@ def event_detail(request, slug):
             {"url": reverse("catalog:event_list"), "label": _("События")},
             {"label": event.name},
         ],
+        **comments_context(request, event),
     }
     return render(request, "catalog/event_detail.html", context)
 

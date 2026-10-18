@@ -45,6 +45,8 @@ urlpatterns = [
     path("", include("apps.catalog.urls")),
     path("", include("apps.photos.urls")),
     path("", include("apps.search.urls")),
+    path("", include("apps.comments.urls")),
+    path("", include("apps.moderation.urls")),
     path("admin/", admin.site.urls),
     # Наши страницы аккаунта объявлены до allauth: адреса не пересекаются,
     # но так видно, что `/accounts/profile/` — наша страница, а не пакета.

@@ -1,0 +1,17 @@
+{% load i18n %}
+{% comment %}
+Ссылка «Сообщить об ошибке» на страницах фото, команды и события.
+
+Адресуется тому же объекту, что и блок комментариев, и берёт его
+из общего контекста (`comment_target`, `comment_target_key`): отдельного
+параметра не нужно, а два источника цели однажды разошлись бы.
+
+Ведёт на отдельную страницу, а не открывает модальное окно: работает
+без JavaScript, и ссылку можно переслать другому человеку.
+{% endcomment %}
+<p class="report-link">
+    <a href="{% url 'moderation:report_add' %}?target={{ comment_target_key }}&amp;object_id={{ comment_target.pk }}&amp;next={{ request.get_full_path|urlencode }}">
+        <i class="bi bi-flag" aria-hidden="true"></i>
+        {% trans "Сообщить об ошибке" %}
+    </a>
+</p>

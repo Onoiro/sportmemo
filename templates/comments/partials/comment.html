@@ -1,0 +1,28 @@
+{% load i18n %}
+{% comment %}
+Один комментарий. Параметры: `comment`, `comments_next` — адрес возврата
+после отправки формы ответа, `is_reply` — разметка ответа (отступ).
+Форма ответа лежит в `<details>`: он раскрывается без JavaScript,
+а своего скрипта для одной кнопки не требуется.
+{% endcomment %}
+<article class="comment{% if is_reply %} comment--reply{% endif %}" id="comment-{{ comment.pk }}">
+    <header class="comment__head">
+        <span class="comment__author">{{ comment.author }}</span>
+        <time class="comment__date" datetime="{{ comment.created_at|date:'c' }}">
+            {{ comment.created_at|date:"d.m.Y H:i" }}
+        </time>
+        {% if comment.status == "draft" %}
+            <span class="comment__badge">{% trans "на проверке" %}</span>
+        {% endif %}
+    </header>
+    <p class="comment__text">{{ comment.text|linebreaksbr }}</p>
+
+    {% if user.is_authenticated and not is_reply %}
+        <details class="comment__reply">
+            <summary class="comment__reply-summary">
+                <i class="bi bi-reply" aria-hidden="true"></i> {% trans "Ответить" %}
+            </summary>
+            {% include "comments/partials/form.html" with parent=comment.pk %}
+        </details>
+    {% endif %}
+</article>

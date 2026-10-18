@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_GET
 
+from apps.comments.services import comments_context
 from apps.core.schema import compact, photo_schema
 from apps.core.seo import page_meta
 from apps.core.shortcuts import (
@@ -77,6 +78,7 @@ def photo_detail(request, pk):
             photo_schema(request, photo) if photo.is_public else None
         ),
         "breadcrumbs": breadcrumbs,
+        **comments_context(request, photo),
     }
     return render(request, "photos/photo_detail.html", context)
 

@@ -63,8 +63,8 @@ stays tidy.
 | `apps/catalog` | `Team`, `TeamMembership` (with `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (roster filter by year), `forms.py` (`TeamForm`), `emails.py` (moderator notification), list views and team, event and person detail pages, team create and edit views |
 | `apps/photos` | `Source`, `Photo`, `PhotoPerson`, public views (`photo_detail`, the `grid` fragment), `photos/urls.py` |
 | `apps/search` | search: the `pg_trgm` extension, search text and query building (`indexing.py`), results and suggestions (`services.py`), the results page (`views.py`, `urls.py`), signals, the `search_reindex` command; it has no models of its own — the index fields live in `catalog` and `photos` |
-| `apps/comments` | `Comment` (generic FK, replies) |
-| `apps/moderation` | `Report`, `ModerationAction` |
+| `apps/comments` | `Comment` (generic FK, replies, statuses), `CommentSettings` (premoderation), target allow-list (`targets.py`), form, add view, visible query (`services.py`) |
+| `apps/moderation` | `Report`, `ModerationAction` (moderator decision log), report form and page |
 
 ## Development conventions
 
@@ -147,8 +147,9 @@ the list of sub-stages are in the master plan. Sub-stages 2.1 (demo data), 2.2 (
 skeleton), 2.3 (public queries and lists), 2.4 (gallery component), 2.5 (team and event pages),
 2.6 (person and photo pages), 2.7 (team roster filter by year), 2.8a (sign-up, login and
 password), 2.8b (user profile and menu), 2.9 (user-created team), 2.10 (meta tags and
-Open Graph), 2.11 (sitemap, robots and Schema.org), 2.12 (search: infrastructure) and
-2.13 (search: interface) are complete; the next one is 2.14 (comments and reports in the UI).
+Open Graph), 2.11 (sitemap, robots and Schema.org), 2.12 (search: infrastructure),
+2.13 (search: interface) and 2.14 (comments and reports in the UI) are complete; the next one
+is 2.15 (catalog filters).
 
 ## Deliberately deferred
 
@@ -157,7 +158,7 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.14.0
+- Version: 0.15.0
 - Development branch: `master`
 - Stage: 1 (repository foundation and data model) — **complete**;
   stage 2 (public archive) — **in progress**, sub-stages 2.1 (demo data), 2.2
@@ -165,8 +166,9 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
   (team and event pages), 2.6 (person and photo pages), 2.7 (team roster filter by year),
   2.8a (sign-up, login and password), 2.8b (user profile and menu), 2.9 (user-created team),
   2.10 (meta tags and Open Graph), 2.11 (sitemap, robots and Schema.org), 2.12
-  (search: infrastructure) and 2.13 (search: interface) complete
-- Tests: 799, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
+  (search: infrastructure), 2.13 (search: interface) and 2.14 (comments and reports in the UI)
+  are complete; the next one is 2.15 (catalog filters)
+- Tests: 892, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
 
 ### What exists now
 
@@ -177,8 +179,8 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 | `apps/catalog` | `Team`, `TeamMembership` (with `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (roster filter by year), `forms.py` (`TeamForm`), `emails.py` (moderator notification), list views and team, event and person detail pages, team create and edit views |
 | `apps/photos` | `Source`, `Photo` (rights, `processing_status`, `phash`, `duplicate_of`), `PhotoPerson`, thumbnails via `ImageSpecField`, the photo page and the gallery fragment |
 | `apps/search` | `pg_trgm` extension, `search_vector` fields and GIN indexes, search text and query building (`indexing.py`), results and suggestions (`services.py`), the results page (`views.py`), signals, the `search_reindex` command |
-| `apps/comments` | `Comment` (generic FK, replies, statuses) |
-| `apps/moderation` | `Report`, `ModerationAction` (moderator decision log) |
+| `apps/comments` | `Comment` (generic FK, replies, statuses), `CommentSettings` (premoderation), target allow-list (`targets.py`), form, add view, visible query (`services.py`) |
+| `apps/moderation` | `Report`, `ModerationAction` (moderator decision log), report form and page |
 
 Infrastructure: `Dockerfile` + `docker-compose.yml` (db, redis, minio, web, worker), CI
 (`.github/workflows/ci.yml`: ruff, migration check, pytest on 3.12 and 3.13 against PostgreSQL 17),
@@ -194,6 +196,8 @@ and the `.agents/skills/semver-checker/` skill.
   paint, so there is no flash.
 - Gallery: `static/js/gallery.js` adds `aria-busy` and live-region messages to the htmx
   "show more" button. It loads after htmx; without JavaScript the button stays a plain link.
+- Comments: `static/js/comments.js` does the same for the comment form and list; without
+  JavaScript the form is sent as a plain POST with a redirect back.
 - Frontend libraries are vendored in `static/vendor/` (Bootstrap 5, Bootstrap Icons, htmx,
   Alpine.js). No CDN: versions and checksums are in `static/vendor/README.md`.
 - Public queries: `SoftDeleteQuerySet.published()` filters by `status=Status.PUBLISHED`;
@@ -376,6 +380,54 @@ and the `.agents/skills/semver-checker/` skill.
 - `BootstrapFormMixin` lives in `apps/core/forms.py`, not in `accounts`: team forms need
   styled fields too, and importing from `accounts` into `catalog` would be a needless link
   between apps.
+
+### Comments and reports
+
+- **A comment is published at once.** Premoderation is off by default: the archive is filled
+  from other people's albums, and a correction ("this is Petrov, not Ivanov") should appear
+  right away, not after a moderator. A moderator removes a bad comment in the admin — this is
+  reactive moderation, not the absence of moderation.
+- **Premoderation is a switch, not a code change:** `CommentSettings` is a singleton setting
+  in the admin (one row, created by a data migration; adding and deleting rows is forbidden,
+  the list leads straight to the edit form). Two settings rows would mean nobody knows which
+  one applies. The setting is read through the cache and clears it on save, so the switch
+  takes effect at once.
+- **Comment visibility lives in `apps/comments/services.py`**, not in templates:
+  `comments_context()` builds the list for a page, `visible_comments_q()` holds the visibility
+  rule. The three pages (photo, team, event) live in different apps, and a separate query in
+  each would give different rules.
+- **Who sees what:** an anonymous visitor and a signed-in user see published comments; the
+  author also sees their own `draft` comment with a "pending review" badge. Hidden, rejected
+  and deleted comments are seen by nobody, the author included: that is a moderator decision,
+  not a draft. A reply to a hidden root comment is not shown — it would hang without context.
+- **Replies are one level deep:** the form lifts a reply to a reply up to the root comment.
+  A tree needs recursion in the template and reads worse than a flat list.
+- **The target allow-list is `apps/comments/targets.py`** (photo, team, event). A generic FK
+  does not restrict the target by itself: without the list the form could create a comment on
+  a user or on a report. The object is fetched through `get_visible_or_404`, so a comment
+  cannot attach to something the user cannot see.
+- **Duplicate protection** — the same author, target and text within 10 minutes: a double
+  click or "sent, then reloaded the page" is a common case, not spam. IP throttling is
+  deferred (P2-17), editing and deleting your own comment as well (P2-16).
+- **The form works without JavaScript:** a plain POST with a redirect back; with htmx the
+  block is re-rendered whole (`hx-swap="outerHTML"`), and `static/js/comments.js` only adds
+  `aria-busy` and an `aria-live` message. The `next` value is checked against open redirects.
+- **A report is a separate page** `/reports/add/`, open to anonymous visitors: a modal window
+  needs JavaScript, and a report link should be shareable. The "Report a mistake" link sits on
+  the same three pages as the comments.
+- **There are no moderation buttons on public pages.** The admin is the single place for
+  decisions, and each one goes into `ModerationAction` and the history. The only action on a
+  page is the report link.
+- **Moderator emails are sent about reports only.** We do not write about new comments: with
+  premoderation off that would be a stream of letters. The shared part is
+  `apps/core/emails.py` (`moderator_emails()`, `notify_moderators()`); the wrappers with the
+  letter text are in `catalog` and `moderation`. `notify_moderators()` never raises; an SMTP
+  error is logged and does not cancel the record.
+- **Report form protection** — a honeypot field `website`: if it is filled, we show thanks and
+  write nothing (replying with a refusal would tell a bot it was caught). A repeat report by
+  the same signed-in user on the same object with the same reason within a day is not created;
+  we do not check anonymous visitors — there is nothing to match them by.
+- `/reports/add/` is closed to indexing (`noindex`) and added to `robots.txt`.
 
 ### Admin rules
 

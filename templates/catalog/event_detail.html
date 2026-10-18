@@ -69,5 +69,8 @@
             {% include "photos/partials/grid.html" with photos=page_obj page_obj=page_obj gallery_query=gallery_query %}
         </section>
     {% endif %}
+
+    {% include "comments/partials/list.html" %}
+    {% include "partials/report_link.html" %}
 </div>
 {% endblock %}

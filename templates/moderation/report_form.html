@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1 class="page-header__title">{% trans "Сообщить об ошибке" %}</h1>
+        <p class="page-header__lead">
+            {% trans "Расскажите, что указано неверно: модератор проверит и поправит." %}
+        </p>
+    </header>
+
+    <div class="report-shell">
+        <div class="report-target">
+            <span class="report-target__label">{% trans "Объект" %}</span>
+            <a class="report-target__link" href="{{ target_obj.get_absolute_url }}">{{ target_obj }}</a>
+        </div>
+
+        <form class="report-form" method="post" action="{% url 'moderation:report_add' %}" novalidate>
+            {% csrf_token %}
+            {{ form.target }}
+            {{ form.object_id }}
+            {{ form.next }}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="report-form__field">
+                <label class="form-label" for="{{ form.reason.id_for_label }}">{{ form.reason.label }}</label>
+                {{ form.reason }}
+                {{ form.reason.errors }}
+            </div>
+
+            <div class="report-form__field">
+                <label class="form-label" for="{{ form.comment.id_for_label }}">{{ form.comment.label }}</label>
+                {{ form.comment }}
+                <div class="form-text">{% trans "Необязательно, но с пояснением разбираться быстрее." %}</div>
+                {{ form.comment.errors }}
+            </div>
+
+            {% comment %}
+            Приманка для ботов: человек её не видит, бот заполняет. Прячем
+            стилем, а не `type="hidden"` — скрытое поле боты пропускают.
+            {% endcomment %}
+            <div class="report-form__trap" aria-hidden="true">
+                <label for="{{ form.website.id_for_label }}">Website</label>
+                {{ form.website }}
+            </div>
+
+            <div class="report-form__actions">
+                <button class="btn btn-primary" type="submit">{% trans "Отправить" %}</button>
+                <a class="btn btn-outline-secondary" href="{{ next_url }}">{% trans "Отмена" %}</a>
+            </div>
+
+            <p class="report-form__note">
+                {% trans "Жалоба не требует регистрации. Если вы вошли, модератор увидит, от кого она." %}
+            </p>
+        </form>
+    </div>
+</div>
+{% endblock %}

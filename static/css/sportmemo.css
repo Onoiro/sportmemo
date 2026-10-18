@@ -1152,6 +1152,169 @@ html[data-bs-theme="dark"] {
     font-size: 0.8125rem;
 }
 
+/* --- Комментарии --- */
+
+.comments {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--bs-border-color);
+}
+
+.comments__count {
+    margin-left: 0.375rem;
+    color: var(--bs-secondary-color);
+    font-size: 0.875rem;
+}
+
+.comments__list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.comments__empty {
+    color: var(--bs-secondary-color);
+    max-width: 44rem;
+}
+
+.comment {
+    padding: 0.875rem 1rem;
+    background-color: var(--sm-photo-bg, var(--bs-secondary-bg));
+    border: 1px solid var(--sm-photo-border, var(--bs-border-color));
+    border-radius: var(--sm-radius);
+}
+
+/* Ответы отличаются от корневых: отступ и светлее фон. Уровень один,
+   дерево не строим — в разметке оно читается хуже плоского списка. */
+.comment--reply {
+    margin-left: 1.5rem;
+    margin-top: 0.5rem;
+    background-color: var(--bs-secondary-bg);
+}
+
+.comment__head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: baseline;
+    margin-bottom: 0.375rem;
+}
+
+.comment__author {
+    font-weight: 600;
+    color: var(--bs-heading-color);
+}
+
+.comment__date {
+    color: var(--bs-secondary-color);
+    font-size: 0.8125rem;
+}
+
+.comment__badge {
+    padding: 0.0625rem 0.375rem;
+    background-color: var(--bs-primary-bg-subtle);
+    border: 1px solid var(--bs-primary-border-subtle);
+    border-radius: var(--sm-radius);
+    color: var(--bs-primary-text-emphasis);
+    font-size: 0.75rem;
+}
+
+.comment__text {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.comment__reply {
+    margin-top: 0.5rem;
+}
+
+.comment__reply-summary {
+    display: inline-block;
+    color: var(--bs-link-color);
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.comment__reply-summary:hover {
+    color: var(--bs-link-hover-color);
+}
+
+.comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+    margin-top: 0.5rem;
+}
+
+.comment-form textarea {
+    width: 100%;
+}
+
+.comments__login {
+    padding: 1rem 1.125rem;
+    background-color: var(--bs-secondary-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--sm-radius);
+}
+
+/* --- Жалоба на ошибку --- */
+
+.report-link {
+    margin: 1.5rem 0 0;
+    font-size: 0.9375rem;
+}
+
+.report-shell {
+    max-width: 40rem;
+}
+
+.report-target {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: baseline;
+    margin-bottom: 1.25rem;
+    padding: 0.75rem 1rem;
+    background-color: var(--bs-secondary-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--sm-radius);
+}
+
+.report-target__label {
+    color: var(--bs-secondary-color);
+    font-size: 0.875rem;
+}
+
+.report-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.report-form__actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.report-form__note {
+    margin: 0;
+    color: var(--bs-secondary-color);
+    font-size: 0.875rem;
+}
+
+/* Приманка для ботов: уводим за пределы экрана, а не в `display: none`.
+   `display: none` распознают часть ботов; позиционирование за краем
+   оставляет поле «видимым» для разбора разметки. */
+.report-form__trap {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
 /* --- Мобильное разрешение --- */
 
 @media (max-width: 575.98px) {
@@ -1281,5 +1444,9 @@ html[data-bs-theme="dark"] {
 
     .search-group__head {
         margin-bottom: 0.75rem;
+    }
+
+    .comment--reply {
+        margin-left: 0.75rem;
     }
 }
