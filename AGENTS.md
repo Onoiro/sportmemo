@@ -158,288 +158,178 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.15.0
-- Development branch: `master`
-- Stage: 1 (repository foundation and data model) — **complete**;
-  stage 2 (public archive) — **in progress**, sub-stages 2.1 (demo data), 2.2
-  (public UI skeleton), 2.3 (public queries and lists), 2.4 (gallery component), 2.5
-  (team and event pages), 2.6 (person and photo pages), 2.7 (team roster filter by year),
-  2.8a (sign-up, login and password), 2.8b (user profile and menu), 2.9 (user-created team),
-  2.10 (meta tags and Open Graph), 2.11 (sitemap, robots and Schema.org), 2.12
-  (search: infrastructure), 2.13 (search: interface) and 2.14 (comments and reports in the UI)
-  are complete; the next one is 2.15 (catalog filters)
-- Tests: 892, passing on Python 3.12 and 3.13 (`make test`); linter clean (`make lint`)
-
-### What exists now
-
-| App | Contents |
-|---|---|
-| `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public queries (`shortcuts.py`), public views (home page, years, `robots.txt`), `core/urls.py`, shared form helpers (`forms.py`: `BootstrapFormMixin`), SEO meta tags (`seo.py`), sitemap (`sitemaps.py`), Schema.org markup (`schema.py`) |
-| `apps/accounts` | email-based `User`, `UserManager`, consents (terms/privacy/PD law + version), roles, `User.person` link, allauth forms with Bootstrap classes, allauth adapter |
-| `apps/catalog` | `Team`, `TeamMembership` (with `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (roster filter by year), `forms.py` (`TeamForm`), `emails.py` (moderator notification), list views and team, event and person detail pages, team create and edit views |
-| `apps/photos` | `Source`, `Photo` (rights, `processing_status`, `phash`, `duplicate_of`), `PhotoPerson`, thumbnails via `ImageSpecField`, the photo page and the gallery fragment |
-| `apps/search` | `pg_trgm` extension, `search_vector` fields and GIN indexes, search text and query building (`indexing.py`), results and suggestions (`services.py`), the results page (`views.py`), signals, the `search_reindex` command |
-| `apps/comments` | `Comment` (generic FK, replies, statuses), `CommentSettings` (premoderation), target allow-list (`targets.py`), form, add view, visible query (`services.py`) |
-| `apps/moderation` | `Report`, `ModerationAction` (moderator decision log), report form and page |
-
-Infrastructure: `Dockerfile` + `docker-compose.yml` (db, redis, minio, web, worker), CI
-(`.github/workflows/ci.yml`: ruff, migration check, pytest on 3.12 and 3.13 against PostgreSQL 17),
-and the `.agents/skills/semver-checker/` skill.
+- Version: 0.15.0; development branch `master`; 892 tests passing on Python 3.12 and 3.13
+  (`make test`); linter clean (`make lint`).
+- Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is in progress:
+  sub-stages 2.1–2.14 are done, the next one is 2.15 (catalog filters).
 
 ### Public UI
 
-- `templates/base.html` plus `templates/partials/` (navbar, footer, breadcrumbs, messages,
-  pagination) and the gallery partials in `templates/photos/partials/`; error pages in
-  `templates/404.html` and `templates/500.html`.
-- Theme: `static/css/sportmemo.css` and `static/js/theme.js` — warm sepia by default, dark
-  variant, choice kept in `localStorage`. An inline script in `<head>` applies the theme before
-  paint, so there is no flash.
-- Gallery: `static/js/gallery.js` adds `aria-busy` and live-region messages to the htmx
-  "show more" button. It loads after htmx; without JavaScript the button stays a plain link.
-- Comments: `static/js/comments.js` does the same for the comment form and list; without
-  JavaScript the form is sent as a plain POST with a redirect back.
-- Frontend libraries are vendored in `static/vendor/` (Bootstrap 5, Bootstrap Icons, htmx,
-  Alpine.js). No CDN: versions and checksums are in `static/vendor/README.md`.
-- Public queries: `SoftDeleteQuerySet.published()` filters by `status=Status.PUBLISHED`;
-  `.visible()` additionally requires `rights_confirmed=True` (used for photos). Public pages
-  chain `Model.public.published().visible()`.
-- Shared entry points for public queries live in `apps/core/shortcuts.py`: `visible_photos()`,
-  `archive_stats()`, `paginate(request, queryset, per_page)` and
-  `get_visible_or_404(model, *, request=None, **lookup)`. The helper takes the model as an
-  argument and imports no app models — otherwise `core` ↔ `catalog`/`photos` would cycle.
-- `get_visible_or_404`: the object comes from `public`; an unpublished object is returned only
-  to its author (`created_by` / `uploaded_by`) and to a moderator, everyone else gets 404;
-  deleted and merged objects are 404 for everyone. Author and moderator see the "not published"
-  badge (`templates/partials/moderation_notice.html`).
-- Lists `/teams/` (24 per page), `/events/` (20), `/years/` and `/years/<year>/` (24 photos)
-  return visible objects only. The year list is built from visible photos — the same source
-  as the "years in the archive" counter on the home page.
-- The photo grid is one component (`templates/photos/partials/grid.html` plus `grid_items.html`)
-  used by the home page, the year page and the htmx fragment. "Show more" appends the next page
-  to the grid without a reload: the `photos:grid` fragment returns only the cards and the button
-  container, and on the last page an empty container with `hx-swap-oob` makes the button
-  disappear. Without JavaScript the same button is a plain `?page=N` link.
-- The page size (24) and the card order are shared between the year page and the fragment
-  (`PHOTO_PAGE_SIZE`, `PHOTO_ORDERING` in `apps/core/shortcuts.py`): if they drift apart, the
-  "show more" step starts skipping or repeating photos. Pages where the filter is not in
-  `request.GET` (the year page) pass it to the gallery explicitly — the hook for catalog filters
-  in 2.15.
-- `/photos/<pk>/` opens anonymously for a published photo with confirmed rights. A draft or a
-  photo without confirmed rights is shown only to its author (`uploaded_by`) and to a moderator;
-  `get_visible_or_404` does the filtering. Links to the team and the event appear only when they
-  are published. In the "People on the photo" block a person's name links to their page when the
-  person is published; a draft person's name stays plain text. The view counter grows on every
-  open through an atomic `update(views_count=F("views_count") + 1)` instead of `save()`, so no
-  `django-simple-history` record is created.
-- `/teams/<slug>/` and `/events/<slug>/` are the "visiting card" pages: a header with facts,
-  a description, attributes, a gallery and relations. A team shows its events and a roster with
-  a filter by year (`?year=1994`); an event shows its participating teams with results.
-- The team roster is filtered by year instead of living on a separate page: the archive is
-  filled from other people's albums, so a "roster of the year" would read as a complete list.
-  The wording promises no completeness — "People in the team in 1994" plus the note "The archive
-  does not list everyone who played". A separate page with year grouping is deferred (idea I-8).
-- The "all years" mode shows up to 12 people (`TEAM_ROSTER_PREVIEW`) and the total number of
-  known people; a selected year is shown in full, otherwise the filter would be pointless.
-  The year list holds only years with at least one known person.
-- An open period (`year_from` set, `year_to` empty) ends with the last year known for the team
-  (the maximum over its memberships and events); without that bound a person would smear across
-  every year up to today. A lone `year_to` gives a single year.
-- Period logic lives in `apps/catalog/roster.py` and issues no database queries: unit tests cover
-  it. The years label is the `TeamMembership.years_label` property, shared with the person page.
-- `/people/<slug>/` is the person page: a main photo, the public name, life years, a biography,
-  attributes, "Teams and roles", "Photos" and "Also known as". There is deliberately no
-  `/people/` list: the page is reachable from a photo or from a team roster only.
-- The heading, `<title>`, description and breadcrumbs of the person page are built from
-  `Person.public_name` only: `display_name` holds the full last name and never reaches the
-  markup. With `hidden` visibility the page shows the neutral label "Name not stated" and still
-  opens — otherwise photos and teams would lose the link to the person.
-- Name variants (`PersonName`) are shown only when `name_visibility = full` (the
-  `Person.is_full_name_public` property) and are hidden in the view, not in the template: a
-  nickname or a birth name would reveal the hidden last name. When hidden,
-  `context["name_variants"]` is an empty list.
-- The main photo of the person page is `Person.avatar` when it is visible (`Photo.is_public`);
-  otherwise the newest visible photo of that person (`PHOTO_ORDERING`). When there is nothing,
-  a placeholder icon is shown. A draft avatar or an avatar without confirmed rights is ignored.
-- The biography is rendered as is: the author and the moderator are responsible for last names
-  in the text. The text is not checked — a known limitation of the sub-stage.
-- A link to a team or an event is created only when the object is published (`is_published`);
-  otherwise the name is plain text. The rule applies to lists, the photo page, participating
-  teams and the "Events of the year" block.
-- Attributes (`Team.attributes`, `Event.attributes`) are rendered as "label, value" pairs by
-  `attribute_items()` (`apps/catalog/views.py`): the service key `demo` is hidden, known keys are
-  translated, unknown keys are shown as is, lists are joined with commas.
-- `Event.date_label` renders event dates from months and years only: "July 1980",
-  "June — July 1988", "July 1988 — August 1989", "1980" or "date not stated". The month name
-  comes from the active locale through `date_format`, so no separate month strings are needed.
-- Slugs are stored with `allow_unicode=True`, so routes use a custom `<uslug:slug>` converter
-  (`apps/core/converters.py`, registered in `CoreConfig.ready()`): the stock `<slug:...>` accepts
-  ASCII only and would break `reverse()` on Cyrillic slugs.
-- The "Events of the year" block on `/years/<year>/` shows published events of that year without
-  pagination; the photo counter in the card uses the shared `photos_count()` annotation from
-  `apps/core/shortcuts.py`.
-- `/search/` is opened by the results page (`search:index`, the `apps/search` app): the search
-  infrastructure (the `pg_trgm` extension, `search_vector` fields, GIN indexes, signals, the
-  `search_reindex` command) was built in 2.12, the interface in 2.13.
-- `apps/core/migrations/0003_site_domain.py` sets the `django.contrib.sites` domain to
-  `sportmemo.ru` — absolute links in emails and sitemaps must not point at `example.com`.
+Components and pages. The rules for visibility, privacy and their reasoning live in
+"Code rules".
 
-### Account pages
+- Skeleton: `templates/base.html` and the partials (`navbar`, `footer`, `breadcrumbs`,
+  `messages`), error pages `templates/404.html` and `templates/500.html`. Theme —
+  `static/css/sportmemo.css` and `static/js/theme.js`: warm sepia by default and a dark variant,
+  choice kept in `localStorage`; an inline script in `<head>` applies the theme before paint,
+  so there is no flash. Frontend libraries are vendored in `static/vendor/` (Bootstrap 5,
+  Bootstrap Icons, htmx, Alpine.js). No CDN: versions, licences and checksums are in
+  `static/vendor/README.md`.
+- Progressive enhancement: `static/js/gallery.js` and `static/js/comments.js` add `aria-busy`
+  and live-region messages. Without JavaScript the "show more" button stays a plain link
+  `?page=N`, and the comment form is sent as a plain POST with a redirect back.
+- The photo grid is one component (`templates/photos/partials/grid.html` + `grid_items.html`),
+  shared by the home page, the year page and the htmx fragment `photos:grid`. "Show more"
+  appends the next batch without a reload: the fragment returns only the cards and the button
+  container, and on the last page an empty container with `hx-swap-oob`, so the button
+  disappears.
+- Pages: `/teams/` (24 per page) and `/events/` (20) are lists; `/years/` and `/years/<year>/`
+  (24 photos) are by year, plus a "Events of the year" block; `/photos/<pk>/` is a photo;
+  `/teams/<slug>/` and `/events/<slug>/` are "visiting cards" (facts header, description,
+  attributes, gallery, links); `/people/<slug>/` is a person (main photo, public name, life
+  years, biography, attributes, "Teams and roles", "Photos", "Also known as"). There is
+  deliberately no `/people/` list: you can only reach a person page from a photo or from a team
+  roster.
+- Attributes (`Team.attributes`, `Event.attributes`) are rendered as "label, value" pairs via
+  `attribute_items()` (`apps/catalog/views.py`): the service key `demo` is hidden, known keys
+  are translated, unknown keys are shown as is, lists are joined with commas.
+- `Event.date_label` is the event date caption built from months and years ("July 1980",
+  "June — July 1988", "July 1988 — August 1989", "1980", "date not specified"): the month name
+  comes from the active locale via `date_format`, there are no separate month strings.
+- `/search/` (`search:index`, the `apps/search` app): infrastructure is sub-stage 2.12,
+  the interface is 2.13.
+- Public queries: `SoftDeleteQuerySet.published()` (filters by `status=Status.PUBLISHED`),
+  `.visible()` (additionally `rights_confirmed=True` — for photos). Shared entry points live in
+  `apps/core/shortcuts.py`: `visible_photos()`, `archive_stats()`, `paginate()`,
+  `photos_count()` and `get_visible_or_404(model, *, request=None, **lookup)`. The helper takes
+  the model as a parameter and does not import app models — otherwise a cycle
+  `core` ↔ `catalog`/`photos` is easy to create. `get_visible_or_404`: the object comes from
+  `public`; an unpublished object is returned only to the author (`created_by` / `uploaded_by`)
+  and a moderator, everyone else gets 404; a deleted or merged object gives 404 to everyone;
+  the author and moderator see the "not published" notice
+  (`templates/partials/moderation_notice.html`).
+- Batch size (24) and card ordering are shared by the year page and the htmx fragment
+  (`PHOTO_PAGE_SIZE`, `PHOTO_ORDERING` in `apps/core/shortcuts.py`): if they diverge, "show more"
+  will start skipping or repeating photos. Pages where the filter is not in `request.GET`
+  (the year page) pass it to the gallery explicitly — groundwork for catalog filters in 2.15.
+- The year list on `/years/` is computed from visible photos — the same source as the
+  "years in the archive" counter on the home page.
+- Infrastructure: `Dockerfile` + `docker-compose.yml` (db, redis, minio, web, worker), CI
+  (`.github/workflows/ci.yml`: ruff, migration check, pytest on 3.12 and 3.13 against
+  PostgreSQL 17), and the `.agents/skills/semver-checker/` skill.
+- The `django.contrib.sites` domain is set by the data migration
+  `apps/core/migrations/0003_site_domain.py` (`sportmemo.ru`): otherwise absolute links in
+  emails and the sitemap would point to `example.com`.
 
-- Sign-up, login, email confirmation and password flows use `django-allauth` and live inside
-  the site shell: navbar, footer, theme. Stock package templates are **not** copied — the
-  layout (`templates/allauth/layouts/base.html`) and the elements
-  (`templates/allauth/elements/*`) are overridden, so both our templates and the pages we do
-  not override (email address list, re-authentication) get the same styling.
-- The wrapper for account pages is the `main_inner` block in `base.html`, not `content`:
-  allauth child templates override `content` and would wipe the wrapper entirely.
-- Bootstrap classes on fields are set by the `BootstrapFormMixin` mixin
-  (`apps/accounts/forms.py`): allauth templates render widgets as they are, and a template
-  cannot add a widget class. Forms are wired through `ACCOUNT_FORMS`; the mixin calls
-  `super().__init__()` first because allauth adds and removes fields in its own `__init__`.
-- `non_field_errors` are printed as the first row of the form in
-  `templates/allauth/elements/fields.html`: the "wrong email or password" error arrives that
-  way, not as a field error.
-- Email texts live in `templates/account/email/` (wrapper, email confirmation, password
-  reset); in dev the console email backend prints them. The subject gets the `[SportMemo]`
-  prefix from the site name automatically.
-- msgid strings in our templates are **Russian**: our catalogs and the package catalogs share
-  no strings, and English msgid from allauth templates must not shadow package translations.
-- Links in emails are built from the `django.contrib.sites` domain; email confirmation is
-  mandatory (`ACCOUNT_EMAIL_VERIFICATION = "mandatory"`) — without it login sends the user to
-  "check your email", and after confirmation the user is logged in at once
-  (`ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION`).
-- The sign-up form has three mandatory consents with dates and a version — this is legal
-  protection for the project, so the checkboxes are required and have no default values.
-- The "this is me" claim (`User.person` through moderation) is deferred: without moderation
-  anyone could claim someone else's page. The profile (2.8b) only links an already
-  connected person.
+### Accounts, teams, comments
 
-### User profile
+**Accounts (2.8a).** Login, sign-up, email confirmation and password work go through
+`django-allauth` inside the shared site skeleton. The stock templates of the package are
+**not copied**: the layout (`templates/allauth/layouts/base.html`) and the elements
+(`templates/allauth/elements/*`) are overridden, so both our templates and the package pages
+we do not override get the styling. The wrapper for account pages is the `main_inner` block in
+`base.html`, not `content`: allauth child templates override `content` and would wipe the
+wrapper. Bootstrap classes are added to fields by `BootstrapFormMixin`
+(`apps/accounts/forms.py`); the forms are wired through `ACCOUNT_FORMS`, and the mixin calls
+`super().__init__()` first because allauth adds and removes fields in its own `__init__`.
+`non_field_errors` are rendered as the first line of the form (that is how "Wrong email or
+password" arrives). Email texts live in `templates/account/email/` (skeleton, email
+confirmation, password reset); in dev emails are printed by the console backend, and the
+subject gets the `[SportMemo]` prefix from the site name. The msgid of our templates are
+**Russian**: our catalogs and the package catalogs share no strings, and English msgid from
+allauth templates must not overwrite the package translations. Email confirmation is mandatory
+(`ACCOUNT_EMAIL_VERIFICATION = "mandatory"`), and after confirming the user is logged in right
+away (`ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION`). The sign-up form has three mandatory consents
+with dates and a version — that is the legal protection of the project, so the checkboxes are
+mandatory and have no defaults. The "this is me" claim (`User.person` through moderation) is
+deferred: without moderation anyone could "claim" someone else's page.
 
-- `/accounts/profile/` is our own page (`apps/accounts/views.py`, `accounts:profile`), not an
-  allauth template: it extends `base.html` and gets breadcrumbs. It must not extend the
-  allauth layout — that gives a narrow `.auth-shell` column meant for a single form.
-- The route is wired **before** `allauth.urls`: the paths do not overlap, but the order makes
-  the priority of our pages explicit.
-- Only `display_name` can be edited in the profile. Email and password are changed on their
-  own allauth pages, and the profile links to them: two places for one value would drift
-  apart.
-- Saving is POST-redirect-GET with `messages.success`. Without the redirect, reloading the
-  page would repeat the form submission.
-- The role row is shown to moderators and administrators only (`user.is_moderator`): for a
-  regular user the word "user" says nothing.
-- The "My archive profile" block shows a link only when `User.person` is already connected.
-  There is deliberately no "This is me" button: the claim flow is not implemented, and we
-  must not promise what does not exist.
-- The user menu in the navbar is built from existing routes only — otherwise
-  `NoReverseMatch` would break every page. The name in the button is truncated with CSS
-  (`.account-menu__name`), not in the view: a long value would stretch the header.
-- The `account_email` and `account_reauthenticate` pages are **not** overridden: the 2.8a
-  shell styles them, and the allauth scripts arrive through the `extra_body` → `extra_js`
-  block. Check them after a package update: without those scripts the address management
-  buttons do not work.
+**Profile (2.8b).** `/accounts/profile/` is our page (`apps/accounts/views.py`,
+`accounts:profile`); it extends `base.html` and gets breadcrumbs. Extending the allauth layout
+is not an option — it gives the narrow `.auth-shell` column meant for a single form. The route
+is wired **before** `allauth.urls` (the addresses do not overlap, but the order makes the
+priority of our pages explicit). Only `display_name` ("what to call you") can be changed; email
+and password are edited on their allauth pages, with links next to them — two places for one
+value would diverge. Saving is POST-redirect-GET with `messages.success`: without the redirect,
+refreshing the page would repeat the submission. The role is shown only to a moderator and an
+administrator (`user.is_moderator`). The "My profile in the archive" block shows a link only
+when the `User.person` link exists; there is deliberately no "This is me" button — the claim is
+not implemented. The user menu in the navbar is built only from existing routes (otherwise
+`NoReverseMatch` would break every page), and the name is truncated by CSS
+(`.account-menu__name`). The `account_email` and `account_reauthenticate` pages are **not
+overridden**: the 2.8a skeleton styles them, and the scripts arrive via `extra_body` →
+`extra_js`; re-check them after a package upgrade — without those scripts the address
+management buttons do not work.
 
-### Team create and edit
+**Team create and edit (2.9).** A team is created as a **draft** (`status=draft`) with
+`created_by`, and a moderator publishes it; before publication only the author and a moderator
+see the team, everyone else gets 404. The author and a moderator can edit it, everyone else gets
+**404, not 403**: we do not reveal that someone else's draft exists; the check lives in
+`can_edit_team()` and is applied the same way to GET and POST, and the object is taken from
+`Team.public` (not even the author can edit a deleted team). Editing a published team does
+**not reset the status** — the author's changes should not wait for a moderator, but everything
+is written to history. **The sport field is not shown in the form** — the product is
+single-sport (invariant #1), and the value comes from `default_sport()`; when there are no
+active sports the form is unavailable with a message, not a 500 error. **Duplicate names are
+not blocked** ("Sokoly" exist in different cities, and a human decides): `TeamForm.find_duplicates()`
+looks for teams with the same name (`iexact`) in the same sport **including other people's
+drafts** — otherwise three identical teams would appear while moderation is pending; when a
+match is found a "I checked, this is a different team" checkbox is required, and someone else's
+draft is shown by name and status only, without a link. **The team slug is unique within a
+sport** (`_unique_slug()` with a numeric suffix), and the lookup area is `Team.objects`, not
+`public`: `UniqueConstraint` knows nothing about `deleted_at`. Editing the name does not change
+the existing slug — URLs must not break. **A club with several teams** is created as separate
+records ("Russtar", "Russtar-2", "Russtar (junior team, born 1992)"), and the hint about it is
+the help text of the name field; a separate "club" entity with a `parent` field is deferred
+(idea I-9). The moderator email (`apps/catalog/emails.py`) goes to recipients from the database
+(role moderator or admin, active), not from a setting; an SMTP error is logged and does **not**
+cancel the team creation, and when there are no moderators no email is sent. The routes
+`teams/new/` and `teams/mine/` are declared **before** `teams/<uslug:slug>/`: the `uslug`
+converter accepts any letters and hyphens and would otherwise capture both addresses.
+`BootstrapFormMixin` lives in `apps/core/forms.py`, not in `accounts`: team forms need styled
+fields too, and importing from `accounts` into `catalog` would be an extra link between apps.
 
-- A team is created by a user as a **draft** (`status=draft`) with `created_by`; a moderator
-  publishes it. Until then only the author and moderators see it, everyone else gets 404 —
-  the `get_visible_or_404` rule already covers this.
-- A team is edited by its author and by moderators; everyone else gets **404, not 403**: we
-  do not reveal that someone else's draft exists. The check lives in `can_edit_team()` and
-  applies to both GET and POST; even the author cannot edit a deleted team (the object comes
-  from `Team.public`).
-- Editing a **published** team does **not** reset its status: author changes must not wait for
-  a moderator, but everything is written to history (`django-simple-history`). We will return
-  to re-moderation if vandalism appears.
-- **The sport is not shown in the form** — the product is single-sport (invariant 1). The value
-  comes from `default_sport()` (`apps/core/shortcuts.py`): the first active sport by sort order.
-  No active sports — the form is unavailable with a clear message, not a 500 error.
-- **Duplicate names are not blocked.** "Соколы" exist in different cities, and the decision
-  "duplicate or namesake team" is made by a human. The form
-  (`TeamForm.find_duplicates()`) searches for teams with the same name (`iexact`) in the same
-  sport, **including other users' drafts** — otherwise three identical teams would appear
-  while moderation is pending. If found, the "I checked: this is a different team" checkbox is
-  required. Someone else's draft is shown by name and status only, without a link; a published
-  team gets a link. Real duplicates are merged by a moderator.
-- **The team slug is unique within a sport**, so it is generated through `_unique_slug()` with
-  a numeric suffix (`динамо`, `динамо-2`). The lookup scope is `Team.objects`, not `public`:
-  the `UniqueConstraint` knows nothing about `deleted_at`, and a slug that looks free to
-  `public` would still fail at the database level. Renaming does not change the existing slug —
-  URLs must not break.
-- **A club with several teams** is created as separate entries: "Русстар", "Русстар-2",
-  "Русстар (юноши 1992 г. р.)". A hint about this is the help text of the name field. A
-  separate "club" entity with a `parent` field is deferred (idea I-9 in the backlog):
-  navigation in the archive goes by years and people, and "all photos of a club" will be
-  collected by search.
-- The moderator notification (`apps/catalog/emails.py`) goes to recipients from the database
-  (role moderator or admin, active), not from a setting: the moderator list changes. An SMTP
-  error is logged and **does not cancel** team creation; with no moderators the email is not
-  sent and a warning is logged.
-- The `teams/new/` and `teams/mine/` routes are declared **before** `teams/<uslug:slug>/`:
-  the `uslug` converter accepts any letters and dashes and would otherwise capture both.
-- `BootstrapFormMixin` lives in `apps/core/forms.py`, not in `accounts`: team forms need
-  styled fields too, and importing from `accounts` into `catalog` would be a needless link
-  between apps.
+**Comments and reports (2.14).** A comment is **published immediately**: premoderation is off
+by default — the archive grows from other people's albums, and a correction like "this is not
+Ivanov but Petrov" must appear at once, not after a moderator. It is enabled by a switch, not by
+a code change: `CommentSettings` is a singleton setting in the admin (one row, created by a data
+migration; adding and deleting rows is forbidden, and the changelist leads to the edit form). It
+is read through the cache and resets it on save — the switch takes effect at once. **Comment
+visibility lives in `apps/comments/services.py`** (`comments_context()`, `visible_comments_q()`),
+not in templates: the three pages live in different apps, and a separate query in each would
+give different rules. Who sees what: anonymous and logged-in users see published comments; the
+author additionally sees their own comment in `draft` with a "pending review" badge; hidden,
+rejected and deleted comments are seen by nobody, including the author (that is a moderator's
+decision, not a draft), and a reply to a hidden root comment is not shown. **Replies are flat**:
+a reply to a reply is raised by the form to the root comment — a tree needs recursion in the
+template and reads worse in markup. **The target allow-list is `apps/comments/targets.py`**
+(photo, team, event): a generic FK does not restrict the target itself, and without the list the
+form could create a comment on a user or on a report; the object is fetched with
+`get_visible_or_404`. **Duplicate protection** — the same author, the same target and the same
+text within 10 minutes; IP throttling is deferred (P2-17), and so are editing and deleting your
+own comment (P2-16). The form works without JavaScript; with htmx the block is re-rendered
+entirely (`hx-swap="outerHTML"`), and `next` is checked against an open redirect. **A report is
+a separate page** `/reports/add/`, reachable anonymously: a modal window needs JavaScript, and a
+report link should be easy to forward. **There are no moderation buttons on public pages**: the
+admin is the single place for decisions, and each one is written to `ModerationAction` and to
+history. **Moderator emails are sent about reports only** (new comments would be a flood of
+emails with premoderation off); the shared part lives in `apps/core/emails.py`
+(`moderator_emails()`, `notify_moderators()`), and the wrappers with the text are in `catalog`
+and `moderation`; `notify_moderators()` never raises. **Report form protection** — a `website`
+honeypot field: when filled we show thanks and record nothing (answering a bot with a refusal
+would tell it that it was caught). A repeated report by the same logged-in user on the same
+object with the same reason within a day is not created; anonymous users are not checked.
+`/reports/add/` is closed to indexing (`noindex`) and added to `robots.txt`.
 
-### Comments and reports
-
-- **A comment is published at once.** Premoderation is off by default: the archive is filled
-  from other people's albums, and a correction ("this is Petrov, not Ivanov") should appear
-  right away, not after a moderator. A moderator removes a bad comment in the admin — this is
-  reactive moderation, not the absence of moderation.
-- **Premoderation is a switch, not a code change:** `CommentSettings` is a singleton setting
-  in the admin (one row, created by a data migration; adding and deleting rows is forbidden,
-  the list leads straight to the edit form). Two settings rows would mean nobody knows which
-  one applies. The setting is read through the cache and clears it on save, so the switch
-  takes effect at once.
-- **Comment visibility lives in `apps/comments/services.py`**, not in templates:
-  `comments_context()` builds the list for a page, `visible_comments_q()` holds the visibility
-  rule. The three pages (photo, team, event) live in different apps, and a separate query in
-  each would give different rules.
-- **Who sees what:** an anonymous visitor and a signed-in user see published comments; the
-  author also sees their own `draft` comment with a "pending review" badge. Hidden, rejected
-  and deleted comments are seen by nobody, the author included: that is a moderator decision,
-  not a draft. A reply to a hidden root comment is not shown — it would hang without context.
-- **Replies are one level deep:** the form lifts a reply to a reply up to the root comment.
-  A tree needs recursion in the template and reads worse than a flat list.
-- **The target allow-list is `apps/comments/targets.py`** (photo, team, event). A generic FK
-  does not restrict the target by itself: without the list the form could create a comment on
-  a user or on a report. The object is fetched through `get_visible_or_404`, so a comment
-  cannot attach to something the user cannot see.
-- **Duplicate protection** — the same author, target and text within 10 minutes: a double
-  click or "sent, then reloaded the page" is a common case, not spam. IP throttling is
-  deferred (P2-17), editing and deleting your own comment as well (P2-16).
-- **The form works without JavaScript:** a plain POST with a redirect back; with htmx the
-  block is re-rendered whole (`hx-swap="outerHTML"`), and `static/js/comments.js` only adds
-  `aria-busy` and an `aria-live` message. The `next` value is checked against open redirects.
-- **A report is a separate page** `/reports/add/`, open to anonymous visitors: a modal window
-  needs JavaScript, and a report link should be shareable. The "Report a mistake" link sits on
-  the same three pages as the comments.
-- **There are no moderation buttons on public pages.** The admin is the single place for
-  decisions, and each one goes into `ModerationAction` and the history. The only action on a
-  page is the report link.
-- **Moderator emails are sent about reports only.** We do not write about new comments: with
-  premoderation off that would be a stream of letters. The shared part is
-  `apps/core/emails.py` (`moderator_emails()`, `notify_moderators()`); the wrappers with the
-  letter text are in `catalog` and `moderation`. `notify_moderators()` never raises; an SMTP
-  error is logged and does not cancel the record.
-- **Report form protection** — a honeypot field `website`: if it is filled, we show thanks and
-  write nothing (replying with a refusal would tell a bot it was caught). A repeat report by
-  the same signed-in user on the same object with the same reason within a day is not created;
-  we do not check anonymous visitors — there is nothing to match them by.
-- `/reports/add/` is closed to indexing (`noindex`) and added to `robots.txt`.
-
-### Admin rules
-
-- Moderation (publish / hide / reject / soft-delete / restore) runs as list actions; every decision
-  is recorded in `ModerationAction`.
-- Duplicate merge is the "Merge duplicates into one object" action: it opens a separate target
-  selection page (`admin/core/merge_form.html`) because the target must not be one of the sources.
-- `ModerationAction` is read-only in admin: the log is written by actions, not by hand.
+**Admin.** Moderation (publish / hide / reject / soft-delete / restore) is a list action; every
+decision is written to `ModerationAction`. Merging duplicates is the "Merge duplicates into one
+object" action, which opens a separate target selection page (`admin/core/merge_form.html`)
+because the target must not be one of the sources. `ModerationAction` is read-only: the log is
+filled by actions, not by hand.
 
 ### Code rules
 
-- Any model with `deleted_at` must expose `objects` (everything, including deleted) and `public`
+- Models with `deleted_at` must have both `objects` (everything, including deleted rows) and `public`
   (deleted excluded). Public queries go through `public` only.
 - Fields with `auto_now_add` cannot be populated from JSON fixtures — seed data belongs in a data
   migration.
