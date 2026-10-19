@@ -22,6 +22,10 @@
         {% endif %}
     </header>
 
+    {% if filters.fields or filters.sort %}
+        {% include "catalog/partials/filters.html" %}
+    {% endif %}
+
     {% if page_obj.object_list %}
         <div class="entity-grid">
             {% for team in page_obj %}
@@ -29,6 +33,19 @@
             {% endfor %}
         </div>
         {% pagination page_obj %}
+    {% elif filters.has_active %}
+        <div class="empty-state">
+            <i class="bi bi-funnel empty-state__icon" aria-hidden="true"></i>
+            <p class="empty-state__title">{% trans "По выбранным условиям ничего не найдено" %}</p>
+            <p class="mb-0">
+                {% trans "Попробуйте изменить условия или сбросить фильтры." %}
+            </p>
+            <p class="mt-3 mb-0">
+                <a class="btn btn-outline-primary btn-sm" href="{{ filters.reset_url }}">
+                    {% trans "Сбросить фильтры" %}
+                </a>
+            </p>
+        </div>
     {% else %}
         <div class="empty-state">
             <i class="bi bi-people empty-state__icon" aria-hidden="true"></i>

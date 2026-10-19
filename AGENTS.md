@@ -148,8 +148,8 @@ skeleton), 2.3 (public queries and lists), 2.4 (gallery component), 2.5 (team an
 2.6 (person and photo pages), 2.7 (team roster filter by year), 2.8a (sign-up, login and
 password), 2.8b (user profile and menu), 2.9 (user-created team), 2.10 (meta tags and
 Open Graph), 2.11 (sitemap, robots and Schema.org), 2.12 (search: infrastructure),
-2.13 (search: interface) and 2.14 (comments and reports in the UI) are complete; the next one
-is 2.15 (catalog filters).
+2.13 (search: interface), 2.14 (comments and reports in the UI) and 2.15 (catalog filters)
+are complete. Stage 2 (public archive) is closed.
 
 ## Deliberately deferred
 
@@ -158,10 +158,10 @@ constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.15.0; development branch `master`; 892 tests passing on Python 3.12 and 3.13
+- Version: 0.16.0; development branch `master`; 940 tests passing on Python 3.12 and 3.13
   (`make test`); linter clean (`make lint`).
-- Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is in progress:
-  sub-stages 2.1–2.14 are done, the next one is 2.15 (catalog filters).
+- Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
+  sub-stages 2.1–2.15 are done.
 
 ### Public UI
 
@@ -211,7 +211,15 @@ Components and pages. The rules for visibility, privacy and their reasoning live
 - Batch size (24) and card ordering are shared by the year page and the htmx fragment
   (`PHOTO_PAGE_SIZE`, `PHOTO_ORDERING` in `apps/core/shortcuts.py`): if they diverge, "show more"
   will start skipping or repeating photos. Pages where the filter is not in `request.GET`
-  (the year page) pass it to the gallery explicitly — groundwork for catalog filters in 2.15.
+  (the year page) pass it to the gallery explicitly.
+- Catalog filters live in `apps/catalog/filters.py`: option lookups, parameter parsing and the
+  `canonical` address are built there, and the template gets a ready panel
+  (`FilterPanel` → `SelectField`) and never compares anything with `request.GET`. Option
+  lookups use the whole public queryset, not the filtered one: otherwise a selected city
+  would disappear from the list after a decade is chosen. An invalid parameter value counts
+  as "filter not applied" — a typo in a link must not look like "nothing found".
+  `canonical` is built from normalized parameters (`page_meta(..., canonical_query=)`):
+  junk and the page number never get into it.
 - The year list on `/years/` is computed from visible photos — the same source as the
   "years in the archive" counter on the home page.
 - Infrastructure: `Dockerfile` + `docker-compose.yml` (db, redis, minio, web, worker), CI
@@ -343,6 +351,9 @@ filled by actions, not by hand.
   `.visible()` for photos). Drafts never appear on any public page.
 - A new public page takes its queryset from `apps/core/shortcuts.py` instead of building the
   `public.published()` chain by hand: the filtering rule must live in one place.
+- List filters live in `apps/catalog/filters.py`, not in templates and not in views: option
+  lookups, parameter parsing and the `canonical` address live in one place, and the template
+  gets a ready panel. An invalid parameter value counts as "filter not applied".
 - A link to an unpublished object is never created: check `is_published` before the link,
   otherwise render the name as plain text. A draft must not leak through a direct link or
   reach a search engine index.

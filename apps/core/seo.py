@@ -33,15 +33,20 @@ def absolute(request: HttpRequest, url: str) -> str:
     return request.build_absolute_uri(url)
 
 
-def canonical_url(request: HttpRequest) -> str:
+def canonical_url(request: HttpRequest, query=None) -> str:
     """Адрес страницы без параметра `page`.
 
     Значимые фильтры (`?year=1994`) сохраняются: у отфильтрованной выдачи
     свой адрес. Номер страницы выбрасывается: `canonical` всегда указывает
     на первую страницу — иначе каждая страница пагинации объявила бы себя
     главной, и поисковик не смог бы выбрать между ними.
+
+    `query` передают страницы, которые сами решают, какие параметры значимы
+    (списки каталога): мусор вида `?year=abc` не должен создавать отдельный
+    адрес одной и той же выдачи. `None` — прежнее поведение: весь
+    `request.GET`.
     """
-    query = request.GET.copy()
+    query = (request.GET if query is None else query).copy()
     query.pop("page", None)
     if not query:
         return request.path
@@ -124,6 +129,7 @@ def page_meta(
     noindex: bool = False,
     nofollow: bool = False,
     append_site_name: bool = True,
+    canonical_query=None,
 ) -> dict:
     """Полный словарь метатегов страницы.
 
@@ -134,6 +140,8 @@ def page_meta(
 
     `append_site_name=False` нужен главной: там имя сайта стоит первым
     («SportMemo — архив спортивных фотографий»), а не в конце.
+    `canonical_query` — нормализованные параметры для страниц, которые
+    отбрасывают мусор из адреса (списки каталога).
     """
     if not title:
         title = SITE_NAME
@@ -143,7 +151,7 @@ def page_meta(
     description = _clip(description) if description else str(DEFAULT_DESCRIPTION)
     # Карточка ведёт на первую страницу списка: страницы пагинации
     # закрыты от индексации.
-    canonical = absolute(request, canonical_url(request))
+    canonical = absolute(request, canonical_url(request, query=canonical_query))
     if is_paginated_beyond_first(request):
         noindex = True
 

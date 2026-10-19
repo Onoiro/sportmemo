@@ -14,6 +14,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_GET, require_http_methods
 
 from apps.catalog.emails import notify_moderators_new_team
+from apps.catalog.filters import event_filters, team_filters
 from apps.catalog.forms import TeamForm
 from apps.catalog.models import Event, Person, Team
 from apps.catalog.roster import memberships_in_year, roster_years
@@ -160,22 +161,25 @@ def get_editable_team_or_404(request, slug):
     return team
 
 
+@require_GET
 def team_list(request):
-    """Список опубликованных команд, по алфавиту."""
-    teams = (
-        Team.public.published()
-        .select_related("sport")
-        .annotate(photos_total=photos_count())
-        .order_by("name")
-    )
+    """Список опубликованных команд с фильтрами по городу и десятилетию.
+
+    Фильтры разбирает `apps/catalog/filters.py`: там же живут справочники
+    вариантов. Невалидное значение не применяется — опечатка в ссылке
+    не должна давать пустую страницу.
+    """
+    filters = team_filters(request)
     context = {
-        "page_obj": paginate(request, teams, TEAM_PAGE_SIZE),
+        "page_obj": paginate(request, filters.queryset, TEAM_PAGE_SIZE),
+        "filters": filters.panel,
         "meta": page_meta(
             request,
             title=_("Команды"),
             description=_(
                 "Команды архива SportMemo: города, годы основания и фотографии."
             ),
+            canonical_query=filters.query,
         ),
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},
@@ -185,24 +189,22 @@ def team_list(request):
     return render(request, "catalog/team_list.html", context)
 
 
+@require_GET
 def event_list(request):
-    """Список опубликованных событий: от новых к старым.
+    """Список опубликованных событий с фильтрами по году, типу и городу.
 
     `nulls_last=True` обязателен: в PostgreSQL при `DESC` события без года
-    иначе оказались бы первыми.
+    иначе оказались бы первыми. Порядок задаёт `event_filters()`.
     """
-    events = (
-        Event.public.published()
-        .select_related("sport")
-        .annotate(photos_total=photos_count())
-        .order_by(F("year").desc(nulls_last=True), "name")
-    )
+    filters = event_filters(request)
     context = {
-        "page_obj": paginate(request, events, EVENT_PAGE_SIZE),
+        "page_obj": paginate(request, filters.queryset, EVENT_PAGE_SIZE),
+        "filters": filters.panel,
         "meta": page_meta(
             request,
             title=_("События"),
             description=_("Турниры, серии и товарищеские встречи в архиве SportMemo."),
+            canonical_query=filters.query,
         ),
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},

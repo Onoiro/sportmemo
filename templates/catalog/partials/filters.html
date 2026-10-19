@@ -1,0 +1,39 @@
+{% load i18n %}
+{% comment %}
+Панель фильтров списка. Обычная форма GET: состояние живёт в URL,
+ссылку можно переслать, JavaScript не нужен.
+
+Поля и варианты приходят из `apps/catalog/filters.py`: шаблон ничего
+не сравнивает с `request.GET` и не решает, какое значение валидно.
+{% endcomment %}
+<form class="filter-bar" method="get" role="search">
+    {% for field in filters.fields %}
+        <div class="filter-bar__field">
+            <label class="filter-bar__label" for="filter-{{ field.name }}">{{ field.label }}</label>
+            <select class="form-select filter-bar__select" id="filter-{{ field.name }}" name="{{ field.name }}">
+                {% if field.all_label %}
+                    <option value="">{{ field.all_label }}</option>
+                {% endif %}
+                {% for option in field.options %}
+                    <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    {% endfor %}
+
+    <div class="filter-bar__field">
+        <label class="filter-bar__label" for="filter-{{ filters.sort.name }}">{{ filters.sort.label }}</label>
+        <select class="form-select filter-bar__select" id="filter-{{ filters.sort.name }}" name="{{ filters.sort.name }}">
+            {% for option in filters.sort.options %}
+                <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="filter-bar__actions">
+        <button class="btn btn-outline-primary" type="submit">{% trans "Применить" %}</button>
+        {% if filters.has_active %}
+            <a class="filter-bar__reset" href="{{ filters.reset_url }}">{% trans "Сбросить фильтры" %}</a>
+        {% endif %}
+    </div>
+</form>
