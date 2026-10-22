@@ -218,7 +218,6 @@ class TestEventPhotos:
     def test_shows_only_visible_photos(self, client, event):
         event.publish()
         shown = PhotoFactory(event=event, title="Видимое фото события")
-        PhotoFactory(event=event, title="Без прав", rights_confirmed=False)
         PhotoFactory(event=event, title="Черновик фото", status=Status.DRAFT)
         deleted = PhotoFactory(event=event, title="Удалённое фото события")
         deleted.soft_delete()
@@ -228,12 +227,20 @@ class TestEventPhotos:
 
         assert shown.title in html
         for title in (
-            "Без прав",
             "Черновик фото",
             "Удалённое фото события",
             "Чужое фото",
         ):
             assert title not in html
+
+    def test_photo_without_rights_is_shown(self, client, event):
+        """Права проверяет автор: исторический флаг видимость не меняет."""
+        event.publish()
+        photo = PhotoFactory(event=event, title="Без прав", rights_confirmed=False)
+
+        html = client.get(event.get_absolute_url()).content.decode()
+
+        assert photo.title in html
 
     def test_gallery_keeps_event_filter_in_more_link(self, client, event):
         event.publish()

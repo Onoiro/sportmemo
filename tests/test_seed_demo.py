@@ -16,7 +16,7 @@ from apps.core.management.commands.seed_demo import (
     _make_demo_image,
 )
 from apps.core.models import Status
-from apps.photos.models import Photo, Source
+from apps.photos.models import Photo, ProcessingStatus, Source
 from tests.utils import make_image_file
 
 pytestmark = pytest.mark.django_db
@@ -60,7 +60,9 @@ class TestDemoSet:
         assert Team.objects.filter(status=Status.DRAFT).count() == 1
         assert Event.objects.filter(status=Status.DRAFT).count() == 2
         assert Person.objects.filter(status=Status.DRAFT).count() == 2
-        assert Photo.objects.filter(status=Status.DRAFT).count() == 3
+        # Три явных черновика плюс три кадра без подтверждённых прав:
+        # после решения 2.1 такие фото не публикуются.
+        assert Photo.objects.filter(status=Status.DRAFT).count() == 6
 
     def test_marks_demo_objects(self, seed):
         seed()
@@ -103,13 +105,27 @@ class TestPhotos:
 
         assert sizes == set(PHOTO_SIZES)
 
-    def test_photo_without_rights_is_not_public(self, seed):
+    def test_photos_without_rights_are_drafts(self, seed):
+        """Правило «без прав не публикуется» отменено: такие кадры
+        остаются черновиками, а не висят в архиве с флагом."""
         seed()
 
         without_rights = Photo.objects.filter(rights_confirmed=False)
 
         assert without_rights.count() == 3
+        assert all(photo.status == Status.DRAFT for photo in without_rights)
         assert all(not photo.is_public for photo in without_rights)
+
+    def test_display_and_hash_are_generated(self, seed):
+        """Демо-архив проходит тот же пайплайн, что и настоящая загрузка."""
+        seed(photos=3)
+
+        for photo in Photo.objects.all():
+            assert photo.display
+            assert photo.display.storage.exists(photo.display.name)
+            assert photo.phash
+            assert photo.width and photo.height
+            assert photo.processing_status == ProcessingStatus.PROCESSED
 
     def test_photo_without_team_and_event_exists(self, seed):
         seed()

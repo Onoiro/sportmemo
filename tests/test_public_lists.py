@@ -77,16 +77,26 @@ class TestTeamList:
 
         assert names == ["Акулы", "Ястребы"]
 
-    def test_photos_count_ignores_unconfirmed_rights(self, client, team, user):
+    def test_photos_count_ignores_drafts(self, client, team, user):
         team.publish()
         PhotoFactory(team=team, status=Status.PUBLISHED)
-        PhotoFactory(team=team, status=Status.PUBLISHED, rights_confirmed=False)
         PhotoFactory(team=team, status=Status.DRAFT)
 
         response = client.get(reverse("catalog:team_list"))
         listed = response.context["page_obj"].object_list[0]
 
         assert listed.photos_total == 1
+
+    def test_photos_count_includes_photo_without_rights(self, client, team, user):
+        """Права проверяет автор: счётчик их не учитывает."""
+        team.publish()
+        PhotoFactory(team=team, status=Status.PUBLISHED)
+        PhotoFactory(team=team, status=Status.PUBLISHED, rights_confirmed=False)
+
+        response = client.get(reverse("catalog:team_list"))
+        listed = response.context["page_obj"].object_list[0]
+
+        assert listed.photos_total == 2
 
     def test_pagination_splits_long_list(self, client, baseball, user):
         for index in range(TEAM_PAGE_SIZE + 1):
@@ -228,10 +238,18 @@ class TestYearList:
 
         assert years == [2003, 1994, 1985]
 
-    def test_photos_without_rights_do_not_create_year(self, client):
-        PhotoFactory(year=1994, rights_confirmed=False)
+    def test_drafts_do_not_create_year(self, client):
         PhotoFactory(year=1994, status=Status.DRAFT)
         PhotoFactory(year=1994)
+
+        response = client.get(reverse("core:year_list"))
+        years = [item["year"] for item in response.context["years"]]
+
+        assert years == [1994]
+
+    def test_photo_without_rights_creates_year(self, client):
+        """Права проверяет автор: год с одним таким фото — нормальный."""
+        PhotoFactory(year=1994, rights_confirmed=False)
 
         response = client.get(reverse("core:year_list"))
         years = [item["year"] for item in response.context["years"]]
@@ -278,9 +296,8 @@ class TestYearDetail:
         assert shown in photos
         assert other not in photos
 
-    def test_hides_unpublished_and_unconfirmed_photos(self, client):
+    def test_hides_unpublished_photos(self, client):
         shown = PhotoFactory(year=1994)
-        PhotoFactory(year=1994, rights_confirmed=False)
         PhotoFactory(year=1994, status=Status.DRAFT)
         deleted = PhotoFactory(year=1994)
         deleted.soft_delete()
@@ -290,8 +307,16 @@ class TestYearDetail:
 
         assert photos == [shown]
 
+    def test_shows_photo_without_rights(self, client):
+        """Права проверяет автор: исторический флаг видимость не меняет."""
+        photo = PhotoFactory(year=1994, rights_confirmed=False)
+
+        response = client.get(reverse("core:year_detail", args=[1994]))
+
+        assert list(response.context["page_obj"].object_list) == [photo]
+
     def test_year_without_visible_photos_is_404(self, client):
-        PhotoFactory(year=1994, rights_confirmed=False)
+        PhotoFactory(year=1994, status=Status.DRAFT)
 
         response = client.get(reverse("core:year_detail", args=[1994]))
 

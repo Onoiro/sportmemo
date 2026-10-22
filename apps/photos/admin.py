@@ -74,6 +74,7 @@ class PhotoAdmin(ModerationActionsMixin, BaseHistoryAdmin):
         "width",
         "height",
         "phash",
+        "crop_data",
     )
     inlines = (PhotoPersonInline,)
     actions = MODERATION_ACTIONS
@@ -87,6 +88,7 @@ class PhotoAdmin(ModerationActionsMixin, BaseHistoryAdmin):
                 "fields": (
                     "processed",
                     "display",
+                    "crop_data",
                     "width",
                     "height",
                     "phash",
@@ -111,6 +113,7 @@ class PhotoAdmin(ModerationActionsMixin, BaseHistoryAdmin):
             {
                 "fields": (
                     "exif",
+                    "original_filename",
                     "views_count",
                     "deleted_at",
                     "created_at",

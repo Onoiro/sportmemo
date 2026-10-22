@@ -201,10 +201,13 @@ class TestSitemapObjects:
             f"http://{SITE_DOMAIN}{photo.get_absolute_url()}"
         ]
 
-    def test_photo_without_rights_is_not_listed(self, client, baseball, user):
-        PhotoFactory(sport=baseball, uploaded_by=user, rights_confirmed=False)
+    def test_photo_without_rights_is_listed(self, client, baseball, user):
+        """Права проверяет автор: исторический флаг видимость не меняет."""
+        photo = PhotoFactory(sport=baseball, uploaded_by=user, rights_confirmed=False)
 
-        assert locs(parse_xml(client.get("/sitemap-photos.xml"))) == []
+        assert locs(parse_xml(client.get("/sitemap-photos.xml"))) == [
+            f"http://{SITE_DOMAIN}{photo.get_absolute_url()}"
+        ]
 
     def test_draft_photo_is_not_listed(self, client, baseball, user):
         PhotoFactory(sport=baseball, uploaded_by=user, status=Status.DRAFT)

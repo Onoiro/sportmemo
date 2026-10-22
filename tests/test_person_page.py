@@ -236,16 +236,16 @@ class TestPersonHeroPhoto:
 
         assert response.context["hero_photo"] == avatar
 
-    def test_avatar_without_rights_falls_back_to_first_photo(self, client, user):
+    def test_avatar_without_rights_is_shown(self, client, user):
+        """Права проверяет автор: флаг видимость не меняет."""
         person = make_person(user)
-        person.avatar = PhotoFactory(rights_confirmed=False)
+        avatar = PhotoFactory(rights_confirmed=False)
+        person.avatar = avatar
         person.save()
-        photo = PhotoFactory(title="Первое видимое фото")
-        photo.photo_persons.create(person=person)
 
         response = client.get(person.get_absolute_url())
 
-        assert response.context["hero_photo"] == photo
+        assert response.context["hero_photo"] == avatar
 
     def test_draft_avatar_falls_back_to_first_photo(self, client, user):
         person = make_person(user)
@@ -272,8 +272,6 @@ class TestPersonPhotos:
     def test_shows_only_visible_photos(self, client, person):
         shown = PhotoFactory(title="Видимое фото человека")
         shown.photo_persons.create(person=person)
-        without_rights = PhotoFactory(title="Без прав", rights_confirmed=False)
-        without_rights.photo_persons.create(person=person)
         draft = PhotoFactory(title="Черновик фото", status=Status.DRAFT)
         draft.photo_persons.create(person=person)
         deleted = PhotoFactory(title="Удалённое фото человека")
@@ -285,12 +283,20 @@ class TestPersonPhotos:
 
         assert shown.title in html
         for title in (
-            "Без прав",
             "Черновик фото",
             "Удалённое фото человека",
             "Чужое фото",
         ):
             assert title not in html
+
+    def test_photo_without_rights_is_shown(self, client, person):
+        """Права проверяет автор: исторический флаг видимость не меняет."""
+        photo = PhotoFactory(title="Без прав", rights_confirmed=False)
+        photo.photo_persons.create(person=person)
+
+        html = client.get(person.get_absolute_url()).content.decode()
+
+        assert photo.title in html
 
     def test_gallery_keeps_person_filter_in_more_link(self, client, person):
         for _ in range(25):

@@ -135,15 +135,6 @@ class SoftDeleteQuerySet(models.QuerySet):
         """
         return self.filter(status=Status.PUBLISHED)
 
-    def visible(self):
-        """Только то, что разрешено показывать.
-
-        Пока применяется к `Photo`: без подтверждённых прав фото публиковать
-        нельзя. Живёт рядом с `published()`, чтобы работали цепочки вида
-        `Photo.public.published().visible()`.
-        """
-        return self.filter(rights_confirmed=True)
-
 
 class SoftDeleteManager(models.Manager.from_queryset(SoftDeleteQuerySet)):
     """Менеджер по умолчанию: отдаёт все объекты, включая удалённые.

@@ -46,6 +46,17 @@ def cleared_cache():
     cache.clear()
 
 
+@pytest.fixture(autouse=True)
+def celery_eager(settings):
+    """Задачи выполняются в том же процессе, брокер не нужен.
+
+    Настройка ставится явно, а не через `DEBUG`: тесты не должны зависеть
+    от окружения разработчика и от запущенного Redis.
+    """
+    settings.CELERY_TASK_ALWAYS_EAGER = True
+    settings.CELERY_TASK_EAGER_PROPAGATES = True
+
+
 @pytest.fixture
 def baseball(db):
     """Вид спорта «Бейсбол» — создаётся data-миграцией,
@@ -124,8 +135,10 @@ def event(baseball, user):
 
 @pytest.fixture
 def photo(baseball, user):
-    """Опубликованное фото с подтверждёнными правами —
-    для тестов публикации.
+    """Опубликованное фото с версией для показа — для тестов публикации.
+
+    `display` заполняется сразу: превью строятся от него, и без файла
+    карточка фото в тестах была бы пустой.
     """
     from django.utils import timezone
 
@@ -136,6 +149,7 @@ def photo(baseball, user):
         sport=baseball,
         title="Финал 1994",
         original=make_image_file(),
+        display=make_image_file("display.jpg"),
         uploaded_by=user,
         rights_confirmed=True,
         rights_confirmed_at=timezone.now(),

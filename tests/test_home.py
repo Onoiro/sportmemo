@@ -42,7 +42,6 @@ class TestHome:
 
     def test_stats_count_only_visible_photos(self, client):
         PhotoFactory(year=1994)
-        PhotoFactory(year=1995, rights_confirmed=False)
         PhotoFactory(year=1996, status=Status.DRAFT)
 
         response = client.get(reverse("core:home"))
@@ -72,17 +71,23 @@ class TestHome:
 
         assert len(response.context["latest_photos"]) == HOME_PHOTO_LIMIT
 
-    def test_draft_and_unconfirmed_photos_are_not_shown(self, client):
+    def test_draft_photos_are_not_shown(self, client):
         visible = PhotoFactory()
-        hidden = PhotoFactory(rights_confirmed=False)
         draft = PhotoFactory(status=Status.DRAFT)
 
         response = client.get(reverse("core:home"))
         shown = list(response.context["latest_photos"])
 
         assert visible in shown
-        assert hidden not in shown
         assert draft not in shown
+
+    def test_photo_without_rights_is_shown(self, client):
+        """Права проверяет автор, а не сервер: флаг видимость не меняет."""
+        without_rights = PhotoFactory(rights_confirmed=False)
+
+        response = client.get(reverse("core:home"))
+
+        assert without_rights in response.context["latest_photos"]
 
     def test_empty_archive_shows_empty_state(self, client):
         response = client.get(reverse("core:home"))

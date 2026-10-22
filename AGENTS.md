@@ -188,11 +188,13 @@ constructor". Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.16.0; development branch `master`; 940 tests passing on Python 3.12 and 3.13
+- Version: 0.17.0; development branch `master`; 1026 tests passing on Python 3.12 and 3.13
   (`make test`); linter clean (`make lint`).
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
-  sub-stages 2.1–2.15 are done. Stage 3 (photo processing) has started: decisions are
-  agreed, sub-stages 3.1–3.6 are planned, the next one is 3.1 (processing foundation).
+  sub-stages 2.1–2.15 are done. Stage 3 (photo processing) has started: sub-stage 3.1
+  (processing foundation) is complete — EXIF by allow-list, orientation, rotation, crop,
+  `display`, perceptual hash, backfill; previews come from `display`; `rights_confirmed` is
+  out of the visibility rule. The next one is 3.2 (user photo upload).
 
 ### Public UI
 
@@ -229,8 +231,9 @@ Components and pages. The rules for visibility, privacy and their reasoning live
   comes from the active locale via `date_format`, there are no separate month strings.
 - `/search/` (`search:index`, the `apps/search` app): infrastructure is sub-stage 2.12,
   the interface is 2.13.
-- Public queries: `SoftDeleteQuerySet.published()` (filters by `status=Status.PUBLISHED`),
-  `.visible()` (additionally `rights_confirmed=True` — for photos). Shared entry points live in
+- Public queries: `SoftDeleteQuerySet.published()` (filters by `status=Status.PUBLISHED`).
+  The `.visible()` method was **removed** in 3.1: after decision 2.1 it filtered nothing, and
+  an empty wrapper would lie to the reader. Shared entry points live in
   `apps/core/shortcuts.py`: `visible_photos()`, `archive_stats()`, `paginate()`,
   `photos_count()` and `get_visible_or_404(model, *, request=None, **lookup)`. The helper takes
   the model as a parameter and does not import app models — otherwise a cycle
@@ -378,10 +381,33 @@ filled by actions, not by hand.
   `attributes={"demo": true}`; `make seed-demo-flush` removes it. This is a development tool:
   demo data is never moved to production, and the deploy checklist includes "do not move demo
   data".
-- Public pages return published, non-deleted objects only: `Model.public.published()` (plus
-  `.visible()` for photos). Drafts never appear on any public page.
+- Public pages return published, non-deleted objects only: `Model.public.published()`.
+  Drafts never appear on any public page.
 - A new public page takes its queryset from `apps/core/shortcuts.py` instead of building the
   `public.published()` chain by hand: the filtering rule must live in one place.
+- **Pure photo-processing functions live in `apps/photos/processing.py`** and do not import
+  models, storage settings or Celery: PIL in → PIL out. The pipeline and field writes live in
+  `apps/photos/services.py`. There must be no second implementation: the backfill command and
+  the worker call the same `process_photo()`.
+- **The order of operations is fixed:** `exif_transpose` → user rotation → crop → `display`
+  preparation. Crop coordinates arrive in the "what the user sees" system (after EXIF
+  orientation); applied to raw pixels they would cut the wrong area.
+- **`display` is the only source of previews.** `thumbnail` and `preview` are `ImageSpecField`
+  with `source="display"`. Falling back to `original` is forbidden in previews, in `og:image`
+  and in JSON-LD: the original keeps EXIF and GPS. A photo without `display` shows a
+  placeholder.
+- **`Photo.rights_confirmed` does not affect visibility.** The author is responsible for
+  rights, not the server (decision 2.1); the field is a historical flag for the admin. A photo
+  is visible by `published` status and the absence of `deleted_at`.
+- **EXIF is stored by allow-list** (`apps/photos/exif.py`); the GPS IFD is never read.
+  `Artist` and `Copyright` stay as a hint for the moderator. The year from `DateTimeOriginal`
+  is a form value only, never written to the database on its own.
+- **A crop is `crop_data`, not a new file.** Garbage in the data (not a dict, unknown version,
+  coordinates outside the image, a crop smaller than 100 px) is treated as "no crop" with a
+  log warning: the service must not crash on browser input.
+- **A processing error never escapes:** `processing_status=failed` plus a short text in
+  `processing_error`, the stack goes to the log. Otherwise one broken file would stop the whole
+  backfill.
 - List filters live in `apps/catalog/filters.py`, not in templates and not in views: option
   lookups, parameter parsing and the `canonical` address live in one place, and the template
   gets a ready panel. An invalid parameter value counts as "filter not applied".
@@ -458,7 +484,7 @@ filled by actions, not by hand.
   indexed. The trigram index keeps the raw fields, so hiding there is done by the query
   filter: public search results must go through `public.published()` and respect
   `name_visibility`.
-- Drafts and photos without confirmed rights are indexed as usual: publication is filtered by
+- Drafts are indexed as usual: publication is filtered by
   the queryset, not by the index. Reindexing on every status change would mean extra writes.
 - User input is turned into a query by `build_search_query()`: words are cleaned with a
   regular expression (`&`, `|`, `!`, `:` are part of the `tsquery` language), and each word

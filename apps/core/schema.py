@@ -132,9 +132,11 @@ def photo_schema(request, photo) -> dict | None:
     """`ImageObject` для страницы фотографии.
 
     `contentUrl` — превью, а не оригинал: поисковику нужна картинка,
-    которую он покажет в выдаче, а не многомегабайтный скан.
+    которую он покажет в выдаче, а не многомегабайтный скан. Фото без
+    `display` не имеет превью — блок не отдаётся вовсе, а не подменяется
+    оригиналом (там EXIF и GPS).
     """
-    image = photo.preview or photo.original
+    image = photo.preview
     try:
         content_url = absolute(request, image.url)
     except (OSError, ValueError):

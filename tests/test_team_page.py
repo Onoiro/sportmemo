@@ -125,7 +125,6 @@ class TestTeamPhotos:
     def test_shows_only_visible_photos(self, client, team):
         team.publish()
         shown = PhotoFactory(team=team, title="Видимое фото команды")
-        PhotoFactory(team=team, title="Без прав", rights_confirmed=False)
         PhotoFactory(team=team, title="Черновик фото", status=Status.DRAFT)
         deleted = PhotoFactory(team=team, title="Удалённое фото команды")
         deleted.soft_delete()
@@ -135,12 +134,20 @@ class TestTeamPhotos:
 
         assert shown.title in html
         for title in (
-            "Без прав",
             "Черновик фото",
             "Удалённое фото команды",
             "Чужое фото",
         ):
             assert title not in html
+
+    def test_photo_without_rights_is_shown(self, client, team):
+        """Права проверяет автор: исторический флаг видимость не меняет."""
+        team.publish()
+        photo = PhotoFactory(team=team, title="Без прав", rights_confirmed=False)
+
+        html = client.get(team.get_absolute_url()).content.decode()
+
+        assert photo.title in html
 
     def test_gallery_keeps_team_filter_in_more_link(self, client, team):
         team.publish()

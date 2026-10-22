@@ -3,7 +3,7 @@ DC := docker compose
 
 .PHONY: help install lint format format-check test test-cov migrate migrations shell superuser \
         run collectstatic messages compile i18n seed-demo seed-demo-flush search-reindex \
-        up down down-clean restart build rebuild logs ps
+        photos-backfill up down down-clean restart build rebuild logs ps
 
 help: ## Показать доступные команды
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -62,6 +62,13 @@ seed-demo-flush: ## Удалить демо-данные и их файлы
 
 search-reindex: ## Пересчитать поисковый индекс архива
 	$(MANAGE) search_reindex
+
+# ======================================================================
+# Обработка фото
+# ======================================================================
+
+photos-backfill: ## Обработать фото без версии для показа и перцептивного хеша
+	$(MANAGE) photos_backfill
 
 # ======================================================================
 # Локализация

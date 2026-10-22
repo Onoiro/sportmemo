@@ -8,6 +8,7 @@ from pathlib import Path
 from tomllib import load as toml_load
 
 import environ
+from PIL import Image
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -203,7 +204,16 @@ STORAGES = {
     },
 }
 
-# --- Файлы: MinIO (S3) ---
+# --- Файлы: лимиты и MinIO (S3) ---
+# Предел распаковки задаёт Pillow, а не форма: файл может прийти мимо формы
+# (админка, команда, воркер), и тогда защита от «бомбы сжатия» нужна в одном
+# месте. 60 Мпикс — 48 МП телефона плюс запас; скан A4 600 dpi даёт 35 Мпикс.
+Image.MAX_IMAGE_PIXELS = 60_000_000
+
+# Задел под пакетную загрузку (10 файлов + запас): Django считает число
+# файлов в одном запросе и отклоняет запрос целиком.
+DATA_UPLOAD_MAX_NUMBER_FILES = 12
+
 USE_S3 = env("USE_S3")
 if USE_S3:
     AWS_ACCESS_KEY_ID = env("MINIO_ACCESS_KEY")
@@ -243,6 +253,9 @@ CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=DEBUG)
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
+# Два воркера, а не по числу ядер: декодирование 48 Мпикс в RGB — это ~144 МБ
+# на фото, и на VPS с 4 ГБ памяти воркер по числу ядер падал бы по OOM.
+CELERY_WORKER_CONCURRENCY = 2
 
 # --- Логирование ---
 LOGGING = {

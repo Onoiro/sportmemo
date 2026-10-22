@@ -1,9 +1,13 @@
 """Модели фотографий: источник, фото, люди на фото."""
 
+import uuid
+from pathlib import Path
+
 from django.conf import settings
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVectorField
 from django.db import models
+from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.utils.translation import gettext_lazy as _
 from imagekit.models import ImageSpecField
@@ -12,9 +16,40 @@ from simple_history.models import HistoricalRecords
 
 from apps.core.models import (
     SoftDeleteModel,
+    Status,
     StatusModel,
     TimeStampedModel,
 )
+
+
+def _upload_path(kind, filename):
+    """UUID-имя файла: `photos/<kind>/YYYY/MM/<uuid><ext>`.
+
+    Исходное имя не используется: оно бывает кириллическим, повторяется
+    у разных людей и раскрывает содержимое альбома. Расширение оставляем —
+    по нему хранилище отдаёт правильный `Content-Type`.
+
+    Дата подставляется здесь, а не строкой `upload_to`: `strftime`
+    Django применяет только к строковому `upload_to`, а не к функции.
+    """
+    suffix = Path(filename).suffix.lower()
+    stamp = timezone.now().strftime("%Y/%m")
+    return f"photos/{kind}/{stamp}/{uuid.uuid4().hex}{suffix}"
+
+
+def photo_original_path(instance, filename):
+    """Путь оригинала: байт в байт как загружен, с UUID-именем."""
+    return _upload_path("original", filename)
+
+
+def photo_display_path(instance, filename):
+    """Путь версии для показа — единственного источника превью."""
+    return _upload_path("display", filename)
+
+
+def photo_processed_path(instance, filename):
+    """Путь будущей обработки (автоуровни, реставрация)."""
+    return _upload_path("processed", filename)
 
 
 class SourceKind(models.TextChoices):
@@ -128,21 +163,49 @@ class Photo(TimeStampedModel, StatusModel, SoftDeleteModel):
     title = models.CharField(_("заголовок"), max_length=300, blank=True)
     caption = models.TextField(_("подпись"), blank=True)
 
-    original = models.ImageField(_("оригинал"), upload_to="photos/original/%Y/%m/")
+    original = models.ImageField(
+        _("оригинал"), upload_to=photo_original_path, max_length=255
+    )
     processed = models.ImageField(
         _("обработанная версия"),
-        upload_to="photos/processed/%Y/%m/",
+        upload_to=photo_processed_path,
+        max_length=255,
         null=True,
         blank=True,
     )
     display = models.ImageField(
-        _("версия для показа"), upload_to="photos/display/%Y/%m/", null=True, blank=True
+        _("версия для показа"),
+        upload_to=photo_display_path,
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text=_(
+            "Нормализованный оригинал или кроп без EXIF, JPEG до 1280 px. "
+            "Единственный источник превью: без него фото показывается "
+            "заглушкой."
+        ),
+    )
+    original_filename = models.CharField(
+        _("исходное имя файла"),
+        max_length=255,
+        blank=True,
+        help_text=_("Как файл назывался у автора. Хранится для поиска в админке."),
     )
 
     width = models.PositiveIntegerField(_("ширина"), null=True, blank=True)
     height = models.PositiveIntegerField(_("высота"), null=True, blank=True)
     phash = models.CharField(
         _("перцептивный хеш"), max_length=64, blank=True, db_index=True
+    )
+    crop_data = models.JSONField(
+        _("данные кропа"),
+        default=dict,
+        blank=True,
+        help_text=_(
+            "Инструкция обработки, а не новый оригинал: "
+            '{"version": 1, "x", "y", "width", "height", "rotate"}. '
+            "Пустой словарь — без кропа."
+        ),
     )
 
     duplicate_of = models.ForeignKey(
@@ -163,7 +226,14 @@ class Photo(TimeStampedModel, StatusModel, SoftDeleteModel):
     )
     processing_error = models.TextField(_("ошибка обработки"), blank=True)
 
-    rights_confirmed = models.BooleanField(_("права подтверждены"), default=False)
+    rights_confirmed = models.BooleanField(
+        _("права подтверждены"),
+        default=False,
+        help_text=_(
+            "Исторический флаг для админки: на видимость фото не влияет. "
+            "Ответственность за контент несёт автор (Правила сервиса)."
+        ),
+    )
     rights_confirmed_at = models.DateTimeField(
         _("дата подтверждения прав"), null=True, blank=True
     )
@@ -176,19 +246,24 @@ class Photo(TimeStampedModel, StatusModel, SoftDeleteModel):
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("загрузил"),
-        on_delete=models.PROTECT,
+        null=True,
+        # Архив важнее аккаунта: фото остаются анонимными, а не исчезают.
+        # `blank=False` намеренно — в админке автор по-прежнему обязателен.
+        on_delete=models.SET_NULL,
         related_name="uploaded_photos",
     )
 
     # Превью генерируются лениво и кэшируются в хранилище (MinIO).
+    # Источник — `display`, а не оригинал: пользователь кроит и поворачивает
+    # кадр, и в галерее он должен видеть результат, а не исходный файл.
     thumbnail = ImageSpecField(
-        source="original",
+        source="display",
         processors=[ResizeToFit(width=400, height=400)],
         format="JPEG",
         options={"quality": 82},
     )
     preview = ImageSpecField(
-        source="original",
+        source="display",
         processors=[ResizeToFit(width=1280, height=1280)],
         format="JPEG",
         options={"quality": 85},
@@ -235,10 +310,12 @@ class Photo(TimeStampedModel, StatusModel, SoftDeleteModel):
 
     @property
     def is_public(self) -> bool:
-        """Фото публикуется только при подтверждённых правах."""
-        return (
-            self.status == "published" and self.rights_confirmed and not self.is_deleted
-        )
+        """Фото публично, если опубликовано и не удалено.
+
+        Права на фото проверяет автор, а не сервер (решение 2.1):
+        `rights_confirmed` — исторический флаг и на видимость не влияет.
+        """
+        return self.status == Status.PUBLISHED and not self.is_deleted
 
     def save(self, *args, **kwargs):
         if not self.year and self.taken_date:

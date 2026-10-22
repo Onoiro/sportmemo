@@ -117,6 +117,10 @@ class PhotoFactory(factory.django.DjangoModelFactory):
     sport = factory.SubFactory(SportFactory)
     title = factory.Sequence(lambda n: f"Фото {n}")
     original = factory.LazyFunction(make_image_file)
+    # Превью строятся от `display`, поэтому без него карточка в тестах
+    # была бы пустой. Настоящая обработка здесь не нужна: проверяется
+    # публичное поведение страниц, а не пайплайн.
+    display = factory.LazyFunction(lambda: make_image_file("display.jpg"))
     uploaded_by = factory.SubFactory(UserFactory)
     rights_confirmed = True
     rights_confirmed_at = factory.LazyFunction(timezone.now)

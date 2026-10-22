@@ -1,7 +1,8 @@
-"""Тесты публичных выборок: `published()`, `visible()` и хелперы.
+"""Тесты публичных выборок: `published()` и хелперы.
 
-Правило проекта: наружу отдаём только опубликованное, без удалённых
-и слитых объектов, а фото — только с подтверждёнными правами.
+Правило проекта: наружу отдаём только опубликованное и не удалённое.
+Права на фото проверяет автор, а не сервер (решение 2.1): `rights_confirmed`
+на видимость не влияет.
 """
 
 import pytest
@@ -51,43 +52,47 @@ class TestPublished:
         assert Photo.public.published().filter(pk=photo.pk).exists()
 
 
-class TestVisible:
-    def test_keeps_only_photos_with_confirmed_rights(self, photo):
+class TestPhotoVisibility:
+    def test_photo_without_rights_is_visible(self, photo):
+        """Исторический флаг не влияет: фото опубликовано — значит видно."""
         without_rights = PhotoFactory(rights_confirmed=False)
 
-        found = Photo.public.published().visible()
+        found = Photo.public.published()
 
-        assert list(found) == [photo]
-        assert not found.filter(pk=without_rights.pk).exists()
+        assert set(found) == {photo, without_rights}
 
-    def test_draft_photo_with_rights_is_not_visible(self, photo):
+    def test_draft_photo_is_not_visible(self, photo):
         photo.status = Status.DRAFT
         photo.save(update_fields=["status"])
 
-        assert not Photo.public.published().visible().filter(pk=photo.pk).exists()
+        assert not Photo.public.published().filter(pk=photo.pk).exists()
 
-    def test_hidden_photo_with_rights_is_not_visible(self, photo):
+    def test_hidden_photo_is_not_visible(self, photo):
         photo.hide()
 
-        assert not Photo.public.published().visible().filter(pk=photo.pk).exists()
+        assert not Photo.public.published().filter(pk=photo.pk).exists()
 
-    def test_deleted_photo_with_rights_is_not_visible(self, photo):
+    def test_deleted_photo_is_not_visible(self, photo):
         photo.soft_delete()
 
-        assert not Photo.public.published().visible().filter(pk=photo.pk).exists()
+        assert not Photo.public.published().filter(pk=photo.pk).exists()
 
 
 class TestShortcutQueries:
     def test_visible_photos_is_the_public_chain(self, photo):
-        PhotoFactory(rights_confirmed=False)
         PhotoFactory(status=Status.DRAFT)
 
         assert list(visible_photos()) == [photo]
 
+    def test_visible_photos_keeps_photo_without_rights(self, photo):
+        without_rights = PhotoFactory(rights_confirmed=False)
+
+        assert set(visible_photos()) == {photo, without_rights}
+
     def test_archive_stats_count_only_public_objects(self, baseball, user, photo):
         TeamFactory(sport=baseball, created_by=user, status=Status.PUBLISHED)
         TeamFactory(sport=baseball, created_by=user, status=Status.DRAFT)
-        PhotoFactory(year=1994, rights_confirmed=False)
+        PhotoFactory(year=1994, status=Status.DRAFT)
 
         stats = archive_stats()
 

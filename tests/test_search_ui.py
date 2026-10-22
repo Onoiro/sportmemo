@@ -292,12 +292,13 @@ class TestPrivacy:
 
         assert list(group(result, "teams").items) == [target]
 
-    def test_photo_without_rights_is_not_found(self, client):
+    def test_photo_without_rights_is_found(self, client):
+        """Права проверяет автор: поиск их не учитывает."""
         PhotoFactory(title="Громовский финал", rights_confirmed=False)
 
         result = search(client, "громовский").context["result"]
 
-        assert result.total == 0
+        assert result.total == 1
 
     def test_draft_photo_is_not_found(self, client):
         PhotoFactory(title="Громовский финал", status=Status.DRAFT)

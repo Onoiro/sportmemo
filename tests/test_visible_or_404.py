@@ -79,25 +79,34 @@ class TestDraftObject:
             get_visible_or_404(Team, request=ANONYMOUS, slug=team.slug)
 
 
-class TestPhotoRights:
-    def test_photo_without_rights_is_hidden_from_anonymous(self, photo):
+class TestPhotoVisibility:
+    def test_photo_without_rights_is_shown_to_anonymous(self, photo):
+        """`rights_confirmed` — исторический флаг, видимость не меняет."""
         photo.rights_confirmed = False
         photo.save(update_fields=["rights_confirmed"])
+
+        found = get_visible_or_404(Photo, request=ANONYMOUS, pk=photo.pk)
+
+        assert found == photo
+
+    def test_draft_photo_is_hidden_from_anonymous(self, photo):
+        photo.status = Status.DRAFT
+        photo.save(update_fields=["status"])
 
         with pytest.raises(Http404):
             get_visible_or_404(Photo, request=ANONYMOUS, pk=photo.pk)
 
-    def test_photo_without_rights_is_shown_to_uploader(self, photo, user):
-        photo.rights_confirmed = False
-        photo.save(update_fields=["rights_confirmed"])
+    def test_draft_photo_is_shown_to_uploader(self, photo, user):
+        photo.status = Status.DRAFT
+        photo.save(update_fields=["status"])
 
         found = get_visible_or_404(Photo, request=_Request(user), pk=photo.pk)
 
         assert found == photo
 
-    def test_photo_without_rights_is_shown_to_moderator(self, photo, moderator):
-        photo.rights_confirmed = False
-        photo.save(update_fields=["rights_confirmed"])
+    def test_draft_photo_is_shown_to_moderator(self, photo, moderator):
+        photo.status = Status.DRAFT
+        photo.save(update_fields=["status"])
 
         found = get_visible_or_404(Photo, request=_Request(moderator), pk=photo.pk)
 

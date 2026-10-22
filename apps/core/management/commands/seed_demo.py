@@ -39,10 +39,10 @@ from apps.photos.models import (
     Photo,
     PhotoPerson,
     PhotoPersonRole,
-    ProcessingStatus,
     Source,
     SourceKind,
 )
+from apps.photos.services import process_photo
 
 DEMO_EMAIL = "demo@example.com"
 DEMO_MODERATOR_EMAIL = "demo-moderator@example.com"
@@ -540,10 +540,11 @@ EXPLICIT_PHOTOS = [
         "event": "chempionat-rossii-1994",
         "source": "Программа чемпионата России 1994",
         "size": (1200, 800),
-        # Права не подтверждены, но статус — «опубликовано»:
-        # проверяем правило «без прав не публикуется».
+        # Права не подтверждены — значит черновик. Правило «без прав
+        # не публикуется» отменено (решение 2.1), но опубликованное фото
+        # без прав в демо-архиве выглядело бы бессмысленно.
         "rights": False,
-        "status": Status.PUBLISHED,
+        "status": Status.DRAFT,
         "caption": "Вырезка без указания правообладателя.",
     },
     {
@@ -554,7 +555,7 @@ EXPLICIT_PHOTOS = [
         "source": "Цифровой архив «Тихоокеанских крабов»",
         "size": (1200, 800),
         "rights": False,
-        "status": Status.PUBLISHED,
+        "status": Status.DRAFT,
         "caption": "Цифровой кадр без подтверждённых прав.",
     },
     {
@@ -564,7 +565,7 @@ EXPLICIT_PHOTOS = [
         "source": "Плёнка из архива клуба",
         "size": (800, 1200),
         "rights": False,
-        "status": Status.PUBLISHED,
+        "status": Status.DRAFT,
         "caption": "Кадр с плёнки, права уточняются.",
     },
     {
@@ -968,7 +969,6 @@ class Command(BaseCommand):
             team = teams.get(spec.get("team")) if spec.get("team") else None
             event = events.get(spec.get("event")) if spec.get("event") else None
             source = sources.get(spec.get("source")) if spec.get("source") else None
-            width, height = spec["size"]
             now = timezone.now()
             defaults = {
                 "sport": self.sport,
@@ -978,11 +978,8 @@ class Command(BaseCommand):
                 "year": spec["year"],
                 "title": spec["title"],
                 "caption": spec.get("caption", ""),
-                "width": width,
-                "height": height,
                 "rights_confirmed": spec["rights"],
                 "rights_confirmed_at": now if spec["rights"] else None,
-                "processing_status": ProcessingStatus.PROCESSED,
                 "uploaded_by": self.demo_user,
             }
             photo = Photo.objects.filter(
@@ -1005,6 +1002,9 @@ class Command(BaseCommand):
                 for key, value in defaults.items():
                     setattr(photo, key, value)
                 photo.save()
+            # Демо-архив проходит тот же пайплайн, что и настоящая загрузка:
+            # размеры, `display` и `phash` считает обработка, а не команда.
+            process_photo(photo)
             self._publish(photo, spec["status"])
             photos.append(photo)
         return photos

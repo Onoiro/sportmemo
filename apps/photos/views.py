@@ -65,15 +65,17 @@ def photo_detail(request, pk):
             description=photo.caption
             or photo.title
             or _("Фотография из архива SportMemo"),
-            image=photo.preview if photo.preview else photo.original,
+            # Только превью: откат на оригинал означал бы, что в `og:image`
+            # уходит файл с EXIF и GPS. Нет превью — общая заглушка сайта.
+            image=photo.preview,
             image_alt=title,
             og_type="article",
-            # Черновик и фото без подтверждённых прав открываются только
-            # автору и модератору — в поиске им делать нечего.
+            # Черновик открывается только автору и модератору —
+            # в поиске ему делать нечего.
             noindex=not photo.is_public,
         ),
-        # Разметка только у публичного фото: черновик и фото без прав
-        # открываются лишь автору и модератору.
+        # Разметка только у публичного фото: черновик открывается лишь
+        # автору и модератору.
         "jsonld_blocks": compact(
             photo_schema(request, photo) if photo.is_public else None
         ),

@@ -1,9 +1,8 @@
 """Хелперы публичных выборок и пагинации.
 
 Правило проекта: наружу отдаём только опубликованное, без удалённых и слитых
-объектов, а фото — только с подтверждёнными правами. Здесь живут общие точки
-входа в это правило, чтобы каждая страница не собирала цепочку
-`public.published()` по-своему.
+объектов. Здесь живут общие точки входа в это правило, чтобы каждая страница
+не собирала цепочку `public.published()` по-своему.
 """
 
 from django.core.paginator import Paginator
@@ -22,17 +21,16 @@ PHOTO_ORDERING = ("-created_at",)
 def photos_count():
     """Аннотация «сколько видимых фото привязано к объекту».
 
-    Права и статус проверяются в самой аннотации: счётчик не должен
-    учитывать черновики и фото без подтверждённых прав. `distinct=True`
-    обязателен — без него `Count` по обратной связи размножает строки.
-    Живёт здесь, а не в `catalog/views.py`: ту же аннотацию использует
-    страница года, и общая точка не даёт двум счётчикам разойтись.
+    Статус проверяется в самой аннотации: счётчик не должен учитывать
+    черновики. `distinct=True` обязателен — без него `Count` по обратной
+    связи размножает строки. Живёт здесь, а не в `catalog/views.py`: ту же
+    аннотацию использует страница года, и общая точка не даёт двум счётчикам
+    разойтись.
     """
     return Count(
         "photos",
         filter=Q(
             photos__status=Status.PUBLISHED,
-            photos__rights_confirmed=True,
             photos__deleted_at__isnull=True,
         ),
         distinct=True,
@@ -50,7 +48,7 @@ def visible_photos():
     """
     from apps.photos.models import Photo
 
-    return Photo.public.published().visible()
+    return Photo.public.published()
 
 
 def archive_stats():
@@ -95,12 +93,13 @@ def paginate(request, queryset, per_page):
 
 
 def _is_publicly_visible(obj):
-    """Опубликован ли объект и подтверждены ли права (для фото)."""
-    if not getattr(obj, "is_published", False):
-        return False
-    if hasattr(obj, "rights_confirmed") and not obj.rights_confirmed:
-        return False
-    return True
+    """Опубликован ли объект.
+
+    Права на фото здесь не проверяются: ответственность за контент несёт
+    автор (решение 2.1), а `rights_confirmed` — исторический флаг для
+    админки.
+    """
+    return bool(getattr(obj, "is_published", False))
 
 
 def _is_owner(obj, user):

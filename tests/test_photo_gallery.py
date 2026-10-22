@@ -38,7 +38,6 @@ class TestGridFragment:
 
     def test_shows_only_visible_photos(self, client):
         shown = PhotoFactory(title="Видимое фото")
-        PhotoFactory(title="Без прав", rights_confirmed=False)
         PhotoFactory(title="Черновик", status=Status.DRAFT)
         deleted = PhotoFactory(title="Удалённое фото")
         deleted.soft_delete()
@@ -46,8 +45,16 @@ class TestGridFragment:
         html = client.get(reverse("photos:grid")).content.decode()
 
         assert shown.title in html
-        for title in ("Без прав", "Черновик", "Удалённое фото"):
+        for title in ("Черновик", "Удалённое фото"):
             assert title not in html
+
+    def test_photo_without_rights_is_shown(self, client):
+        """Права проверяет автор: исторический флаг видимость не меняет."""
+        photo = PhotoFactory(title="Без прав", rights_confirmed=False)
+
+        html = client.get(reverse("photos:grid")).content.decode()
+
+        assert photo.title in html
 
     def test_filters_by_year(self, client):
         shown = PhotoFactory(year=1994, title="Фото 1994")
@@ -222,11 +229,23 @@ class TestPhotoDetail:
 
         assert client.get(photo.get_absolute_url()).status_code == 200
 
-    def test_without_rights_is_404_for_anonymous(self, client, photo):
+    def test_photo_without_rights_opens_anonymously(self, client, photo):
+        """Исторический флаг видимость не меняет: фото опубликовано."""
         photo.rights_confirmed = False
         photo.save()
 
-        assert client.get(photo.get_absolute_url()).status_code == 404
+        assert client.get(photo.get_absolute_url()).status_code == 200
+
+    def test_photo_without_display_shows_placeholder(self, client, photo):
+        """Фото без `display` не падает: превью нет — картинка-заглушка."""
+        photo.display.delete(save=True)
+
+        response = client.get(photo.get_absolute_url())
+        html = response.content.decode()
+
+        assert response.status_code == 200
+        assert "og-default.png" in html
+        assert "photos/original/" not in html
 
     def test_deleted_is_404_for_uploader(self, client, photo, user):
         photo.soft_delete()

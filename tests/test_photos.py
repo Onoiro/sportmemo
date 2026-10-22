@@ -1,4 +1,4 @@
-"""Тесты фотографий: права, дубликаты, превью, люди на фото."""
+"""Тесты фотографий: видимость, дубликаты, превью, люди на фото."""
 
 import pytest
 from django.core.exceptions import ValidationError
@@ -30,8 +30,11 @@ class TestSource:
         assert not Source.public.filter(pk=source.pk).exists()
 
 
-class TestPhotoRights:
-    def test_photo_without_rights_is_not_public(self, baseball, user):
+class TestPhotoVisibility:
+    def test_photo_without_rights_is_public(self, baseball, user):
+        """Права проверяет автор, а не сервер (решение 2.1):
+        исторический флаг на видимость не влияет.
+        """
         photo = Photo.objects.create(
             sport=baseball,
             title="Без прав",
@@ -41,7 +44,7 @@ class TestPhotoRights:
             rights_confirmed=False,
         )
 
-        assert not photo.is_public
+        assert photo.is_public
 
     def test_photo_with_rights_and_published_is_public(self, photo):
         assert photo.is_public
@@ -144,6 +147,35 @@ class TestPhotoThumbnails:
 
         assert preview.name
         assert preview.width <= 1280
+
+    def test_previews_are_built_from_display(self, baseball, user):
+        """Пользователь кроит кадр — в галерее он видит результат, а не
+        исходный файл: превью строятся от `display`.
+        """
+        photo = Photo.objects.create(
+            sport=baseball,
+            title="Кроп",
+            original=make_image_file("original.jpg", size=(120, 80)),
+            display=make_image_file("display.jpg", size=(60, 40)),
+            uploaded_by=user,
+            status=Status.PUBLISHED,
+        )
+
+        assert "photos/display/" in photo.thumbnail.name
+        assert "photos/display/" in photo.preview.name
+
+    def test_photo_without_display_has_no_preview(self, baseball, user):
+        """Фото без `display` не падает: шаблон покажет заглушку."""
+        photo = Photo.objects.create(
+            sport=baseball,
+            title="Без версии для показа",
+            original=make_image_file(),
+            uploaded_by=user,
+            status=Status.PUBLISHED,
+        )
+
+        assert not photo.thumbnail
+        assert not photo.preview
 
 
 class TestPhotoPerson:
