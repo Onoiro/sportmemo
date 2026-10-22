@@ -318,10 +318,19 @@ SportMemo — UGC-площадка и информационный посред�
 **Цель.** Научиться безопасно принимать файл и получать из него нормализованную версию
 для показа — без UI, без Celery. После подэтапа обработка работает из консоли.
 
+**Детальный план:** [`photo-processing-3.1-processing-foundation.md`](photo-processing-3.1-processing-foundation.md)
+(утверждён 2026-10-22, ветка `feature/photo-processing-foundation`).
+
+**Зависимости подэтапа (уточнено при планировании):** `numpy` и `pillow-heif`.
+`opencv-python-headless` **не ставится**: в 3.1 нет операций, которым он нужен
+(поворот, кроп, ресайз и DCT-хеш — Pillow + numpy). Вернуться к вопросу перед
+автоуровнями/CLAHE.
+
 **Объём.**
 
-- Зависимости: `opencv-python-headless`, `numpy`, `pillow-heif`. Свой phash на numpy
-  (без `imagehash` и `scipy`).
+- Зависимости: `numpy`, `pillow-heif`. Свой phash на numpy
+  (без `imagehash` и `scipy`). `opencv-python-headless` — позже, вместе
+  с первой операцией для него.
 - `apps/photos/exif.py`: разбор EXIF по белому списку, нормализация значений для JSONB,
   извлечение `DateTimeOriginal`, `Artist`, `Copyright`. GPS отбрасывается.
 - `apps/photos/processing.py`: `normalize_orientation()`, `apply_rotation()`,
@@ -341,6 +350,8 @@ SportMemo — UGC-площадка и информационный посред�
 - `og:image` и JSON-LD: убрать откат на `original`.
 - `rights_confirmed` убрать из условия видимости (`Photo.is_public`,
   `visible_photos()`, `photos_count()`, `_is_publicly_visible`).
+  `SoftDeleteQuerySet.visible()` удаляется: после этого решения он не фильтрует
+  ничего, а пустая обёртка соврала бы читателю.
 
 **Файлы:** `pyproject.toml`, `uv.lock`, `config/settings.py`, `config/__init__.py`,
 `apps/photos/exif.py`, `apps/photos/processing.py`, `apps/photos/services.py`,
@@ -608,7 +619,7 @@ SportMemo — UGC-площадка и информационный посред�
 
 | # | Подэтап | Размер | Semver | Статус |
 |---|---|---|---|---|
-| 3.1 | Фундамент обработки | L | minor | [ ] |
+| 3.1 | Фундамент обработки | L | minor | план утверждён, реализация не начата |
 | 3.2 | Загрузка фото пользователем | L | minor | [ ] |
 | 3.3 | Celery-пайплайн | M | minor | [ ] |
 | 3.4 | Коррекция кадра в браузере | L | minor | [ ] |
