@@ -134,11 +134,12 @@ match), then delete with `git branch -D`.
 |---|---|---|
 | 1 | Foundation: data schema, admin, tests, CI | complete |
 | 2 | Public archive: layout, pages, galleries, search, comments, sign-up UI | in progress |
-| 3 | Photo processing: frame correction (OpenCV), Celery pipeline, perceptual hash, duplicate merge | planned |
+| 3 | Photo processing: user upload, frame correction, server pipeline, Celery, perceptual hash, duplicate merge | in progress |
 | 4 | Mobile PWA, legal layer, deployment, backups, monitoring | planned |
 
 Details in `.koda/plans/foundation-and-data-model.md` (stage 1),
-`.koda/plans/public-archive.md` (stage 2 master plan) and `.koda/backlog.md`.
+`.koda/plans/public-archive.md` (stage 2 master plan),
+`.koda/plans/photo-processing.md` (stage 3 master plan) and `.koda/backlog.md`.
 
 **Stage 2 is split into 16 sub-stages**, one session each (sub-stage 2.8 is split in two parts:
 2.8a — sign-up, login and password; 2.8b — user profile and menu). A sub-stage plan is created
@@ -151,17 +152,47 @@ Open Graph), 2.11 (sitemap, robots and Schema.org), 2.12 (search: infrastructure
 2.13 (search: interface), 2.14 (comments and reports in the UI) and 2.15 (catalog filters)
 are complete. Stage 2 (public archive) is closed.
 
+**Stage 3 is split into six sub-stages** plus a deferred batch upload. The master plan is
+[`plans/photo-processing.md`](.koda/plans/photo-processing.md); it also records the decisions
+agreed before work started. Order: 3.1 processing foundation → 3.2 photo upload → 3.3 Celery
+pipeline → 3.4 in-browser crop → 3.5 perceptual hash → 3.6 duplicate merge. A sub-stage plan
+is created as a separate file when work on it starts
+(`plans/photo-processing-3.N-<name>.md`).
+
+**Stage 3 decisions that must not be broken:**
+
+- **Photo rights — "simplified UGC".** There are no declared-rights fields and no licence
+  choice: responsibility for content moves into the Terms of Service, and the upload button
+  is followed by a note about the service rules. The moderator checks relevance and field
+  quality only, not rights. `rights_confirmed` no longer takes part in the visibility
+  condition — it is a historical flag for the admin. Rights-holder claims and "this is me"
+  reports go through the existing report flow (`COPYRIGHT` and `PRIVACY`).
+- **The original is untouchable.** A crop is `crop_data` (versioned JSON), not a new file.
+  Public versions (`thumbnail`, `preview`) are built from `display`, not from `original`.
+  The original never appears in public markup or in `og:image`.
+- **Processing order:** `exif_transpose` → user rotation (0/90/180/270 only) → crop →
+  `display` preparation. Breaking the order shifts the frame on phone photos.
+- **A merged photo returns 301 to the canonical one** if the canonical is public, otherwise
+  404. Merge chains are forbidden: the merge target is always canonical
+  (`merged_into__isnull=True`).
+- **EXIF is stored by allow-list**, GPS is never stored. `Artist` and `Copyright` stay as
+  hints for the moderator. A year from `DateTimeOriginal` only pre-fills the form, it is not
+  written to the database.
+- **`Photo.uploaded_by` is `SET_NULL`:** the archive matters more than the account, photos
+  stay anonymous. Account deletion is anonymisation, not `DELETE`.
+
 ## Deliberately deferred
 
 Not doing until needed: API (DRF/django-ninja), SPA, k8s, microservices, multi-sport UI, a "sport
-constructor". Photo processing is stage 3. Legal pages and SMTP are stage 4.
+constructor". Legal pages and SMTP are stage 4.
 
 ## Current state
 
 - Version: 0.16.0; development branch `master`; 940 tests passing on Python 3.12 and 3.13
   (`make test`); linter clean (`make lint`).
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
-  sub-stages 2.1–2.15 are done.
+  sub-stages 2.1–2.15 are done. Stage 3 (photo processing) has started: decisions are
+  agreed, sub-stages 3.1–3.6 are planned, the next one is 3.1 (processing foundation).
 
 ### Public UI
 
