@@ -922,6 +922,10 @@ make plan-step PLAN=.koda/plans/photo-processing-3.2-photo-upload.md STEP=1
 make plan-all  PLAN=.koda/plans/photo-processing-3.2-photo-upload.md BRANCH=feature/photo-upload
 ```
 
+Модель задаётся переменной `PLAN_MODEL` (по умолчанию `koda-pro`); уровень рассуждений
+берётся из `settings.json` — `low` для `koda-pro`, `medium` для `koda-base`. Исключение:
+`PLAN_MODEL=koda-base make plan-all PLAN=...`.
+
 Правила, которые скрипт проверяет сам:
 
 - работа идёт только в ветке, отличной от `master` (`--branch` создаёт её от `master`);

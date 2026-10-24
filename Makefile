@@ -86,35 +86,37 @@ i18n: messages compile ## Полный цикл локализации
 # ======================================================================
 # Пошаговое выполнение плана подэтапа (каждый шаг — новая сессия Koda)
 #
-# PLAN — файл плана, BRANCH — ветка (по умолчанию feature/<имя плана>),
-# STEP — номер шага. Примеры:
+# PLAN — файл плана, BRANCH — ветка, STEP — номер шага,
+# PLAN_MODEL — модель (по умолчанию koda-pro). Примеры:
 #   make plan-list PLAN=.koda/plans/photo-processing-3.2-photo-upload.md
 #   make plan-step PLAN=... STEP=1
 #   make plan-all  PLAN=... BRANCH=feature/photo-upload
+#   PLAN_MODEL=koda-base make plan-all PLAN=...
 # ======================================================================
 
 RUN_PLAN := .koda/scripts/run-plan.sh
-PLAN_BRANCH = $(if $(BRANCH),--branch $(BRANCH),)
+PLAN_MODEL ?= koda-pro
+PLAN_OPTS = $(if $(BRANCH),--branch $(BRANCH),) --model $(PLAN_MODEL)
 
 plan-list: ## Показать шаги плана: PLAN=<файл>
 	$(RUN_PLAN) $(PLAN) --list
 
 plan-dry: ## Показать, что выполнит plan-all: PLAN=<файл>
-	$(RUN_PLAN) $(PLAN) --all --dry-run $(PLAN_BRANCH)
+	$(RUN_PLAN) $(PLAN) --all --dry-run $(PLAN_OPTS)
 
 plan-step: ## Выполнить один шаг: PLAN=<файл> STEP=<номер>
 	@test -n "$(PLAN)" || { echo "укажите PLAN=<файл плана>"; exit 1; }
 	@test -n "$(STEP)" || { echo "укажите STEP=<номер шага>"; exit 1; }
-	$(RUN_PLAN) $(PLAN) --step $(STEP) $(PLAN_BRANCH)
+	$(RUN_PLAN) $(PLAN) --step $(STEP) $(PLAN_OPTS)
 
 plan-from: ## Выполнить шаги начиная с STEP: PLAN=<файл> STEP=<номер>
 	@test -n "$(PLAN)" || { echo "укажите PLAN=<файл плана>"; exit 1; }
 	@test -n "$(STEP)" || { echo "укажите STEP=<номер шага>"; exit 1; }
-	$(RUN_PLAN) $(PLAN) --from $(STEP) $(PLAN_BRANCH)
+	$(RUN_PLAN) $(PLAN) --from $(STEP) $(PLAN_OPTS)
 
 plan-all: ## Выполнить все невыполненные шаги: PLAN=<файл> [BRANCH=<ветка>]
 	@test -n "$(PLAN)" || { echo "укажите PLAN=<файл плана>"; exit 1; }
-	$(RUN_PLAN) $(PLAN) --all $(PLAN_BRANCH)
+	$(RUN_PLAN) $(PLAN) --all $(PLAN_OPTS)
 
 # ======================================================================
 # Docker
