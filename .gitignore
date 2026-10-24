@@ -30,6 +30,7 @@ htmlcov/
 
 # Koda CLI (сессионные данные; KODA.md и .koda/plans отслеживаются в git)
 .kodacli/
+.koda/logs/
 
 # Временное окружение для проверки на другой версии Python
 .venv313/
