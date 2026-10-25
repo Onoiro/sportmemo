@@ -16,6 +16,8 @@
     var FILE_FIELD = "[name='original']";
     var PREVIEW = "#photo-preview";
     var PREVIEW_IMAGE = "#photo-preview-image";
+    var PREVIEW_NOTE = "#photo-preview-note";
+    var PREVIEW_REMOVE = "#photo-preview-remove";
     var YEAR_FIELD = "#id_year";
     var YEAR_HINT = "#year-hint";
 
@@ -49,7 +51,23 @@
         }
         previewUrl = window.URL.createObjectURL(file);
         image.src = previewUrl;
+        image.hidden = false;
+        hideNote();
         box.hidden = false;
+    }
+
+    function showNote() {
+        var note = document.querySelector(PREVIEW_NOTE);
+        if (note) {
+            note.hidden = false;
+        }
+    }
+
+    function hideNote() {
+        var note = document.querySelector(PREVIEW_NOTE);
+        if (note) {
+            note.hidden = true;
+        }
     }
 
     function resetPreview() {
@@ -62,6 +80,7 @@
         if (image) {
             image.removeAttribute("src");
         }
+        hideNote();
         if (box) {
             box.hidden = true;
         }
@@ -145,6 +164,22 @@
         fillYear(file, token);
     }
 
+    /* Убрать выбранный файл: у поля файла нет нативной кнопки «очистить»,
+       и без этого человек, выбравший не тот снимок, ищет нужный заново. */
+    function onRemove() {
+        var input = document.querySelector(FILE_FIELD);
+        if (!input) {
+            return;
+        }
+        input.value = "";
+        requestId += 1;
+        resetPreview();
+        resetYearHint();
+        /* Фокус возвращаем на поле файла: иначе он остаётся на кнопке,
+           которой больше нет в разметке. */
+        input.focus();
+    }
+
     function init() {
         var form = root();
         if (!form) {
@@ -156,15 +191,18 @@
                 onFileChange(target);
             }
         });
+        var remove = document.querySelector(PREVIEW_REMOVE);
+        if (remove) {
+            remove.addEventListener("click", onRemove);
+        }
         /* HEIC умеет читать не каждый браузер: битая картинка в превью
-           выглядела бы поломкой формы, поэтому прячем контейнер. */
+           выглядела бы поломкой формы. Прячем саму картинку и говорим,
+           что файл выбран: контейнер с кнопкой «Убрать фото» остаётся. */
         var image = document.querySelector(PREVIEW_IMAGE);
         if (image) {
             image.addEventListener("error", function () {
-                var box = document.querySelector(PREVIEW);
-                if (box) {
-                    box.hidden = true;
-                }
+                image.hidden = true;
+                showNote();
             });
         }
     }

@@ -414,6 +414,30 @@ class TestTeamCreateNext:
         assert "Создать команду" in html
         assert f"{CREATE_URL}?next={self.UPLOAD_URL}" in html
 
+    def test_name_query_prefills_field(self, client, user, baseball):
+        """Ссылка «создать команду с таким названием» не должна заставлять
+        вводить его второй раз — там легко опечататься.
+        """
+        log_in(client, user)
+
+        html = client.get(CREATE_URL, {"name": "Неизвестные"}).content.decode()
+
+        assert 'value="Неизвестные"' in html
+
+    def test_name_query_is_trimmed(self, client, user, baseball):
+        log_in(client, user)
+
+        html = client.get(CREATE_URL, {"name": "  Соколы  "}).content.decode()
+
+        assert 'value="Соколы"' in html
+
+    def test_name_query_is_escaped(self, client, user, baseball):
+        log_in(client, user)
+
+        html = client.get(CREATE_URL, {"name": '"><script>x</script>'}).content.decode()
+
+        assert "<script>x</script>" not in html
+
 
 class TestTeamUpdate:
     def test_author_can_edit(self, client, team):

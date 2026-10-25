@@ -169,6 +169,19 @@ def next_with_team(url, team):
     )
 
 
+def initial_team_name(request):
+    """Название из `?name=` для формы создания команды.
+
+    Ссылка «создать команду с таким названием» стоит рядом с ошибкой
+    «не удалось найти»: человек не должен вводить то же название второй раз
+    и опечататься в нём.
+    """
+    value = (request.GET.get("name") or "").strip()
+    # Ограничение поля: длинное значение всё равно обрезалось бы браузером,
+    # но лучше не отдавать его в разметку целиком.
+    return value[:300]
+
+
 def can_edit_team(user, team) -> bool:
     """Может ли пользователь править команду.
 
@@ -471,7 +484,7 @@ def team_create(request):
                 return redirect(next_with_team(next_url, team))
             return redirect(team.get_absolute_url())
     elif sport is not None:
-        form = TeamForm(sport=sport)
+        form = TeamForm(sport=sport, initial={"name": initial_team_name(request)})
     else:
         form = None
 

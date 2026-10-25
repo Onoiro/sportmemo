@@ -2,6 +2,7 @@
 
 import io
 from datetime import timedelta
+from urllib.parse import quote
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -432,6 +433,31 @@ class TestPhotoUploadForm:
         assert form.cleaned_data["team"] is None
         assert form.cleaned_data["event"] is None
 
+    @pytest.mark.django_db
+    def test_help_text_explains_that_names_come_from_archive(self, user, baseball):
+        """Человек должен знать до отправки, что поле — выбор из архива."""
+        form = PhotoUploadForm(user=user, sport=baseball)
+
+        assert "появятся команды из архива" in str(form.fields["team_name"].help_text)
+        assert "появятся события из архива" in str(form.fields["event_name"].help_text)
+
+    @pytest.mark.django_db
+    def test_unresolved_team_is_remembered(self, user, baseball):
+        """Название нужно шаблону: по нему строится ссылка «создать»."""
+        form = _form(user, team_name="Неизвестные")
+
+        assert not form.is_valid()
+        assert form.unresolved["team_name"] == "Неизвестные"
+
+    @pytest.mark.django_db
+    def test_resolved_team_is_not_in_unresolved(self, user, baseball):
+        TeamFactory(name="Соколы", city="Москва", created_by=user)
+
+        form = _form(user, team_name="Соколы")
+
+        assert form.is_valid(), form.errors
+        assert form.unresolved == {}
+
 
 UPLOAD_URL = "/photos/upload/"
 MY_PHOTOS_URL = "/photos/mine/"
@@ -513,6 +539,29 @@ class TestPhotoUploadView:
         response = client.get(UPLOAD_URL, {"team": "999"})
 
         assert response.status_code == 200
+
+    def test_form_has_remove_photo_button(self, client, user, baseball):
+        """Без этой кнопки выбранный не тот файл не снять: у поля файла
+        нативной очистки нет.
+        """
+        client.force_login(user)
+
+        html = client.get(UPLOAD_URL).content.decode()
+
+        assert "Убрать фото" in html
+
+    def test_unresolved_team_offers_creation_link(self, client, user, baseball):
+        """Ошибка «не удалось найти» без выхода — тупик для новичка."""
+        client.force_login(user)
+
+        response = client.post(
+            UPLOAD_URL, {"original": make_upload(), "team_name": "Неизвестные"}
+        )
+
+        html = response.content.decode()
+        assert "Не удалось найти" in html
+        assert "Создать команду «Неизвестные»" in html
+        assert f"name={quote('Неизвестные')}" in html
 
     def test_put_is_not_allowed(self, client, user, baseball):
         client.force_login(user)

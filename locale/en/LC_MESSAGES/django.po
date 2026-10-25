@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-25 03:56+0300\n"
+"POT-Creation-Date: 2026-10-25 22:03+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -117,11 +117,11 @@ msgstr "users"
 msgid "Профиль обновлён"
 msgstr "Profile updated"
 
-#: apps/accounts/views.py:38 apps/catalog/views.py:221
-#: apps/catalog/views.py:246 apps/catalog/views.py:325
-#: apps/catalog/views.py:364 apps/catalog/views.py:436
-#: apps/catalog/views.py:493 apps/catalog/views.py:535
-#: apps/catalog/views.py:566 apps/core/views.py:114 apps/core/views.py:144
+#: apps/accounts/views.py:38 apps/catalog/views.py:234
+#: apps/catalog/views.py:259 apps/catalog/views.py:338
+#: apps/catalog/views.py:377 apps/catalog/views.py:449
+#: apps/catalog/views.py:506 apps/catalog/views.py:548
+#: apps/catalog/views.py:579 apps/core/views.py:114 apps/core/views.py:144
 #: apps/core/views.py:192 apps/moderation/views.py:111 apps/photos/views.py:119
 #: apps/photos/views.py:153 apps/photos/views.py:183 apps/search/views.py:40
 #: templates/partials/footer.html:20
@@ -260,7 +260,7 @@ msgstr "The description must not be longer than %(limit)s characters."
 msgid "Эмблема не должна быть больше %(limit)s МБ."
 msgstr "The logo must not be larger than %(limit)s MB."
 
-#: apps/catalog/forms.py:140 apps/photos/forms.py:180
+#: apps/catalog/forms.py:140 apps/photos/forms.py:189
 #, python-format
 msgid "Поддерживаются форматы: %(formats)s."
 msgstr "Supported formats: %(formats)s."
@@ -570,74 +570,74 @@ msgstr "Innings"
 msgid "Команд"
 msgstr "Teams"
 
-#: apps/catalog/views.py:214 apps/catalog/views.py:222
-#: apps/catalog/views.py:326 apps/catalog/views.py:494
-#: apps/catalog/views.py:536 apps/search/services.py:103
+#: apps/catalog/views.py:227 apps/catalog/views.py:235
+#: apps/catalog/views.py:339 apps/catalog/views.py:507
+#: apps/catalog/views.py:549 apps/search/services.py:103
 #: templates/catalog/team_list.html:11 templates/core/home.html:52
 #: templates/partials/footer.html:12 templates/partials/navbar.html:14
 msgid "Команды"
 msgstr "Teams"
 
-#: apps/catalog/views.py:216
+#: apps/catalog/views.py:229
 msgid "Команды архива SportMemo: города, годы основания и фотографии."
 msgstr "Teams in the SportMemo archive: cities, founding years and photos."
 
-#: apps/catalog/views.py:241 apps/catalog/views.py:247
-#: apps/catalog/views.py:365 apps/search/services.py:109
+#: apps/catalog/views.py:254 apps/catalog/views.py:260
+#: apps/catalog/views.py:378 apps/search/services.py:109
 #: templates/catalog/event_list.html:11 templates/partials/footer.html:13
 #: templates/partials/navbar.html:17
 msgid "События"
 msgstr "Events"
 
-#: apps/catalog/views.py:242
+#: apps/catalog/views.py:255
 msgid "Турниры, серии и товарищеские встречи в архиве SportMemo."
 msgstr "Tournaments, series and friendly games in the SportMemo archive."
 
-#: apps/catalog/views.py:312
+#: apps/catalog/views.py:325
 #, python-format
 msgid "Команда «%(name)s» в архиве SportMemo."
 msgstr "Team \"%(name)s\" in the SportMemo archive."
 
-#: apps/catalog/views.py:357
+#: apps/catalog/views.py:370
 #, python-format
 msgid "Событие «%(name)s» в архиве SportMemo."
 msgstr "Event \"%(name)s\" in the SportMemo archive."
 
-#: apps/catalog/views.py:422
+#: apps/catalog/views.py:435
 #, python-format
 msgid "Человек %(name)s в архиве SportMemo."
 msgstr "Person %(name)s in the SportMemo archive."
 
-#: apps/catalog/views.py:468
+#: apps/catalog/views.py:481
 msgid "Команда создана и отправлена на проверку модератору."
 msgstr "The team is created and sent to a moderator for review."
 
-#: apps/catalog/views.py:483 apps/catalog/views.py:488
-#: apps/catalog/views.py:495
+#: apps/catalog/views.py:496 apps/catalog/views.py:501
+#: apps/catalog/views.py:508
 msgid "Новая команда"
 msgstr "New team"
 
-#: apps/catalog/views.py:484
+#: apps/catalog/views.py:497
 msgid "Создать"
 msgstr "Create"
 
-#: apps/catalog/views.py:516
+#: apps/catalog/views.py:529
 msgid "Изменения сохранены."
 msgstr "Changes saved."
 
-#: apps/catalog/views.py:525 apps/catalog/views.py:530
+#: apps/catalog/views.py:538 apps/catalog/views.py:543
 msgid "Редактирование команды"
 msgstr "Edit team"
 
-#: apps/catalog/views.py:526 templates/accounts/profile.html:91
+#: apps/catalog/views.py:539 templates/accounts/profile.html:91
 msgid "Сохранить"
 msgstr "Save"
 
-#: apps/catalog/views.py:538
+#: apps/catalog/views.py:551
 msgid "Редактирование"
 msgstr "Edit"
 
-#: apps/catalog/views.py:561 apps/catalog/views.py:567
+#: apps/catalog/views.py:574 apps/catalog/views.py:580
 #: templates/accounts/profile.html:59 templates/accounts/profile.html:65
 #: templates/catalog/my_teams.html:11 templates/partials/navbar.html:65
 msgid "Мои команды"
@@ -888,8 +888,8 @@ msgid ""
 "Что публикует SportMemo, чего в архиве не будет и как сообщить об ошибке или "
 "нарушении прав."
 msgstr ""
-"What SportMemo publishes, what will not be in the archive, and how to "
-"report an error or a rights violation."
+"What SportMemo publishes, what will not be in the archive, and how to report "
+"an error or a rights violation."
 
 #: apps/core/views.py:138 apps/core/views.py:145 apps/core/views.py:193
 #: apps/photos/views.py:186 templates/core/home.html:61
@@ -1108,72 +1108,82 @@ msgstr "Date taken"
 msgid "Команда"
 msgstr "Team"
 
-#: apps/photos/forms.py:80 apps/search/services.py:159
+#: apps/photos/forms.py:79
+msgid ""
+"Начните вводить — появятся команды из архива. Если нужной нет, создайте её "
+"по ссылке ниже."
+msgstr ""
+"Start typing to see teams from the archive. If the team is not there, "
+"create it with the link below."
+
+#: apps/photos/forms.py:84 apps/search/services.py:159
 #: templates/photos/photo_detail.html:69
 msgid "Событие"
 msgstr "Event"
 
-#: apps/photos/forms.py:116
+#: apps/photos/forms.py:88
+msgid "Начните вводить — появятся события из архива."
+msgstr "Start typing to see events from the archive."
+
+#: apps/photos/forms.py:125
 #, python-format
 msgid "Файл больше %(limit)s МБ."
 msgstr "The file is larger than %(limit)s MB."
 
-#: apps/photos/forms.py:166
+#: apps/photos/forms.py:175
 msgid ""
 "Не удалось прочитать изображение. Подходят файлы JPEG, PNG, WebP и HEIC."
-msgstr ""
-"Could not read the image. JPEG, PNG, WebP and HEIC files are accepted."
+msgstr "Could not read the image. JPEG, PNG, WebP and HEIC files are accepted."
 
-#: apps/photos/forms.py:172
+#: apps/photos/forms.py:181
 msgid "Не удалось прочитать изображение: файл повреждён."
 msgstr "Could not read the image: the file is damaged."
 
-#: apps/photos/forms.py:190
+#: apps/photos/forms.py:199
 #, python-format
 msgid ""
 "Слишком маленькое изображение: %(width)s×%(height)s px, меньшая сторона "
 "должна быть не меньше %(min)s px."
 msgstr ""
-"The image is too small: %(width)s×%(height)s px, the shorter side must be "
-"at least %(min)s px."
+"The image is too small: %(width)s×%(height)s px, the shorter side must be at "
+"least %(min)s px."
 
-#: apps/photos/forms.py:198
+#: apps/photos/forms.py:207
 #, python-format
 msgid ""
 "Слишком большое изображение: %(width)s×%(height)s px, большая сторона может "
 "быть до %(max)s px."
 msgstr ""
-"The image is too large: %(width)s×%(height)s px, the longer side can be "
-"up to %(max)s px."
+"The image is too large: %(width)s×%(height)s px, the longer side can be up "
+"to %(max)s px."
 
-#: apps/photos/forms.py:215
+#: apps/photos/forms.py:224
 msgid "Файл повреждён: изображение не удалось прочитать целиком."
 msgstr "The file is damaged: the image could not be read in full."
 
-#: apps/photos/forms.py:225
+#: apps/photos/forms.py:234
 #, python-format
 msgid ""
 "За сутки можно загрузить не больше %(limit)s фотографий. Попробуйте позже."
 msgstr ""
-"You can upload no more than %(limit)s photos per day. Please try again "
-"later."
+"You can upload no more than %(limit)s photos per day. Please try again later."
 
-#: apps/photos/forms.py:243
+#: apps/photos/forms.py:252
 #, python-format
 msgid "Не удалось найти «%(name)s». Проверьте название."
 msgstr "Could not find «%(name)s». Please check the name."
 
-#: apps/photos/forms.py:272
+#: apps/photos/forms.py:284
 #, python-format
 msgid "Год должен быть между %(min)s и %(max)s."
 msgstr "The year must be between %(min)s and %(max)s."
 
-#: apps/photos/forms.py:279
+#: apps/photos/forms.py:291
 #, python-format
 msgid "Дата съёмки не совпадает с годом %(year)s."
 msgstr "The shooting date does not match the year %(year)s."
 
-#: apps/photos/forms.py:290
+#: apps/photos/forms.py:302
 #, python-format
 msgid "Изображение слишком большое: больше %(mpix)s Мпикс."
 msgstr "The image is too large: more than %(mpix)s MP."
@@ -1447,8 +1457,8 @@ msgid ""
 "Спасибо! Фотография успешно загружена. Она появится в общем архиве после "
 "быстрой проверки модератором."
 msgstr ""
-"Thank you! The photo is uploaded. It will appear in the public archive "
-"after a quick moderator review."
+"Thank you! The photo is uploaded. It will appear in the public archive after "
+"a quick moderator review."
 
 #: apps/photos/views.py:114 apps/photos/views.py:120
 #: templates/photos/photo_form.html:11
@@ -1457,7 +1467,7 @@ msgstr "Photo upload"
 
 #: apps/photos/views.py:148 apps/photos/views.py:154
 #: templates/partials/navbar.html:68 templates/photos/my_photos.html:13
-#: templates/photos/photo_form.html:99
+#: templates/photos/photo_form.html:133
 msgid "Мои фото"
 msgstr "My photos"
 
@@ -1940,7 +1950,7 @@ msgstr ""
 "it.If your team is not in the archive, create it. A moderator publishes it."
 
 #: templates/catalog/my_teams.html:52 templates/catalog/team_list.html:19
-#: templates/photos/photo_form.html:66
+#: templates/photos/photo_form.html:88
 msgid "Создать команду"
 msgstr "Create a team"
 
@@ -2200,8 +2210,8 @@ msgid ""
 "Коротко о том, что здесь можно и чего нельзя. Полное пользовательское "
 "соглашение появится позже."
 msgstr ""
-"A short note on what is allowed here and what is not. The full terms of "
-"use will come later."
+"A short note on what is allowed here and what is not. The full terms of use "
+"will come later."
 
 #: templates/core/rules.html:18
 msgid "Что публикуем"
@@ -2212,8 +2222,8 @@ msgid ""
 "Фотографии спортивных команд, турниров, тренировок и людей, связанных со "
 "спортом."
 msgstr ""
-"Photos of sports teams, tournaments, training sessions and people "
-"connected with sport."
+"Photos of sports teams, tournaments, training sessions and people connected "
+"with sport."
 
 #: templates/core/rules.html:22
 msgid ""
@@ -2232,9 +2242,9 @@ msgid ""
 "К фото — то, что вы знаете: кто на нём, команда, событие, год и источник. "
 "Чем полнее подпись, тем полезнее снимок для других."
 msgstr ""
-"Add what you know to the photo: who is in it, the team, the event, the "
-"year and the source. The fuller the caption, the more useful the photo is "
-"for others."
+"Add what you know to the photo: who is in it, the team, the event, the year "
+"and the source. The fuller the caption, the more useful the photo is for "
+"others."
 
 #: templates/core/rules.html:30
 msgid "Чего не публикуем"
@@ -2279,9 +2289,8 @@ msgid ""
 "отпечаток. Публикуйте свои снимки или те, на публикацию которых есть "
 "разрешение."
 msgstr ""
-"Photo rights usually belong to the photographer, not to the person who "
-"keeps the print. Publish your own photos or those you have permission to "
-"publish."
+"Photo rights usually belong to the photographer, not to the person who keeps "
+"the print. Publish your own photos or those you have permission to publish."
 
 #: templates/core/rules.html:49
 msgid ""
@@ -2289,8 +2298,8 @@ msgid ""
 "этом с причиной «нарушение авторских прав». Фото скроют, пока мы разбираемся."
 msgstr ""
 "If you are the photographer and found your photo in the archive without "
-"permission, report it with the reason «copyright violation». The photo "
-"will be hidden while we check."
+"permission, report it with the reason «copyright violation». The photo will "
+"be hidden while we check."
 
 #: templates/core/rules.html:55
 msgid "Право на изображение"
@@ -2302,17 +2311,17 @@ msgid ""
 "ваш родственник и публикация нежелательна — сообщите с причиной «нарушение "
 "приватности»."
 msgstr ""
-"A person decides how their image is used. If you or your relative is in "
-"the photo and you do not want it published, report it with the reason "
-"«privacy violation»."
+"A person decides how their image is used. If you or your relative is in the "
+"photo and you do not want it published, report it with the reason «privacy "
+"violation»."
 
 #: templates/core/rules.html:61
 msgid ""
 "Интересы детей представляют родители: их просьба снять снимок выполняется "
 "так же, как просьба взрослого."
 msgstr ""
-"Parents represent the interests of children: their request to remove a "
-"photo is handled like an adult's request."
+"Parents represent the interests of children: their request to remove a photo "
+"is handled like an adult's request."
 
 #: templates/core/rules.html:67
 msgid "Проверка и жалобы"
@@ -2323,17 +2332,17 @@ msgid ""
 "Фото публикует модератор после быстрой проверки. Модератор смотрит, "
 "относится ли снимок к спорту и заполнена ли подпись; за права отвечает автор."
 msgstr ""
-"A moderator publishes the photo after a quick review. The moderator "
-"checks that the photo relates to sport and that the caption is filled in. "
-"The author is responsible for the rights."
+"A moderator publishes the photo after a quick review. The moderator checks "
+"that the photo relates to sport and that the caption is filled in. The "
+"author is responsible for the rights."
 
 #: templates/core/rules.html:73
 msgid ""
 "На странице фото, команды или события есть ссылка «Сообщить об ошибке». "
 "Жалоба не требует регистрации: укажите причину и пояснение, если оно нужно."
 msgstr ""
-"On a photo, team or event page there is a «Report an error» link. A "
-"report does not require an account: give the reason and a note if needed."
+"On a photo, team or event page there is a «Report an error» link. A report "
+"does not require an account: give the reason and a note if needed."
 
 #: templates/core/rules.html:85
 msgid "Найти фото, команду или событие в архиве"
@@ -2470,8 +2479,8 @@ msgid ""
 "Публикует фото модератор — обычно в течение дня. До публикации фото видите "
 "только вы и модератор."
 msgstr ""
-"A moderator publishes the photo, usually within a day. Before that only "
-"you and the moderator can see it."
+"A moderator publishes the photo, usually within a day. Before that only you "
+"and the moderator can see it."
 
 #: templates/photos/my_photos.html:26
 msgid "Обновить"
@@ -2546,11 +2555,24 @@ msgstr "Photo upload is not available yet"
 msgid "Год взят из файла — проверьте, пожалуйста."
 msgstr "The year is taken from the file. Please check it."
 
-#: templates/photos/photo_form.html:97
+#: templates/photos/photo_form.html:59
+msgid "Предпросмотр недоступен в этом браузере, но файл выбран."
+msgstr "This browser cannot show the preview, but the file is selected."
+
+#: templates/photos/photo_form.html:71
+msgid "Убрать фото"
+msgstr "Remove photo"
+
+#: templates/photos/photo_form.html:124
+#, python-format
+msgid "Создать команду «%(name)s»"
+msgstr "Create team «%(name)s»"
+
+#: templates/photos/photo_form.html:131
 msgid "Загрузить"
 msgstr "Upload"
 
-#: templates/photos/photo_form.html:112
+#: templates/photos/photo_form.html:146
 #, python-format
 msgid ""
 "Загружая фото, вы подтверждаете соблюдение <a href=\"%(rules_url)s\">Правил "

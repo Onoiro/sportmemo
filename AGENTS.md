@@ -188,7 +188,7 @@ constructor". Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.18.0; development branch `master`; 1114 tests passing on Python 3.12 and 3.13
+- Version: 0.18.1; development branch `master`; 1122 tests passing on Python 3.12 and 3.13
   (`make test`); linter clean (`make lint`).
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is in progress: sub-stage 3.1
@@ -393,7 +393,14 @@ sits under the upload button and in the footer; the text covers copyright
 (`COPYRIGHT`) and the right to one's image (`PRIVACY`) as separate items.
 **Returning to the form after creating a team** — `next` in `team_create`
 checked with `url_has_allowed_host_and_scheme`, and the photo form accepts
-`?team=<pk>`.
+`?team=<pk>`. **A chosen file can be removed** with the "Remove photo" button
+under the preview: the file field has no native clear control, and without it
+someone who picked the wrong shot has to find the right one again. The button
+lives in `photo-form.js` together with the preview and clears the field, the
+`objectURL` and the EXIF year hint. A failed name resolution leads to the
+"Create team “…”" link (`?name=` in `team_create` prefills the form): the error
+text is escaped, so a link cannot go inside it, and
+`PhotoUploadForm.unresolved` hands the unresolved names to the template.
 
 **Admin.** Moderation (publish / hide / reject / soft-delete / restore) is a list action; every
 decision is written to `ModerationAction`. Merging duplicates is the "Merge duplicates into one

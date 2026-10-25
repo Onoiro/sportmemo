@@ -998,6 +998,16 @@ html[data-bs-theme="dark"] {
     border-radius: calc(var(--sm-radius) - 0.125rem);
 }
 
+.photo-preview__remove {
+    margin-top: 0.5rem;
+}
+
+.photo-preview__note {
+    margin: 0.75rem 0 0;
+    color: var(--bs-secondary-color);
+    font-size: 0.875rem;
+}
+
 /* --- Кабинет автора: сетка загруженных фото --- */
 
 .upload-grid {

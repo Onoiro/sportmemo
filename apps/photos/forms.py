@@ -75,12 +75,17 @@ class PhotoUploadForm(BootstrapFormMixin, forms.Form):
         max_length=300,
         required=False,
         widget=forms.TextInput(attrs={"list": "team-options", "autocomplete": "off"}),
+        help_text=_(
+            "Начните вводить — появятся команды из архива. "
+            "Если нужной нет, создайте её по ссылке ниже."
+        ),
     )
     event_name = forms.CharField(
         label=_("Событие"),
         max_length=300,
         required=False,
         widget=forms.TextInput(attrs={"list": "event-options", "autocomplete": "off"}),
+        help_text=_("Начните вводить — появятся события из архива."),
     )
 
     def __init__(self, *args, user=None, sport=None, **kwargs):
@@ -89,6 +94,10 @@ class PhotoUploadForm(BootstrapFormMixin, forms.Form):
         # Вид спорта сужает резолв: продукт односпортный, но схема
         # мультиспортная, и «Соколы» из другого вида спорта — не наша команда.
         self.sport = sport if sport is not None else default_sport()
+        # Названия, которые не нашлись в архиве: шаблон покажет рядом
+        # с ошибкой ссылку «создать с таким названием». В текст ошибки
+        # ссылку не вставить — он экранируется.
+        self.unresolved = {}
 
     @property
     def team_options(self):
@@ -242,6 +251,9 @@ class PhotoUploadForm(BootstrapFormMixin, forms.Form):
         if resolved is None:
             message = _("Не удалось найти «%(name)s». Проверьте название.")
             self.add_error(field_name, message % {"name": value})
+            # Шаблон покажет рядом ссылку «создать с таким названием»:
+            # без неё человек не знает, что делать дальше.
+            self.unresolved[field_name] = value
         return resolved
 
     def _queryset(self, model):

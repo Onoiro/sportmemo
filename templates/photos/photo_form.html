@@ -45,6 +45,26 @@
             {% endcomment %}
             <div class="photo-preview" id="photo-preview" hidden>
                 <img class="photo-preview__image" id="photo-preview-image" alt="">
+                {% comment %}
+                HEIC умеет читать не каждый браузер. Скрываем только
+                картинку: контейнер с кнопкой «Убрать фото» должен
+                остаться, иначе человек не поймёт, что файл выбран,
+                и не сможет его снять.
+                {% endcomment %}
+                <p class="photo-preview__note" id="photo-preview-note" hidden>
+                    {% trans "Предпросмотр недоступен в этом браузере, но файл выбран." %}
+                </p>
+                {% comment %}
+                Убрать выбранный файл иначе нечем: у поля файла нет кнопки
+                «очистить», а без неё человек, выбравший не тот снимок,
+                вынужден искать в проводнике нужный. Кнопку показывает
+                скрипт вместе с превью, поэтому без JavaScript её нет.
+                {% endcomment %}
+                <button class="btn btn-sm btn-outline-secondary photo-preview__remove"
+                        type="button" id="photo-preview-remove">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                    {% trans "Убрать фото" %}
+                </button>
             </div>
 
             {% for field in form %}
@@ -85,6 +105,17 @@
                         <div class="form-text" id="year-hint" hidden></div>
                     {% endif %}
                     {{ field.errors }}
+                    {% if field.name == "team_name" and form.unresolved.team_name %}
+                        {% comment %}
+                        Текст ошибки экранируется, ссылку в него не вставить.
+                        Поэтому выход из тупика «не удалось найти» стоит
+                        рядом, с уже подставленным названием.
+                        {% endcomment %}
+                        <a class="photo-form__link"
+                           href="{% url 'catalog:team_create' %}?next={{ upload_url|urlencode }}&amp;name={{ form.unresolved.team_name|urlencode }}">
+                            {% blocktranslate with name=form.unresolved.team_name %}Создать команду «{{ name }}»{% endblocktranslate %}
+                        </a>
+                    {% endif %}
                 </div>
             {% endfor %}
 
