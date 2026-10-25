@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1 class="page-header__title">{% trans "Мои события" %}</h1>
+        {% comment %}
+        Пояснение снимает главный вопрос автора: «я создал, почему не видно?»
+        Ответ — событие публикует модератор.
+        {% endcomment %}
+        <p class="page-header__lead">
+            {% trans "Публикует событие модератор — обычно в течение дня. До публикации событие видите только вы и модератор." %}
+        </p>
+    </header>
+
+    {% if events %}
+        <ul class="entity-list">
+            {% for event in events %}
+                <li class="entity-list__item">
+                    <a class="entity-list__name" href="{{ event.get_absolute_url }}">{{ event.name }}</a>
+                    <span class="entity-list__note">
+                        {% if event.year %}{{ event.year }} · {% endif %}
+                        {% if event.city %}{{ event.city }} · {% endif %}
+                        {{ event.created_at|date:"j E Y" }}
+                    </span>
+                    <span class="badge-status badge-status--{{ event.status }}">
+                        {{ event.get_status_display }}
+                    </span>
+                    <a class="btn btn-outline-secondary btn-sm"
+                       href="{% url 'catalog:event_update' event.slug %}">
+                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                        {% trans "Редактировать" %}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-calendar-plus empty-state__icon" aria-hidden="true"></i>
+            <p class="empty-state__title">{% trans "Вы ещё не создавали событий" %}</p>
+            <p class="mb-3">
+                {% trans "Если вашего турнира или встречи нет в архиве — заведите событие. Публикует модератор." %}
+            </p>
+            <a class="btn btn-primary" href="{% url 'catalog:event_create' %}">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                {% trans "Создать событие" %}
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

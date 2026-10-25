@@ -16,9 +16,9 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_GET, require_http_methods
 
-from apps.catalog.emails import notify_moderators_new_team
+from apps.catalog.emails import notify_moderators_new_event, notify_moderators_new_team
 from apps.catalog.filters import event_filters, team_filters
-from apps.catalog.forms import TeamForm
+from apps.catalog.forms import EventForm, TeamForm
 from apps.catalog.models import Event, Person, Team
 from apps.catalog.roster import memberships_in_year, roster_years
 from apps.comments.services import comments_context
@@ -161,19 +161,29 @@ def next_with_team(url, team):
     Форма фото принимает `?team=<pk>`: без этого человек вернулся бы
     в пустую форму и вводил название команды, которую только что завёл.
     """
+    return next_with_param(url, "team", team.pk)
+
+
+def next_with_param(url, key, value):
+    """Добавить параметр к адресу возврата, сохранив остальные.
+
+    Общий хелпер для команды и события: формы загрузки фото принимают
+    `?team=` и `?event=`, и склеивать адрес в каждом представлении
+    по-своему значит рано или поздно сломать кириллицу в slug.
+    """
     parts = urlsplit(url)
     query = parse_qsl(parts.query, keep_blank_values=True)
-    query.append(("team", str(team.pk)))
+    query.append((key, str(value)))
     return urlunsplit(
         (parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment)
     )
 
 
-def initial_team_name(request):
-    """Название из `?name=` для формы создания команды.
+def initial_name(request):
+    """Название из `?name=` для формы создания команды или события.
 
-    Ссылка «создать команду с таким названием» стоит рядом с ошибкой
-    «не удалось найти»: человек не должен вводить то же название второй раз
+    Ссылка «создать с таким названием» стоит рядом с ошибкой «не удалось
+    найти»: человек не должен вводить то же название второй раз
     и опечататься в нём.
     """
     value = (request.GET.get("name") or "").strip()
@@ -182,8 +192,8 @@ def initial_team_name(request):
     return value[:300]
 
 
-def can_edit_team(user, team) -> bool:
-    """Может ли пользователь править команду.
+def can_edit(user, obj) -> bool:
+    """Может ли пользователь править команду или событие.
 
     Правит автор и модератор. Всем остальным — 404, а не 403: не раскрываем
     существование чужого черновика. Та же проверка, что в
@@ -191,23 +201,23 @@ def can_edit_team(user, team) -> bool:
     """
     if user is None or not user.is_authenticated:
         return False
-    return bool(getattr(user, "is_moderator", False)) or team.created_by_id == user.pk
+    return bool(getattr(user, "is_moderator", False)) or obj.created_by_id == user.pk
 
 
-def get_editable_team_or_404(request, slug):
-    """Команда для правки или 404.
+def get_editable_or_404(request, model, slug, label):
+    """Объект для правки или 404.
 
     Объект берётся из `public` (без удалённых и слитых), право проверяется
-    отдельно: удалённую команду не должен править даже автор.
+    отдельно: удалённую запись не должен править даже автор.
     """
     try:
-        team = Team.public.select_related("sport").get(slug=slug)
-    except Team.DoesNotExist as exc:
-        raise Http404("Команда не найдена") from exc
+        obj = model.public.select_related("sport").get(slug=slug)
+    except model.DoesNotExist as exc:
+        raise Http404(label) from exc
 
-    if not can_edit_team(request.user, team):
-        raise Http404("Команда не найдена")
-    return team
+    if not can_edit(request.user, obj):
+        raise Http404(label)
+    return obj
 
 
 @require_GET
@@ -317,7 +327,7 @@ def team_detail(request, slug):
         "roster_years": years,
         "selected_year": selected_year,
         "attribute_items": attribute_items(team.attributes),
-        "can_edit": can_edit_team(request.user, team),
+        "can_edit": can_edit(request.user, team),
         "meta": page_meta(
             request,
             title=team.full_name,
@@ -373,6 +383,7 @@ def event_detail(request, slug):
         "jsonld_blocks": compact(
             event_schema(request, event) if event.is_published else None
         ),
+        "can_edit": can_edit(request.user, event),
         "breadcrumbs": [
             {"url": reverse("core:home"), "label": _("Главная")},
             {"url": reverse("catalog:event_list"), "label": _("События")},
@@ -484,7 +495,7 @@ def team_create(request):
                 return redirect(next_with_team(next_url, team))
             return redirect(team.get_absolute_url())
     elif sport is not None:
-        form = TeamForm(sport=sport, initial={"name": initial_team_name(request)})
+        form = TeamForm(sport=sport, initial={"name": initial_name(request)})
     else:
         form = None
 
@@ -520,7 +531,7 @@ def team_update(request, slug):
     ждать модератора, а изменение всё равно попадает в историю. Вернуться
     к повторной модерации можно, если появится вандализм.
     """
-    team = get_editable_team_or_404(request, slug)
+    team = get_editable_or_404(request, Team, slug, "Команда не найдена")
 
     if request.method == "POST":
         form = TeamForm(request.POST, request.FILES, instance=team, sport=team.sport)
@@ -581,3 +592,131 @@ def my_teams(request):
         ],
     }
     return render(request, "catalog/my_teams.html", context)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def event_create(request):
+    """Создание события: сохраняется черновиком и ждёт модератора.
+
+    Вид спорта берётся из `default_sport()`: выбора в интерфейсе нет, схема
+    мультиспортная (инвариант № 1). Активных видов спорта нет — форма
+    недоступна: показать сообщение честнее, чем падать на пустом `sport`.
+
+    Событие заводят прямо из формы загрузки фото — там же, где команду:
+    поле «Событие» требует существующей записи, и без этой формы человек
+    не мог бы её создать.
+    """
+    sport = default_sport()
+    next_url = safe_next_url(request)
+
+    if request.method == "POST" and sport is not None:
+        form = EventForm(request.POST, sport=sport)
+        if form.is_valid():
+            event = form.save(commit=False)
+            event.sport = sport
+            event.status = Status.DRAFT
+            event.created_by = request.user
+            event.save()
+            notify_moderators_new_event(event)
+            messages.success(
+                request,
+                _("Событие создано и отправлено на проверку модератору."),
+            )
+            if next_url:
+                return redirect(next_with_param(next_url, "event", event.pk))
+            return redirect(event.get_absolute_url())
+    elif sport is not None:
+        form = EventForm(sport=sport, initial={"name": initial_name(request)})
+    else:
+        form = None
+
+    context = {
+        "form": form,
+        "event": None,
+        "next_url": next_url,
+        "form_action": reverse("catalog:event_create"),
+        "form_title": _("Новое событие"),
+        "submit_label": _("Создать"),
+        "sport": sport,
+        "meta": page_meta(
+            request,
+            title=_("Новое событие"),
+            noindex=True,
+            nofollow=True,
+        ),
+        "breadcrumbs": [
+            {"url": reverse("core:home"), "label": _("Главная")},
+            {"url": reverse("catalog:event_list"), "label": _("События")},
+            {"label": _("Новое событие")},
+        ],
+    }
+    return render(request, "catalog/event_form.html", context)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def event_update(request, slug):
+    """Правка своего события.
+
+    Опубликованное событие остаётся опубликованным — то же правило, что
+    у команды: правки автора не должны ждать модератора, а изменение всё
+    равно попадает в историю.
+    """
+    event = get_editable_or_404(request, Event, slug, "Событие не найдено")
+
+    if request.method == "POST":
+        form = EventForm(request.POST, instance=event, sport=event.sport)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _("Изменения сохранены."))
+            return redirect(event.get_absolute_url())
+    else:
+        form = EventForm(instance=event, sport=event.sport)
+
+    context = {
+        "form": form,
+        "event": event,
+        "form_action": reverse("catalog:event_update", args=[event.slug]),
+        "form_title": _("Редактирование события"),
+        "submit_label": _("Сохранить"),
+        "sport": event.sport,
+        "meta": page_meta(
+            request,
+            title=_("Редактирование события"),
+            noindex=True,
+            nofollow=True,
+        ),
+        "breadcrumbs": [
+            {"url": reverse("core:home"), "label": _("Главная")},
+            {"url": reverse("catalog:event_list"), "label": _("События")},
+            {"url": event.get_absolute_url(), "label": event.name},
+            {"label": _("Редактирование")},
+        ],
+    }
+    return render(request, "catalog/event_form.html", context)
+
+
+@login_required
+@require_GET
+def my_events(request):
+    """Свои события: любые статусы, включая мягко удалённые."""
+    events = (
+        Event.objects.filter(created_by=request.user)
+        .select_related("sport")
+        .order_by("-created_at")
+    )
+    context = {
+        "events": events,
+        "meta": page_meta(
+            request,
+            title=_("Мои события"),
+            noindex=True,
+            nofollow=True,
+        ),
+        "breadcrumbs": [
+            {"url": reverse("core:home"), "label": _("Главная")},
+            {"label": _("Мои события")},
+        ],
+    }
+    return render(request, "catalog/my_events.html", context)

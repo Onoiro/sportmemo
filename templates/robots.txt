@@ -5,6 +5,8 @@ Disallow: /search/
 Disallow: /healthz/
 Disallow: /teams/new/
 Disallow: /teams/mine/
+Disallow: /events/new/
+Disallow: /events/mine/
 Disallow: /reports/add/
 
 Sitemap: {{ sitemap_url }}

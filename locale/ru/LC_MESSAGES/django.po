@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-25 22:03+0300\n"
+"POT-Creation-Date: 2026-10-25 22:34+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,11 +21,11 @@ msgstr ""
 
 #: apps/accounts/admin.py:34 apps/accounts/views.py:36
 #: apps/accounts/views.py:39 templates/accounts/profile.html:11
-#: templates/partials/navbar.html:71
+#: templates/partials/navbar.html:74
 msgid "Профиль"
 msgstr "Профиль"
 
-#: apps/accounts/admin.py:36 templates/accounts/profile.html:97
+#: apps/accounts/admin.py:36 templates/accounts/profile.html:108
 msgid "Согласия"
 msgstr "Согласия"
 
@@ -119,14 +119,15 @@ msgstr "пользователи"
 msgid "Профиль обновлён"
 msgstr "Профиль обновлён"
 
-#: apps/accounts/views.py:38 apps/catalog/views.py:234
-#: apps/catalog/views.py:259 apps/catalog/views.py:338
-#: apps/catalog/views.py:377 apps/catalog/views.py:449
-#: apps/catalog/views.py:506 apps/catalog/views.py:548
-#: apps/catalog/views.py:579 apps/core/views.py:114 apps/core/views.py:144
-#: apps/core/views.py:192 apps/moderation/views.py:111 apps/photos/views.py:119
-#: apps/photos/views.py:153 apps/photos/views.py:183 apps/search/views.py:40
-#: templates/partials/footer.html:20
+#: apps/accounts/views.py:38 apps/catalog/views.py:244
+#: apps/catalog/views.py:269 apps/catalog/views.py:348
+#: apps/catalog/views.py:388 apps/catalog/views.py:460
+#: apps/catalog/views.py:517 apps/catalog/views.py:559
+#: apps/catalog/views.py:590 apps/catalog/views.py:649
+#: apps/catalog/views.py:691 apps/catalog/views.py:718 apps/core/views.py:114
+#: apps/core/views.py:144 apps/core/views.py:192 apps/moderation/views.py:111
+#: apps/photos/views.py:131 apps/photos/views.py:165 apps/photos/views.py:195
+#: apps/search/views.py:40 templates/partials/footer.html:20
 msgid "Главная"
 msgstr "Главная"
 
@@ -156,10 +157,14 @@ msgstr "Биография"
 msgid "Даты и место"
 msgstr "Даты и место"
 
-#: apps/catalog/emails.py:20
+#: apps/catalog/emails.py:21
 #, python-format
 msgid "Новая команда: %(name)s"
 msgstr "Новая команда: %(name)s"
+
+#: apps/catalog/emails.py:38
+msgid "Новое событие: %(name)s"
+msgstr "Новое событие: %(name)s"
 
 #: apps/catalog/filters.py:25
 #, python-format
@@ -187,7 +192,9 @@ msgid "Сортировка"
 msgstr "Сортировка"
 
 #: apps/catalog/filters.py:274 apps/catalog/filters.py:322
-#: apps/catalog/forms.py:49 templates/catalog/email/new_team_notification.txt:4
+#: apps/catalog/forms.py:57 apps/catalog/forms.py:208
+#: templates/catalog/email/new_event_notification.txt:6
+#: templates/catalog/email/new_team_notification.txt:4
 msgid "Город"
 msgstr "Город"
 
@@ -195,7 +202,7 @@ msgstr "Город"
 msgid "Все города"
 msgstr "Все города"
 
-#: apps/catalog/filters.py:277 apps/catalog/forms.py:50
+#: apps/catalog/filters.py:277 apps/catalog/forms.py:58
 #: templates/catalog/email/new_team_notification.txt:5
 msgid "Год основания"
 msgstr "Год основания"
@@ -204,7 +211,8 @@ msgstr "Год основания"
 msgid "Все десятилетия"
 msgstr "Все десятилетия"
 
-#: apps/catalog/filters.py:320 apps/photos/forms.py:64
+#: apps/catalog/filters.py:320 apps/catalog/forms.py:207
+#: apps/photos/forms.py:64 templates/catalog/email/new_event_notification.txt:5
 #: templates/catalog/partials/roster_form.html:11
 #: templates/photos/photo_detail.html:44
 msgid "Год"
@@ -214,7 +222,7 @@ msgstr "Год"
 msgid "Все годы"
 msgstr "Все годы"
 
-#: apps/catalog/filters.py:321
+#: apps/catalog/filters.py:321 apps/catalog/forms.py:204
 msgid "Тип события"
 msgstr "Тип события"
 
@@ -232,45 +240,84 @@ msgstr ""
 "«Русстар-2», «Русстар (юноши 1992 г. р.)». Основную команду указывайте без "
 "уточнения."
 
-#: apps/catalog/forms.py:40
+#: apps/catalog/forms.py:27
+msgid ""
+"Пишите так, как событие называют в архиве: «Кубок России», «Первенство "
+"Москвы». Один и тот же турнир разных лет — отдельные записи: название "
+"совпадает, год разный."
+msgstr ""
+
+#: apps/catalog/forms.py:32
+msgid "Если знаете. Из даты начала год подставится сам."
+msgstr "Если знаете. Из даты начала год подставится сам."
+
+#: apps/catalog/forms.py:48
 msgid "Я проверил(а), это другая команда"
 msgstr "Я проверил(а), это другая команда"
 
-#: apps/catalog/forms.py:48 templates/catalog/email/new_team_notification.txt:3
+#: apps/catalog/forms.py:56 apps/catalog/forms.py:203
+#: templates/catalog/email/new_event_notification.txt:3
+#: templates/catalog/email/new_team_notification.txt:3
 msgid "Название"
 msgstr "Название"
 
-#: apps/catalog/forms.py:51
+#: apps/catalog/forms.py:59 apps/catalog/forms.py:210
 msgid "Описание"
 msgstr "Описание"
 
-#: apps/catalog/forms.py:52
+#: apps/catalog/forms.py:60
 msgid "Эмблема"
 msgstr "Эмблема"
 
-#: apps/catalog/forms.py:109
+#: apps/catalog/forms.py:117
 #, python-format
 msgid "Год основания должен быть между %(min)s и %(max)s."
 msgstr "Год основания должен быть между %(min)s и %(max)s."
 
-#: apps/catalog/forms.py:118
+#: apps/catalog/forms.py:126 apps/catalog/forms.py:296
 #, python-format
 msgid "Описание не должно быть длиннее %(limit)s символов."
 msgstr "Описание не должно быть длиннее %(limit)s символов."
 
-#: apps/catalog/forms.py:134
+#: apps/catalog/forms.py:142
 #, python-format
 msgid "Эмблема не должна быть больше %(limit)s МБ."
 msgstr "Эмблема не должна быть больше %(limit)s МБ."
 
-#: apps/catalog/forms.py:140 apps/photos/forms.py:189
+#: apps/catalog/forms.py:148 apps/photos/forms.py:189
 #, python-format
 msgid "Поддерживаются форматы: %(formats)s."
 msgstr "Поддерживаются форматы: %(formats)s."
 
-#: apps/catalog/forms.py:156
+#: apps/catalog/forms.py:164
 msgid "Команда с таким названием уже есть в архиве. Проверьте список выше."
 msgstr "Команда с таким названием уже есть в архиве. Проверьте список выше."
+
+#: apps/catalog/forms.py:186
+msgid "Я проверил(а), это другое событие"
+msgstr "Я проверил(а), это другое событие"
+
+#: apps/catalog/forms.py:205
+msgid "Дата начала"
+msgstr "Дата начала"
+
+#: apps/catalog/forms.py:206
+msgid "Дата окончания"
+msgstr "Дата окончания"
+
+#: apps/catalog/forms.py:209
+msgid "Страна"
+msgstr "Страна"
+
+#: apps/catalog/forms.py:287 apps/photos/forms.py:284
+#, python-format
+msgid "Год должен быть между %(min)s и %(max)s."
+msgstr "Год должен быть между %(min)s и %(max)s."
+
+#: apps/catalog/forms.py:315
+msgid ""
+"Событие с таким названием и годом уже есть в архиве. Проверьте список выше."
+msgstr "Событие с таким названием и годом уже есть в архиве. Проверьте список выше."
 
 #: apps/catalog/models.py:75 apps/photos/models.py:381
 msgid "игрок"
@@ -316,7 +363,7 @@ msgstr "эмблема"
 
 #: apps/catalog/models.py:104 apps/catalog/models.py:198
 #: apps/catalog/models.py:287 apps/catalog/models.py:477
-#: apps/catalog/models.py:583
+#: apps/catalog/models.py:591
 msgid "создатель"
 msgstr "создатель"
 
@@ -331,7 +378,7 @@ msgid "поисковый индекс"
 msgstr "поисковый индекс"
 
 #: apps/catalog/models.py:121 apps/catalog/models.py:178
-#: apps/catalog/models.py:576 apps/photos/models.py:169
+#: apps/catalog/models.py:584 apps/photos/models.py:169
 msgid "команда"
 msgstr "команда"
 
@@ -524,7 +571,7 @@ msgstr "год"
 msgid "страна"
 msgstr "страна"
 
-#: apps/catalog/models.py:487 apps/catalog/models.py:570
+#: apps/catalog/models.py:487 apps/catalog/models.py:578
 #: apps/photos/models.py:161
 msgid "событие"
 msgstr "событие"
@@ -533,23 +580,23 @@ msgstr "событие"
 msgid "события"
 msgstr "события"
 
-#: apps/catalog/models.py:550
+#: apps/catalog/models.py:558
 msgid "дата не указана"
 msgstr "дата не указана"
 
-#: apps/catalog/models.py:557
+#: apps/catalog/models.py:565
 msgid "Дата окончания раньше даты начала"
 msgstr "Дата окончания раньше даты начала"
 
-#: apps/catalog/models.py:580
+#: apps/catalog/models.py:588
 msgid "результат"
 msgstr "результат"
 
-#: apps/catalog/models.py:593
+#: apps/catalog/models.py:601
 msgid "участие команды"
 msgstr "участие команды"
 
-#: apps/catalog/models.py:594
+#: apps/catalog/models.py:602
 msgid "участие команд"
 msgstr "участие команд"
 
@@ -573,78 +620,99 @@ msgstr "Иннингов"
 msgid "Команд"
 msgstr "Команд"
 
-#: apps/catalog/views.py:227 apps/catalog/views.py:235
-#: apps/catalog/views.py:339 apps/catalog/views.py:507
-#: apps/catalog/views.py:549 apps/search/services.py:103
+#: apps/catalog/views.py:237 apps/catalog/views.py:245
+#: apps/catalog/views.py:349 apps/catalog/views.py:518
+#: apps/catalog/views.py:560 apps/search/services.py:103
 #: templates/catalog/team_list.html:11 templates/core/home.html:52
 #: templates/partials/footer.html:12 templates/partials/navbar.html:14
 msgid "Команды"
 msgstr "Команды"
 
-#: apps/catalog/views.py:229
+#: apps/catalog/views.py:239
 msgid "Команды архива SportMemo: города, годы основания и фотографии."
 msgstr "Команды архива SportMemo: города, годы основания и фотографии."
 
-#: apps/catalog/views.py:254 apps/catalog/views.py:260
-#: apps/catalog/views.py:378 apps/search/services.py:109
+#: apps/catalog/views.py:264 apps/catalog/views.py:270
+#: apps/catalog/views.py:389 apps/catalog/views.py:650
+#: apps/catalog/views.py:692 apps/search/services.py:109
 #: templates/catalog/event_list.html:11 templates/partials/footer.html:13
 #: templates/partials/navbar.html:17
 msgid "События"
 msgstr "События"
 
-#: apps/catalog/views.py:255
+#: apps/catalog/views.py:265
 msgid "Турниры, серии и товарищеские встречи в архиве SportMemo."
 msgstr "Турниры, серии и товарищеские встречи в архиве SportMemo."
 
-#: apps/catalog/views.py:325
+#: apps/catalog/views.py:335
 #, python-format
 msgid "Команда «%(name)s» в архиве SportMemo."
 msgstr "Команда «%(name)s» в архиве SportMemo."
 
-#: apps/catalog/views.py:370
+#: apps/catalog/views.py:380
 #, python-format
 msgid "Событие «%(name)s» в архиве SportMemo."
 msgstr "Событие «%(name)s» в архиве SportMemo."
 
-#: apps/catalog/views.py:435
+#: apps/catalog/views.py:446
 #, python-format
 msgid "Человек %(name)s в архиве SportMemo."
 msgstr "Человек %(name)s в архиве SportMemo."
 
-#: apps/catalog/views.py:481
+#: apps/catalog/views.py:492
 msgid "Команда создана и отправлена на проверку модератору."
 msgstr "Команда создана и отправлена на проверку модератору."
 
-#: apps/catalog/views.py:496 apps/catalog/views.py:501
-#: apps/catalog/views.py:508
+#: apps/catalog/views.py:507 apps/catalog/views.py:512
+#: apps/catalog/views.py:519
 msgid "Новая команда"
 msgstr "Новая команда"
 
-#: apps/catalog/views.py:497
+#: apps/catalog/views.py:508 apps/catalog/views.py:640
 msgid "Создать"
 msgstr "Создать"
 
-#: apps/catalog/views.py:529
+#: apps/catalog/views.py:540 apps/catalog/views.py:672
 msgid "Изменения сохранены."
 msgstr "Изменения сохранены."
 
-#: apps/catalog/views.py:538 apps/catalog/views.py:543
+#: apps/catalog/views.py:549 apps/catalog/views.py:554
 msgid "Редактирование команды"
 msgstr "Редактирование команды"
 
-#: apps/catalog/views.py:539 templates/accounts/profile.html:91
+#: apps/catalog/views.py:550 apps/catalog/views.py:682
+#: templates/accounts/profile.html:102
 msgid "Сохранить"
 msgstr "Сохранить"
 
-#: apps/catalog/views.py:551
+#: apps/catalog/views.py:562 apps/catalog/views.py:694
 msgid "Редактирование"
 msgstr "Редактирование"
 
-#: apps/catalog/views.py:574 apps/catalog/views.py:580
+#: apps/catalog/views.py:585 apps/catalog/views.py:591
 #: templates/accounts/profile.html:59 templates/accounts/profile.html:65
 #: templates/catalog/my_teams.html:11 templates/partials/navbar.html:65
 msgid "Мои команды"
 msgstr "Мои команды"
+
+#: apps/catalog/views.py:624
+msgid "Событие создано и отправлено на проверку модератору."
+msgstr "Событие создано и отправлено на проверку модератору."
+
+#: apps/catalog/views.py:639 apps/catalog/views.py:644
+#: apps/catalog/views.py:651
+msgid "Новое событие"
+msgstr "Новое событие"
+
+#: apps/catalog/views.py:681 apps/catalog/views.py:686
+msgid "Редактирование события"
+msgstr "Редактирование события"
+
+#: apps/catalog/views.py:713 apps/catalog/views.py:719
+#: templates/accounts/profile.html:70 templates/accounts/profile.html:76
+#: templates/catalog/my_events.html:11 templates/partials/navbar.html:68
+msgid "Мои события"
+msgstr "Мои события"
 
 #: apps/comments/admin.py:40
 #: templates/moderation/email/new_report_notification.txt:5
@@ -876,7 +944,7 @@ msgstr "порядок сортировки"
 msgid "виды спорта"
 msgstr "виды спорта"
 
-#: apps/core/schema.py:150 apps/photos/views.py:192 apps/photos/views.py:196
+#: apps/core/schema.py:150 apps/photos/views.py:204 apps/photos/views.py:208
 #: templates/photos/my_photos.html:58 templates/photos/photo_detail.html:37
 msgid "Фотография"
 msgstr "Фотография"
@@ -903,7 +971,7 @@ msgstr ""
 "нарушении прав."
 
 #: apps/core/views.py:138 apps/core/views.py:145 apps/core/views.py:193
-#: apps/photos/views.py:186 templates/core/home.html:61
+#: apps/photos/views.py:198 templates/core/home.html:61
 #: templates/core/year_list.html:11 templates/partials/footer.html:14
 #: templates/partials/navbar.html:20
 msgid "Годы"
@@ -913,7 +981,7 @@ msgstr "Годы"
 msgid "Хронология архива SportMemo: годы и фотографии каждого года."
 msgstr "Хронология архива SportMemo: годы и фотографии каждого года."
 
-#: apps/core/views.py:187 apps/core/views.py:194 apps/photos/views.py:189
+#: apps/core/views.py:187 apps/core/views.py:194 apps/photos/views.py:201
 #: templates/core/year_detail.html:12
 #, python-format
 msgid "%(year)s год"
@@ -1184,11 +1252,6 @@ msgstr ""
 #, python-format
 msgid "Не удалось найти «%(name)s». Проверьте название."
 msgstr "Не удалось найти «%(name)s». Проверьте название."
-
-#: apps/photos/forms.py:284
-#, python-format
-msgid "Год должен быть между %(min)s и %(max)s."
-msgstr "Год должен быть между %(min)s и %(max)s."
 
 #: apps/photos/forms.py:291
 #, python-format
@@ -1464,7 +1527,7 @@ msgstr "человек на фото"
 msgid "люди на фото"
 msgstr "люди на фото"
 
-#: apps/photos/views.py:97
+#: apps/photos/views.py:109
 msgid ""
 "Спасибо! Фотография успешно загружена. Она появится в общем архиве после "
 "быстрой проверки модератором."
@@ -1472,18 +1535,18 @@ msgstr ""
 "Спасибо! Фотография успешно загружена. Она появится в общем архиве после "
 "быстрой проверки модератором."
 
-#: apps/photos/views.py:114 apps/photos/views.py:120
+#: apps/photos/views.py:126 apps/photos/views.py:132
 #: templates/photos/photo_form.html:11
 msgid "Загрузка фото"
 msgstr "Загрузка фото"
 
-#: apps/photos/views.py:148 apps/photos/views.py:154
-#: templates/partials/navbar.html:68 templates/photos/my_photos.html:13
-#: templates/photos/photo_form.html:133
+#: apps/photos/views.py:160 apps/photos/views.py:166
+#: templates/partials/navbar.html:71 templates/photos/my_photos.html:13
+#: templates/photos/photo_form.html:148
 msgid "Мои фото"
 msgstr "Мои фото"
 
-#: apps/photos/views.py:205
+#: apps/photos/views.py:217
 msgid "Фотография из архива SportMemo"
 msgstr "Фотография из архива SportMemo"
 
@@ -1639,7 +1702,7 @@ msgstr "Вход"
 
 #: templates/account/login.html:21
 #: templates/account/password_reset_from_key_done.html:12
-#: templates/partials/navbar.html:83
+#: templates/partials/navbar.html:86
 msgid "Войти"
 msgstr "Войти"
 
@@ -1667,8 +1730,8 @@ msgstr "Выход"
 msgid "Выйти из аккаунта?"
 msgstr "Выйти из аккаунта?"
 
-#: templates/account/logout.html:20 templates/accounts/profile.html:71
-#: templates/partials/navbar.html:78
+#: templates/account/logout.html:20 templates/accounts/profile.html:82
+#: templates/partials/navbar.html:81
 msgid "Выйти"
 msgstr "Выйти"
 
@@ -1678,7 +1741,7 @@ msgid "Смена пароля"
 msgstr "Смена пароля"
 
 #: templates/account/password_change.html:20
-#: templates/accounts/profile.html:113 templates/partials/navbar.html:74
+#: templates/accounts/profile.html:124 templates/partials/navbar.html:77
 msgid "Сменить пароль"
 msgstr "Сменить пароль"
 
@@ -1729,7 +1792,8 @@ msgid "Сохранить пароль"
 msgstr "Сохранить пароль"
 
 #: templates/account/password_reset_from_key.html:34
-#: templates/admin/core/merge_form.html:46 templates/catalog/team_form.html:102
+#: templates/admin/core/merge_form.html:46
+#: templates/catalog/event_form.html:101 templates/catalog/team_form.html:102
 #: templates/moderation/report_form.html:58
 msgid "Отмена"
 msgstr "Отмена"
@@ -1813,31 +1877,35 @@ msgstr "Аккаунт пока не связан ни с одним челов�
 msgid "Команды, которые вы завели в архиве."
 msgstr "Команды, которые вы завели в архиве."
 
-#: templates/accounts/profile.html:77
+#: templates/accounts/profile.html:72
+msgid "Турниры и встречи, которые вы завели в архиве."
+msgstr "Турниры и встречи, которые вы завели в архиве."
+
+#: templates/accounts/profile.html:88
 msgid "Обращение"
 msgstr "Обращение"
 
-#: templates/accounts/profile.html:99
+#: templates/accounts/profile.html:110
 msgid "Пользовательское соглашение"
 msgstr "Пользовательское соглашение"
 
-#: templates/accounts/profile.html:101
+#: templates/accounts/profile.html:112
 msgid "Политика конфиденциальности"
 msgstr "Политика конфиденциальности"
 
-#: templates/accounts/profile.html:103
+#: templates/accounts/profile.html:114
 msgid "Обработка персональных данных"
 msgstr "Обработка персональных данных"
 
-#: templates/accounts/profile.html:105
+#: templates/accounts/profile.html:116
 msgid "Версия согласия"
 msgstr "Версия согласия"
 
-#: templates/accounts/profile.html:111
+#: templates/accounts/profile.html:122
 msgid "Безопасность"
 msgstr "Безопасность"
 
-#: templates/accounts/profile.html:114
+#: templates/accounts/profile.html:125
 msgid "Изменить адрес почты"
 msgstr "Изменить адрес почты"
 
@@ -1876,39 +1944,93 @@ msgstr "— выберите —"
 msgid "Слить"
 msgstr "Слить"
 
-#: templates/catalog/email/new_team_notification.txt:1
-#, python-format
-msgid "Новая команда в архиве SportMemo: %(name)s"
-msgstr "Новая команда в архиве SportMemo: %(name)s"
+#: templates/catalog/email/new_event_notification.txt:1
+msgid "Новое событие в архиве SportMemo: %(name)s"
+msgstr "Новое событие в архиве SportMemo: %(name)s"
 
+#: templates/catalog/email/new_event_notification.txt:4
+#: templates/photos/photo_detail.html:86
+msgid "Тип"
+msgstr "Тип"
+
+#: templates/catalog/email/new_event_notification.txt:7
 #: templates/catalog/email/new_team_notification.txt:6
 msgid "Автор"
 msgstr "Автор"
 
+#: templates/catalog/email/new_event_notification.txt:8
 #: templates/catalog/email/new_team_notification.txt:7
 msgid "Страница"
 msgstr "Страница"
 
+#: templates/catalog/email/new_event_notification.txt:9
 #: templates/catalog/email/new_team_notification.txt:8
 #: templates/moderation/email/new_report_notification.txt:8
 msgid "В админке"
 msgstr "В админке"
 
+#: templates/catalog/email/new_event_notification.txt:11
+msgid "Событие создано в статусе «черновик» и ждёт проверки."
+msgstr "Событие создано в статусе «черновик» и ждёт проверки."
+
+#: templates/catalog/email/new_team_notification.txt:1
+#, python-format
+msgid "Новая команда в архиве SportMemo: %(name)s"
+msgstr "Новая команда в архиве SportMemo: %(name)s"
+
 #: templates/catalog/email/new_team_notification.txt:10
 msgid "Команда создана в статусе «черновик» и ждёт проверки."
 msgstr "Команда создана в статусе «черновик» и ждёт проверки."
 
-#: templates/catalog/event_detail.html:36
+#: templates/catalog/event_detail.html:33 templates/catalog/my_events.html:38
+#: templates/catalog/my_teams.html:38 templates/catalog/team_detail.html:38
+msgid "Редактировать"
+msgstr "Редактировать"
+
+#: templates/catalog/event_detail.html:46
 msgid "Итоги"
 msgstr "Итоги"
 
-#: templates/catalog/event_detail.html:43
+#: templates/catalog/event_detail.html:53
 msgid "Команды-участники"
 msgstr "Команды-участники"
 
-#: templates/catalog/event_detail.html:69
+#: templates/catalog/event_detail.html:79
 msgid "Фотографии события"
 msgstr "Фотографии события"
+
+#: templates/catalog/event_form.html:14
+msgid "Событие опубликовано: изменения появятся на сайте сразу."
+msgstr "Событие опубликовано: изменения появятся на сайте сразу."
+
+#: templates/catalog/event_form.html:18
+msgid "Публикует событие модератор — обычно в течение дня."
+msgstr "Публикует событие модератор — обычно в течение дня."
+
+#: templates/catalog/event_form.html:32
+msgid "Создание событий пока недоступно"
+msgstr "Создание событий пока недоступно"
+
+#: templates/catalog/event_form.html:33 templates/catalog/team_form.html:33
+#: templates/photos/photo_form.html:26
+msgid "Раздел ещё настраивается. Загляните позже."
+msgstr "Раздел ещё настраивается. Загляните позже."
+
+#: templates/catalog/event_form.html:49
+msgid "Событие с таким названием и годом уже есть в архиве"
+msgstr "Событие с таким названием и годом уже есть в архиве"
+
+#: templates/catalog/event_form.html:62 templates/catalog/team_form.html:63
+msgid "ожидает проверки модератором"
+msgstr "ожидает проверки модератором"
+
+#: templates/catalog/event_form.html:69
+msgid ""
+"Если это другое событие (например, турнир с тем же названием в другом "
+"городе), отметьте подтверждение ниже."
+msgstr "Если это другое событие (например, турнир с тем же названием в другом городе), отметьте подтверждение ниже."
+"Если это разные команды (например, одноимённые в разных городах), отметьте "
+"подтверждение ниже."
 
 #: templates/catalog/event_list.html:13
 #, python-format
@@ -1919,27 +2041,50 @@ msgstr[1] "Найдено %(counter)s события"
 msgstr[2] "Найдено %(counter)s событий"
 msgstr[3] "Найдено %(counter)s событий"
 
-#: templates/catalog/event_list.html:31 templates/catalog/team_list.html:39
+#: templates/catalog/event_list.html:19 templates/catalog/my_events.html:52
+#: templates/photos/photo_form.html:104
+msgid "Создать событие"
+msgstr "Создать событие"
+
+#: templates/catalog/event_list.html:39 templates/catalog/team_list.html:39
 msgid "По выбранным условиям ничего не найдено"
 msgstr "По выбранным условиям ничего не найдено"
 
-#: templates/catalog/event_list.html:33 templates/catalog/team_list.html:41
+#: templates/catalog/event_list.html:41 templates/catalog/team_list.html:41
 msgid "Попробуйте изменить условия или сбросить фильтры."
 msgstr "Попробуйте изменить условия или сбросить фильтры."
 
-#: templates/catalog/event_list.html:37
+#: templates/catalog/event_list.html:45
 #: templates/catalog/partials/filters.html:36
 #: templates/catalog/team_list.html:45
 msgid "Сбросить фильтры"
 msgstr "Сбросить фильтры"
 
-#: templates/catalog/event_list.html:44
+#: templates/catalog/event_list.html:52
 msgid "В архиве пока нет событий"
 msgstr "В архиве пока нет событий"
 
-#: templates/catalog/event_list.html:46
+#: templates/catalog/event_list.html:54
 msgid "События появятся здесь, когда их добавят и опубликуют."
 msgstr "События появятся здесь, когда их добавят и опубликуют."
+
+#: templates/catalog/my_events.html:18
+msgid ""
+"Публикует событие модератор — обычно в течение дня. До публикации событие "
+"видите только вы и модератор."
+msgstr "Публикует событие модератор — обычно в течение дня. До публикации событие видите только вы и модератор."
+"Публикует фото модератор — обычно в течение дня. До публикации фото видите "
+"только вы и модератор."
+
+#: templates/catalog/my_events.html:46
+msgid "Вы ещё не создавали событий"
+msgstr "Вы ещё не создавали событий"
+
+#: templates/catalog/my_events.html:48
+msgid ""
+"Если вашего турнира или встречи нет в архиве — заведите событие. Публикует "
+"модератор."
+msgstr "Если вашего турнира или встречи нет в архиве — заведите событие. Публикует модератор."
 
 #: templates/catalog/my_teams.html:18
 msgid ""
@@ -1948,10 +2093,6 @@ msgid ""
 msgstr ""
 "Публикует команду модератор — обычно в течение дня. До публикации команду "
 "видите только вы и модератор."
-
-#: templates/catalog/my_teams.html:38 templates/catalog/team_detail.html:38
-msgid "Редактировать"
-msgstr "Редактировать"
 
 #: templates/catalog/my_teams.html:46
 msgid "Вы ещё не создавали команд"
@@ -2070,17 +2211,9 @@ msgstr "Публикует команду модератор — обычно в
 msgid "Создание команд пока недоступно"
 msgstr "Создание команд пока недоступно"
 
-#: templates/catalog/team_form.html:33 templates/photos/photo_form.html:26
-msgid "Раздел ещё настраивается. Загляните позже."
-msgstr "Раздел ещё настраивается. Загляните позже."
-
 #: templates/catalog/team_form.html:50
 msgid "Команда с таким названием уже есть в архиве"
 msgstr "Команда с таким названием уже есть в архиве"
-
-#: templates/catalog/team_form.html:63
-msgid "ожидает проверки модератором"
-msgstr "ожидает проверки модератором"
 
 #: templates/catalog/team_form.html:70
 msgid ""
@@ -2538,10 +2671,6 @@ msgstr "Просмотров"
 msgid "Источник"
 msgstr "Источник"
 
-#: templates/photos/photo_detail.html:86
-msgid "Тип"
-msgstr "Тип"
-
 #: templates/photos/photo_detail.html:89
 msgid "Издание"
 msgstr "Издание"
@@ -2578,16 +2707,20 @@ msgstr "Предпросмотр недоступен в этом браузер
 msgid "Убрать фото"
 msgstr "Убрать фото"
 
-#: templates/photos/photo_form.html:124
+#: templates/photos/photo_form.html:134
 #, python-format
 msgid "Создать команду «%(name)s»"
 msgstr "Создать команду «%(name)s»"
 
-#: templates/photos/photo_form.html:131
+#: templates/photos/photo_form.html:139
+msgid "Создать событие «%(name)s»"
+msgstr "Создать событие «%(name)s»"
+
+#: templates/photos/photo_form.html:146
 msgid "Загрузить"
 msgstr "Загрузить"
 
-#: templates/photos/photo_form.html:146
+#: templates/photos/photo_form.html:161
 #, python-format
 msgid ""
 "Загружая фото, вы подтверждаете соблюдение <a href=\"%(rules_url)s\">Правил "

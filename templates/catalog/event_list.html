@@ -12,6 +12,14 @@
         <p class="page-header__lead">
             {% blocktranslate count counter=page_obj.paginator.count %}Найдено {{ counter }} событие{% plural %}Найдено {{ counter }} событий{% endblocktranslate %}
         </p>
+        {% if user.is_authenticated %}
+            <p>
+                <a class="btn btn-outline-primary btn-sm" href="{% url 'catalog:event_create' %}">
+                    <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                    {% trans "Создать событие" %}
+                </a>
+            </p>
+        {% endif %}
     </header>
 
     {% if filters.fields or filters.sort %}

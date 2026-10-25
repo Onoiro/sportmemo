@@ -87,6 +87,15 @@
                             {% endfor %}
                         </datalist>
                     {% elif field.name == "event_name" %}
+                        {% comment %}
+                        Событие заводят там же, где команду: поле требует
+                        существующей записи, и без этой ссылки человек
+                        остался бы в тупике.
+                        {% endcomment %}
+                        <a class="photo-form__link"
+                           href="{% url 'catalog:event_create' %}?next={{ upload_url|urlencode }}">
+                            {% trans "Создать событие" %}
+                        </a>
                         <datalist id="event-options">
                             {% for name in form.event_options %}
                                 <option value="{{ name }}"></option>
@@ -114,6 +123,11 @@
                         <a class="photo-form__link"
                            href="{% url 'catalog:team_create' %}?next={{ upload_url|urlencode }}&amp;name={{ form.unresolved.team_name|urlencode }}">
                             {% blocktranslate with name=form.unresolved.team_name %}Создать команду «{{ name }}»{% endblocktranslate %}
+                        </a>
+                    {% elif field.name == "event_name" and form.unresolved.event_name %}
+                        <a class="photo-form__link"
+                           href="{% url 'catalog:event_create' %}?next={{ upload_url|urlencode }}&amp;name={{ form.unresolved.event_name|urlencode }}">
+                            {% blocktranslate with name=form.unresolved.event_name %}Создать событие «{{ name }}»{% endblocktranslate %}
                         </a>
                     {% endif %}
                 </div>

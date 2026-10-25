@@ -942,6 +942,7 @@ html[data-bs-theme="dark"] {
    сломало бы существующие шаблоны каталога, а копия правил разошлась бы
    при первой правке. Поэтому селекторы сгруппированы. */
 .team-form,
+.event-form,
 .photo-form {
     max-width: 46rem;
     padding: 1.5rem;
@@ -951,15 +952,18 @@ html[data-bs-theme="dark"] {
 }
 
 .team-form__field,
+.event-form__field,
 .photo-form__field {
     margin-bottom: 1rem;
 }
 
-.team-form__checkbox {
+.team-form__checkbox,
+.event-form__checkbox {
     margin-bottom: 1rem;
 }
 
 .team-form__actions,
+.event-form__actions,
 .photo-form__actions {
     display: flex;
     flex-wrap: wrap;

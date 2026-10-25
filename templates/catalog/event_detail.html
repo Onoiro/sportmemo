@@ -25,6 +25,16 @@
 
     {% include "partials/moderation_notice.html" with obj=event %}
 
+    {% if can_edit %}
+        <p>
+            <a class="btn btn-outline-secondary btn-sm"
+               href="{% url 'catalog:event_update' event.slug %}">
+                <i class="bi bi-pencil" aria-hidden="true"></i>
+                {% trans "Редактировать" %}
+            </a>
+        </p>
+    {% endif %}
+
     {% if event.description %}
         <section class="detail-section">
             <p class="detail-section__text">{{ event.description }}</p>

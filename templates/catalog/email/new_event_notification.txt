@@ -1,0 +1,11 @@
+{% load i18n %}{% blocktranslate with name=event.name %}Новое событие в архиве SportMemo: {{ name }}{% endblocktranslate %}
+
+{% trans "Название" %}: {{ event.name }}
+{% trans "Тип" %}: {{ event.get_event_type_display }}
+{% if event.year %}{% trans "Год" %}: {{ event.year }}
+{% endif %}{% if event.city %}{% trans "Город" %}: {{ event.city }}
+{% endif %}{% trans "Автор" %}: {{ event.created_by|default:"—" }}
+{% trans "Страница" %}: {{ event_url }}
+{% trans "В админке" %}: {{ admin_url }}
+
+{% trans "Событие создано в статусе «черновик» и ждёт проверки." %}

@@ -64,6 +64,17 @@
                 </a>
             </div>
 
+            <div class="auth-panel">
+                <h2 class="auth-panel__title">{% trans "Мои события" %}</h2>
+                <p class="mb-2">
+                    {% trans "Турниры и встречи, которые вы завели в архиве." %}
+                </p>
+                <a class="btn btn-outline-primary btn-sm" href="{% url 'catalog:my_events' %}">
+                    <i class="bi bi-calendar3" aria-hidden="true"></i>
+                    {% trans "Мои события" %}
+                </a>
+            </div>
+
             <a class="btn btn-outline-secondary" href="{% url 'account_logout' %}">
                 <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                 {% trans "Выйти" %}

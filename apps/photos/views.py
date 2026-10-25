@@ -11,7 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
-from apps.catalog.models import Team
+from apps.catalog.models import Event, Team
 from apps.comments.services import comments_context
 from apps.core.schema import compact, photo_schema
 from apps.core.seo import page_meta
@@ -29,18 +29,30 @@ from apps.photos.models import Photo
 
 
 def _upload_initial(request, sport):
-    """Предзаполнение формы командой из `?team=<pk>`.
+    """Предзаполнение формы командой и событием из `?team=` и `?event=`.
 
-    Адрес нужен для возврата из формы создания команды: человек заводит
-    команду прямо перед загрузкой фото в неё и не должен вводить название
-    заново. Неизвестный или чужой вид спорта просто не подставляет поле —
-    ошибку формы здесь показывать не за что.
+    Адрес нужен для возврата из формы создания команды или события: человек
+    заводит запись прямо перед загрузкой фото в неё и не должен вводить
+    название заново. Неизвестный или чужой вид спорта просто не подставляет
+    поле — ошибку формы здесь показывать не за что.
     """
-    team_id = request.GET.get("team")
-    if not team_id or sport is None or not team_id.isdigit():
+    if sport is None:
         return {}
-    team = Team.objects.filter(pk=team_id, sport=sport, deleted_at__isnull=True).first()
-    return {"team_name": team.full_name} if team else {}
+
+    initial = {}
+    for param, model, label in (
+        ("team", Team, "team_name"),
+        ("event", Event, "event_name"),
+    ):
+        value = request.GET.get(param)
+        if not value or not value.isdigit():
+            continue
+        obj = model.objects.filter(
+            pk=value, sport=sport, deleted_at__isnull=True
+        ).first()
+        if obj is not None:
+            initial[label] = obj.full_name if model is Team else str(obj)
+    return initial
 
 
 def _save_uploaded_photo(form, user, sport):

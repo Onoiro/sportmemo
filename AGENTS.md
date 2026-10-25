@@ -188,7 +188,7 @@ constructor". Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.18.1; development branch `master`; 1122 tests passing on Python 3.12 and 3.13
+- Version: 0.19.0; development branch `master`; 1172 tests passing on Python 3.12 and 3.13
   (`make test`); linter clean (`make lint`).
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is in progress: sub-stage 3.1
@@ -336,6 +336,23 @@ cancel the team creation, and when there are no moderators no email is sent. The
 converter accepts any letters and hyphens and would otherwise capture both addresses.
 `BootstrapFormMixin` lives in `apps/core/forms.py`, not in `accounts`: team forms need styled
 fields too, and importing from `accounts` into `catalog` would be an extra link between apps.
+
+**Creating and editing events (0.19.0).** Built the same way as teams: `EventForm`,
+`events/new/`, `events/mine/`, `events/<slug>/edit/`, `draft` status, moderator email.
+**Why it exists:** the event field in the photo upload form needs an existing record, and a
+user could not create one — only a moderator in the admin. The asymmetry with teams is
+closed by a form, not by a hint. **The event slug is unique within a sport** and now gets a
+numeric suffix through `_unique_slug()`: the Russian Cup runs every year, and without the
+suffix a second such tournament would fail on the `UniqueConstraint` (before 0.19.0 the slug
+was generated unchecked — it worked only because events were created in the admin, where
+the slug was edited by hand). **A duplicate is the same name and the same year**, not the
+name alone: a yearly tournament is a set of normal separate records. The year comes from its
+field, or from `date_from`/`date_to` by the same rule as in `Event.save()`. **Editing after
+publication does not reset the status** — the same decision as for teams. **The permission
+check is shared:** `can_edit()` and `get_editable_or_404()` take a model instead of knowing
+about `Team`, so the rules for teams and events cannot diverge. `next_with_param()` adds
+`?team=` or `?event=` to the return URL — the photo form accepts both and prefills the name
+of the created record. `initial_name()` reads `?name=` for both forms.
 
 **Comments and reports (2.14).** A comment is **published immediately**: premoderation is off
 by default — the archive grows from other people's albums, and a correction like "this is not

@@ -515,7 +515,15 @@ class Event(TimeStampedModel, SlugModel, StatusModel, SoftDeleteModel, Mergeable
         if not self.slug:
             from django.utils.text import slugify
 
-            self.slug = slugify(self.name, allow_unicode=True)[:200]
+            # Уникальность slug — в пределах вида спорта (`UniqueConstraint`).
+            # Одинаковые названия событий — норма: «Кубок России» проводится
+            # каждый год. Менеджер по умолчанию, а не `public`: constraint
+            # про `deleted_at` не знает.
+            self.slug = _unique_slug(
+                self,
+                slugify(self.name, allow_unicode=True)[:200] or "event",
+                Event.objects.filter(sport=self.sport),
+            )
         # Год — денормализация ради навигации: заполняется из date_from,
         # если не задан явно. date_from может прийти строкой
         # (data-миграции, тесты), а строки не имеют .year.
