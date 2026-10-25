@@ -19,6 +19,15 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'core:year_list' %}">{% trans "Годы" %}</a>
                 </li>
+                {% if user.is_authenticated %}
+                    {% comment %}
+                    Ссылка только вошедшему: форма загрузки закрыта входом,
+                    а гость увидел бы адрес, который сразу уводит на вход.
+                    {% endcomment %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'photos:photo_upload' %}">{% trans "Загрузить фото" %}</a>
+                    </li>
+                {% endif %}
             </ul>
 
             {% if not hide_search %}
@@ -53,6 +62,9 @@
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li>
                                 <a class="dropdown-item" href="{% url 'catalog:my_teams' %}">{% trans "Мои команды" %}</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'photos:my_photos' %}">{% trans "Мои фото" %}</a>
                             </li>
                             <li>
                                 <a class="dropdown-item" href="{% url 'accounts:profile' %}">{% trans "Профиль" %}</a>

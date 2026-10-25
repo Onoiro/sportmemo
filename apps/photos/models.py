@@ -121,6 +121,20 @@ class ProcessingStatus(models.TextChoices):
     FAILED = "failed", _("ошибка обработки")
 
 
+# Подписи состояний в кабинете автора. Словарь, а не `choices` с
+# `get_..._display()`: состояние вычисляется из двух полей сразу
+# (статус публикации, обработка, удаление), и полем в базе оно не станет.
+UPLOAD_STATE_LABELS = {
+    "deleted": _("Удалено"),
+    "failed": _("Ошибка обработки"),
+    "processing": _("Обрабатывается"),
+    "published": _("Опубликовано"),
+    "hidden": _("Скрыто модератором"),
+    "rejected": _("Отклонено"),
+    "review": _("На проверке"),
+}
+
+
 class Photo(TimeStampedModel, StatusModel, SoftDeleteModel):
     """Фотография.
 
@@ -316,6 +330,38 @@ class Photo(TimeStampedModel, StatusModel, SoftDeleteModel):
         `rights_confirmed` — исторический флаг и на видимость не влияет.
         """
         return self.status == Status.PUBLISHED and not self.is_deleted
+
+    @property
+    def upload_state(self) -> str:
+        """Состояние фото в кабинете автора — ключ плашки.
+
+        Порядок проверок идёт от самого сильного признака: удалённое фото
+        с `published` должно читаться как «Удалено», а не «Опубликовано»,
+        иначе плашка врала бы о судьбе снимка. Живёт в модели по тому же
+        правилу, что `Event.date_label`: шаблон печатает готовое, а не
+        сравнивает статусы.
+        """
+        if self.is_deleted:
+            return "deleted"
+        if self.processing_status == ProcessingStatus.FAILED:
+            return "failed"
+        if self.processing_status in (
+            ProcessingStatus.UPLOADED,
+            ProcessingStatus.PROCESSING,
+        ):
+            return "processing"
+        if self.status == Status.PUBLISHED:
+            return "published"
+        if self.status == Status.HIDDEN:
+            return "hidden"
+        if self.status == Status.REJECTED:
+            return "rejected"
+        return "review"
+
+    @property
+    def upload_state_label(self) -> str:
+        """Переведённая подпись состояния для плашки кабинета."""
+        return str(UPLOAD_STATE_LABELS[self.upload_state])
 
     def save(self, *args, **kwargs):
         if not self.year and self.taken_date:

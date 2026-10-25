@@ -4,12 +4,15 @@
 зарегистрированным пользователем.
 """
 
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import F
 from django.http import Http404, QueryDict
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_GET, require_http_methods
 
@@ -131,6 +134,39 @@ def roster_year(request, years):
     except (TypeError, ValueError):
         return None
     return year if year in years else None
+
+
+def safe_next_url(request):
+    """Адрес возврата из формы команды.
+
+    Принимаем только относительный путь: открытый редирект на чужой сайт —
+    известная уязвимость фишинга. Абсолютный адрес нашего же сайта тоже
+    отбрасываем — он не нужен, а проверка хоста зависела бы от прокси.
+    """
+    value = request.POST.get("next") or request.GET.get("next") or ""
+    # Только путь от корня: «photos/upload/» браузер отсчитал бы от текущего
+    # адреса и увёл бы человека на несуществующую страницу.
+    if not value.startswith("/") or urlsplit(value).netloc:
+        return ""
+    if not url_has_allowed_host_and_scheme(
+        value, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return ""
+    return value
+
+
+def next_with_team(url, team):
+    """Адрес возврата с номером созданной команды.
+
+    Форма фото принимает `?team=<pk>`: без этого человек вернулся бы
+    в пустую форму и вводил название команды, которую только что завёл.
+    """
+    parts = urlsplit(url)
+    query = parse_qsl(parts.query, keep_blank_values=True)
+    query.append(("team", str(team.pk)))
+    return urlunsplit(
+        (parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment)
+    )
 
 
 def can_edit_team(user, team) -> bool:
@@ -414,6 +450,9 @@ def team_create(request):
     недоступна: показать сообщение честнее, чем падать на пустом `sport`.
     """
     sport = default_sport()
+    # Адрес возврата нужен форме фото: человек заводит команду прямо
+    # из формы загрузки и должен вернуться туда же, а не на визитку.
+    next_url = safe_next_url(request)
 
     if request.method == "POST" and sport is not None:
         form = TeamForm(request.POST, request.FILES, sport=sport)
@@ -428,6 +467,8 @@ def team_create(request):
                 request,
                 _("Команда создана и отправлена на проверку модератору."),
             )
+            if next_url:
+                return redirect(next_with_team(next_url, team))
             return redirect(team.get_absolute_url())
     elif sport is not None:
         form = TeamForm(sport=sport)
@@ -437,6 +478,7 @@ def team_create(request):
     context = {
         "form": form,
         "team": None,
+        "next_url": next_url,
         "form_action": reverse("catalog:team_create"),
         "form_title": _("Новая команда"),
         "submit_label": _("Создать"),

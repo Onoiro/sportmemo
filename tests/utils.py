@@ -3,7 +3,7 @@
 import io
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from PIL import Image
+from PIL import ExifTags, Image
 
 # Цвета квадрантов эталонной картинки. Проверка «какой участок вырезан»
 # идёт по ним: сравнивать пиксели проще, чем координаты.
@@ -30,6 +30,32 @@ def make_image_file(name="test.jpg", size=(120, 80), color="red", exif=None):
     image.save(buffer, format="JPEG", **options)
     buffer.seek(0)
     return SimpleUploadedFile(name, buffer.read(), content_type="image/jpeg")
+
+
+def make_upload(name="photo.jpg", size=(400, 400), image_format="JPEG", taken_at=None):
+    """Файл для формы загрузки — в нужном формате и с датой съёмки.
+
+    `taken_at` пишется в `DateTimeOriginal` (Exif IFD): тест проверяет, что
+    год из файла не попадает в базу сам. HEIF собирается через `pillow_heif`:
+    Pillow без плагина этот формат не сохраняет, а импорт держим внутри
+    функции — пакет необязательный.
+    """
+    buffer = io.BytesIO()
+    image = Image.new("RGB", size, "red")
+    if image_format == "HEIF":
+        import pillow_heif
+
+        pillow_heif.from_pillow(image).save(buffer, quality=90)
+    else:
+        options = {}
+        if taken_at is not None:
+            exif = Image.Exif()
+            exif[ExifTags.IFD.Exif] = {ExifTags.Base.DateTimeOriginal: taken_at}
+            options["exif"] = exif
+        image.save(buffer, format=image_format, **options)
+    buffer.seek(0)
+    content_type = "image/heic" if image_format == "HEIF" else "image/jpeg"
+    return SimpleUploadedFile(name, buffer.read(), content_type=content_type)
 
 
 def make_quadrant_image(size=(200, 200)):

@@ -14,6 +14,7 @@
 | Bootstrap Icons (шрифты) | 1.13.2 | `bootstrap-icons/fonts/` | MIT |
 | htmx | 2.0.11 | `htmx/htmx.min.js` | BSD-2-Clause |
 | Alpine.js | 3.17.4 | `alpine/alpine.min.js` | MIT |
+| exifr | 7.1.3 | `exifr/exifr.min.js` | MIT |
 
 ## Важно: шрифты иконок
 
@@ -31,13 +32,14 @@ e4fd49181388c48ec5040bd3fe66f57c29c8e67fcd8502b3354b96ec7ab47cc7  bootstrap/js/b
 24929e8a44da027588f833d4e82240ee734bd65bf962b08b0545af58a9ce80fa  bootstrap-icons/fonts/bootstrap-icons.woff
 d6fdc75f204e6bdefa99b69bf1e6d4ac69b8a364f77929f45c13476b4000f717  htmx/htmx.min.js
 232519394c6c8fdba6f362b1d9da16106db513cdbf899011f00daab4051df31c  alpine/alpine.min.js
+2bd05117781c12ddd965dee846de3b3f986b5ecb4c7f6a78f2d2ec1db7c65ae7  exifr/exifr.min.js
 ```
 
 ## Как обновить
 
 1. Проверить актуальную версию на [getbootstrap.com](https://getbootstrap.com/),
    [icons.getbootstrap.com](https://icons.getbootstrap.com/), [htmx.org](https://htmx.org/),
-   [alpinejs.dev](https://alpinejs.dev/).
+   [alpinejs.dev](https://alpinejs.dev/), [npmjs.com/package/exifr](https://www.npmjs.com/package/exifr).
 2. Скачать файлы из npm-пакета через jsDelivr, например:
 
    ```bash
@@ -47,3 +49,19 @@ d6fdc75f204e6bdefa99b69bf1e6d4ac69b8a364f77929f45c13476b4000f717  htmx/htmx.min.
 
 3. Пересчитать суммы (`sha256sum static/vendor/**/*`) и обновить таблицу и блок выше.
 4. Прогнать `make test` и открыть сайт: сломанный CSS или пропавшие иконки видно сразу.
+
+### exifr отдельно
+
+`exifr` берётся из `dist/full.umd.js`, а не из `full.umd.min.js`: jsDelivr
+отдаёт один и тот же минифицированный файл, а вариант с `.min.js` в имени
+больше и несёт предупреждение про SRI. Сохраняется как
+`static/vendor/exifr/exifr.min.js`.
+
+```bash
+curl -fsSL -o static/vendor/exifr/exifr.min.js \
+    https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js
+```
+
+Версия важна: подсказка года в форме загрузки вызывает
+`exifr.parse(file, ["DateTimeOriginal"])`, и смена мажорной версии должна
+проверяться руками — в браузере, на файле с EXIF.

@@ -1,17 +1,25 @@
-"""Пайплайн обработки фотографии: от оригинала до версии для показа.
+"""Пайплайн обработки фотографии и правила загрузки.
 
 Сервис знает о модели и хранилище, но вся работа с пикселями лежит
 в `apps/photos/processing.py`. Здесь — порядок шагов, запись полей
 и превращение любой ошибки в статус `failed`: исключение наружу
 не выходит, иначе один битый файл уронил бы проход бэкфилла.
+
+Здесь же правила загрузки: начальный статус нового фото, суточный лимит
+и резолв названия команды или события, введённого текстом. Они общие
+для формы и представления, поэтому живут в сервисе, а не в каждом
+из них по отдельности.
 """
 
 import io
 import logging
+from datetime import timedelta
 
 from django.core.files.base import ContentFile
+from django.utils import timezone
 from PIL import Image, UnidentifiedImageError
 
+from apps.core.models import Status
 from apps.photos.exif import extract_exif
 from apps.photos.models import Photo, ProcessingStatus
 from apps.photos.processing import (
@@ -40,6 +48,74 @@ PROCESSED_FIELDS = (
     "processing_error",
     "updated_at",
 )
+
+# Сколько фото человек может загрузить за сутки. Ограничение защищает
+# и сервер, и очередь модерации от одного разошедшегося альбома.
+DAILY_UPLOAD_LIMIT = 50
+
+
+def initial_status_for(user) -> Status:
+    """Статус, с которым новое фото попадает в архив.
+
+    Одна точка правила: доверенным авторам (`User.is_trusted`, P3-10)
+    понадобится другой статус, и менять его будет один подэтап, а не форма
+    и представление по отдельности. `user` пока не используется — параметр
+    стоит здесь ради этой точки.
+    """
+    return Status.DRAFT
+
+
+def uploads_today(user) -> int:
+    """Сколько фото автор загрузил за последние 24 часа.
+
+    Окно скользящее, а не календарное: «в сутки» для человека означает
+    «за последние сутки». Менеджер по умолчанию, а не `public`: удалённое
+    модератором фото квоту не возвращает, иначе лимит обходился бы
+    удалением.
+    """
+    since = timezone.now() - timedelta(hours=24)
+    return Photo.objects.filter(uploaded_by=user, created_at__gte=since).count()
+
+
+def upload_limit_reached(user) -> bool:
+    """Исчерпан ли суточный лимит загрузок."""
+    return uploads_today(user) >= DAILY_UPLOAD_LIMIT
+
+
+def resolve_by_name(model, value, queryset, label):
+    """Найти объект по названию, введённому человеком текстом.
+
+    Названия команд не уникальны («Соколы» есть в разных городах), поэтому
+    одного совпадения по `name` мало: если вхождений несколько, решает
+    полная подпись объекта. Человек может ввести и полную подпись сразу —
+    тогда совпадений по `name` нет вовсе, и подпись сравнивается
+    с выборкой целиком. Неоднозначное название не угадывается: лучше пустое
+    поле, чем фото не на той команде.
+    """
+    value = (value or "").strip()
+    if not value:
+        return None
+
+    folded = value.casefold()
+    matches = list(queryset.filter(name__iexact=value))
+    if len(matches) == 1:
+        return matches[0]
+
+    # Сравнение подписей идёт в Python: `label` — свойство модели, а не поле,
+    # и в базе его нет. Список команд вида спорта невелик, а резолв
+    # выполняется один раз на отправку формы.
+    candidates = matches or list(queryset)
+    exact = [obj for obj in candidates if label(obj).casefold() == folded]
+    if len(exact) == 1:
+        return exact[0]
+    if matches:
+        logger.debug(
+            "Название %r неоднозначно для %s: совпадений %s",
+            value,
+            model._meta.model_name,
+            len(matches),
+        )
+    return None
 
 
 def _fail(photo, message: str) -> Photo:

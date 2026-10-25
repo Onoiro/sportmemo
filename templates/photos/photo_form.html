@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1 class="page-header__title">{% trans "Загрузка фото" %}</h1>
+        <p class="page-header__lead">
+            {% trans "Публикует фото модератор — обычно в течение дня." %}
+        </p>
+    </header>
+
+    {% if not form %}
+        {% comment %}
+        Активных видов спорта нет — состояние настройки проекта, а не ошибка
+        человека. Пустая форма с обязательным `sport` упала бы на сохранении.
+        {% endcomment %}
+        <div class="empty-state">
+            <i class="bi bi-cone-striped empty-state__icon" aria-hidden="true"></i>
+            <p class="empty-state__title">{% trans "Загрузка фото пока недоступна" %}</p>
+            <p class="mb-0">{% trans "Раздел ещё настраивается. Загляните позже." %}</p>
+        </div>
+    {% else %}
+        {% comment %}
+        Тексты для скрипта лежат в data-атрибутах: строки интерфейса
+        остаются в gettext, а `photo-form.js` только выводит их.
+        {% endcomment %}
+        <form class="photo-form" method="post" action="{% url 'photos:photo_upload' %}"
+              enctype="multipart/form-data" novalidate
+              data-year-hint="{% trans "Год взят из файла — проверьте, пожалуйста." %}">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            {% comment %}
+            Предпросмотр кадра. Контейнер скрыт атрибутом `hidden`, а не CSS:
+            без JavaScript он остаётся пустым и не занимает места, а скрипт
+            формы показывает его сам, когда файл выбран.
+            {% endcomment %}
+            <div class="photo-preview" id="photo-preview" hidden>
+                <img class="photo-preview__image" id="photo-preview-image" alt="">
+            </div>
+
+            {% for field in form %}
+                <div class="photo-form__field">
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.name == "team_name" %}
+                        {% comment %}
+                        Команду заводят прямо перед загрузкой фото в неё:
+                        возврат сюда с подставленным названием избавляет
+                        от второго ввода и от опечатки в нём.
+                        {% endcomment %}
+                        <a class="photo-form__link"
+                           href="{% url 'catalog:team_create' %}?next={{ upload_url|urlencode }}">
+                            {% trans "Создать команду" %}
+                        </a>
+                        <datalist id="team-options">
+                            {% for name in form.team_options %}
+                                <option value="{{ name }}"></option>
+                            {% endfor %}
+                        </datalist>
+                    {% elif field.name == "event_name" %}
+                        <datalist id="event-options">
+                            {% for name in form.event_options %}
+                                <option value="{{ name }}"></option>
+                            {% endfor %}
+                        </datalist>
+                    {% endif %}
+                    {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% if field.name == "year" %}
+                        {% comment %}
+                        Место для подсказки «год из файла»: пустой блок
+                        не занимает места, а скрипт показывает его, только
+                        когда действительно подставил год.
+                        {% endcomment %}
+                        <div class="form-text" id="year-hint" hidden></div>
+                    {% endif %}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
+
+            <div class="photo-form__actions">
+                <button class="btn btn-primary" type="submit">{% trans "Загрузить" %}</button>
+                <a class="btn btn-outline-secondary" href="{% url 'photos:my_photos' %}">
+                    {% trans "Мои фото" %}
+                </a>
+            </div>
+
+            <p class="photo-form__terms">
+                {% comment %}
+                Права на фото проверяет автор, а не сервер (решение 2.1):
+                подпись под кнопкой и есть это подтверждение. Адрес правил
+                передаётся переменной: тег `{% url %}` внутри
+                `blocktranslate` не работает.
+                {% endcomment %}
+                {% url 'core:rules' as rules_url %}
+                {% blocktranslate %}Загружая фото, вы подтверждаете соблюдение <a href="{{ rules_url }}">Правил сервиса</a>.{% endblocktranslate %}
+            </p>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    {% if form %}
+        {% comment %}
+        `exifr` читает только `DateTimeOriginal` из локального файла: сетевых
+        запросов нет, EXIF никуда не уходит. Скрипт формы грузится после него.
+        Без формы (нет активного вида спорта) оба файла не нужны: 76 КБ
+        на странице-заглушке не помогли бы никому.
+        {% endcomment %}
+        <script src="{% static 'vendor/exifr/exifr.min.js' %}"></script>
+        <script src="{% static 'js/photo-form.js' %}"></script>
+    {% endif %}
+{% endblock %}

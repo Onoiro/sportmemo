@@ -39,8 +39,13 @@
     </section>
 
     <section class="entry-tiles">
+        {% comment %}
+        Вошедшему видна третья плитка — «Загрузить фото», поэтому ширина
+        плиток зависит от их числа: три по половине экрана оставили бы
+        пустую половину ряда.
+        {% endcomment %}
         <div class="row g-3">
-            <div class="col-12 col-md-6">
+            <div class="col-12 {% if user.is_authenticated %}col-md-4{% else %}col-md-6{% endif %}">
                 <a class="entry-tile" href="{% url 'catalog:team_list' %}">
                     <i class="bi bi-people entry-tile__icon" aria-hidden="true"></i>
                     <p class="entry-tile__title">{% trans "Команды" %}</p>
@@ -49,7 +54,7 @@
                     </p>
                 </a>
             </div>
-            <div class="col-12 col-md-6">
+            <div class="col-12 {% if user.is_authenticated %}col-md-4{% else %}col-md-6{% endif %}">
                 <a class="entry-tile" href="{% url 'core:year_list' %}">
                     <i class="bi bi-calendar3 entry-tile__icon" aria-hidden="true"></i>
                     <p class="entry-tile__title">{% trans "Годы" %}</p>
@@ -58,6 +63,17 @@
                     </p>
                 </a>
             </div>
+            {% if user.is_authenticated %}
+                <div class="col-12 col-md-4">
+                    <a class="entry-tile" href="{% url 'photos:photo_upload' %}">
+                        <i class="bi bi-cloud-arrow-up entry-tile__icon" aria-hidden="true"></i>
+                        <p class="entry-tile__title">{% trans "Загрузить фото" %}</p>
+                        <p class="entry-tile__text">
+                            {% trans "Оцифруйте снимок из бумажного альбома — архив пополнится." %}
+                        </p>
+                    </a>
+                </div>
+            {% endif %}
         </div>
     </section>
 

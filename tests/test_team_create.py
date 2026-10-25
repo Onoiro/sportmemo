@@ -333,6 +333,88 @@ class TestTeamFormValidation:
         assert set(ALLOWED_LOGO_EXTENSIONS) == {"jpg", "jpeg", "png", "webp"}
 
 
+class TestTeamCreateNext:
+    """Возврат в форму фото после создания команды.
+
+    Человек заводит команду прямо из формы загрузки фото: после создания он
+    должен вернуться туда же и получить подставленное название, а не искать
+    форму заново. Адрес возврата приходит из адреса и формы, поэтому его
+    обязательно проверяем — открытый редирект недопустим.
+    """
+
+    UPLOAD_URL = "/photos/upload/"
+
+    def test_returns_to_photo_form(self, client, user, baseball):
+        log_in(client, user)
+
+        response = client.post(
+            CREATE_URL, form_data(next=self.UPLOAD_URL), follow=False
+        )
+
+        team = Team.objects.get(name="Русстар")
+        assert response.status_code == 302
+        assert response["Location"] == f"{self.UPLOAD_URL}?team={team.pk}"
+
+    def test_photo_form_prefills_created_team(self, client, user, baseball):
+        log_in(client, user)
+        response = client.post(CREATE_URL, form_data(next=self.UPLOAD_URL))
+
+        page = client.get(response["Location"])
+
+        assert page.status_code == 200
+        assert 'value="Русстар (Москва)"' in page.content.decode()
+
+    def test_next_is_kept_in_hidden_field(self, client, user, baseball):
+        log_in(client, user)
+
+        html = client.get(CREATE_URL, {"next": self.UPLOAD_URL}).content.decode()
+
+        assert f'name="next" value="{self.UPLOAD_URL}"' in html
+
+    def test_foreign_host_is_ignored(self, client, user, baseball):
+        log_in(client, user)
+
+        response = client.post(CREATE_URL, form_data(next="https://evil.example/phish"))
+
+        team = Team.objects.get(name="Русстар")
+        assert response.status_code == 302
+        assert response["Location"] == team.get_absolute_url()
+
+    def test_protocol_relative_next_is_ignored(self, client, user, baseball):
+        log_in(client, user)
+
+        response = client.post(CREATE_URL, form_data(next="//evil.example/phish"))
+
+        team = Team.objects.get(name="Русстар")
+        assert response["Location"] == team.get_absolute_url()
+
+    def test_relative_path_without_slash_is_ignored(self, client, user, baseball):
+        """«photos/upload/» браузер отсчитал бы от текущего адреса."""
+        log_in(client, user)
+
+        response = client.post(CREATE_URL, form_data(next="photos/upload/"))
+
+        team = Team.objects.get(name="Русстар")
+        assert response["Location"] == team.get_absolute_url()
+
+    def test_unsafe_next_is_not_rendered(self, client, user, baseball):
+        log_in(client, user)
+
+        html = client.get(
+            CREATE_URL, {"next": "https://evil.example/phish"}
+        ).content.decode()
+
+        assert 'name="next"' not in html
+
+    def test_photo_form_links_to_team_create(self, client, user, baseball):
+        log_in(client, user)
+
+        html = client.get(self.UPLOAD_URL).content.decode()
+
+        assert "Создать команду" in html
+        assert f"{CREATE_URL}?next={self.UPLOAD_URL}" in html
+
+
 class TestTeamUpdate:
     def test_author_can_edit(self, client, team):
         log_in(client, team.created_by)

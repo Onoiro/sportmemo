@@ -35,6 +35,9 @@ MODEL=""
 STEP_TIMEOUT=5400
 ALLOW_DIRTY=0
 DRY_RUN=0
+STEP_PID=""
+HB_PID=""
+BASE_SHA=""
 
 log() {
     printf '%s\n' "$*"
@@ -45,8 +48,50 @@ die() {
     exit 1
 }
 
+# Ctrl+C останавливает шаг, но не оставляет мусор: дочерний процесс koda
+# получает сигнал вместе с нами, а мы успеваем сказать, что осталось.
+on_interrupt() {
+    printf '\n' >&2
+    warn "прервано пользователем"
+    [ -n "$HB_PID" ] && kill "$HB_PID" 2>/dev/null
+    if [ -n "$STEP_PID" ]; then
+        kill -- "-$(ps -o pgid= "$STEP_PID" 2>/dev/null | tr -d ' ')" 2>/dev/null \
+            || kill "$STEP_PID" 2>/dev/null
+        STEP_PID=""
+    fi
+    # Коммит мог появиться до нажатия Ctrl+C — говорим об этом прямо,
+    # иначе легко решить, что шаг пропал.
+    if [ -n "$BASE_SHA" ]; then
+        local head_sha
+        head_sha=$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null)
+        if [ "$head_sha" != "$BASE_SHA" ]; then
+            log "шаг успел закоммититься: $(git -C "$REPO_ROOT" log -1 --format='%h %s')"
+        else
+            log "коммита нет: шаг не завершён. Правки, если были, лежат в \`git status\`"
+        fi
+    fi
+    exit 130
+}
+
 warn() {
     printf 'ВНИМАНИЕ: %s\n' "$*" >&2
+}
+
+# Сердцебиение: headless-режим печатает только финальный ответ, и без
+# отметок шаг выглядит зависшим. Пока идёт koda, раз в 30 секунд пишем,
+# что процесс жив, и показываем, появился ли коммит.
+heartbeat() {
+    local start=$SECONDS
+    while sleep 30; do
+        local elapsed=$((SECONDS - start))
+        local head_sha
+        head_sha=$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null)
+        if [ "$head_sha" != "$1" ]; then
+            log "  [$(printf '%d:%02d' $((elapsed / 60)) $((elapsed % 60)))] есть новый коммит, шаг завершает работу…"
+        else
+            log "  [$(printf '%d:%02d' $((elapsed / 60)) $((elapsed % 60)))] koda работает…"
+        fi
+    done
 }
 
 usage() {
@@ -280,14 +325,35 @@ run_one_step() {
     log "=============================================================="
 
     base_sha=$(git -C "$REPO_ROOT" rev-parse HEAD)
+    BASE_SHA="$base_sha"
 
     local args=(-p "$(build_prompt "$num" "$title" "$plan_rel" "$branch")"
                 --approval-mode yolo
                 --checkpointing)
     [ -n "$MODEL" ] && args+=(-m "$MODEL")
 
-    ( cd "$REPO_ROOT" && timeout "$STEP_TIMEOUT" koda "${args[@]}" ) \
-        || log "  koda завершилась с ненулевым кодом"
+    log "  запускаю koda (таймаут ${STEP_TIMEOUT}s), вывод появится в конце…"
+    local step_start=$SECONDS
+
+    ( cd "$REPO_ROOT" && exec timeout "$STEP_TIMEOUT" koda "${args[@]}" ) &
+    STEP_PID=$!
+
+    heartbeat "$base_sha" &
+    HB_PID=$!
+
+    local koda_status=0
+    wait "$STEP_PID" || koda_status=$?
+    STEP_PID=""
+    kill "$HB_PID" 2>/dev/null
+    wait "$HB_PID" 2>/dev/null
+    HB_PID=""
+
+    local elapsed=$((SECONDS - step_start))
+    log "  koda завершилась за $(printf '%d:%02d' $((elapsed / 60)) $((elapsed % 60))) (код $koda_status)"
+    [ "$koda_status" -eq 124 ] \
+        && warn "шаг прерван по таймауту ${STEP_TIMEOUT}s"
+    [ "$koda_status" -ne 0 ] && [ "$koda_status" -ne 124 ] \
+        && log "  koda завершилась с ненулевым кодом"
 
     head_sha=$(git -C "$REPO_ROOT" rev-parse HEAD)
 
@@ -396,5 +462,7 @@ main() {
     log "готово. Выполнено шагов: $done_count"
     log "проверьте: git log --oneline master..HEAD"
 }
+
+trap on_interrupt INT TERM
 
 main "$@"

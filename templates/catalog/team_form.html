@@ -35,6 +35,9 @@
         <form class="team-form" method="post" action="{{ form_action }}"
               enctype="multipart/form-data" novalidate>
             {% csrf_token %}
+            {% if next_url %}
+                <input type="hidden" name="next" value="{{ next_url }}">
+            {% endif %}
 
             {% if form.non_field_errors %}
                 <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>

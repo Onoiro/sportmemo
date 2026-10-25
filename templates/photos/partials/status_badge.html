@@ -1,0 +1,9 @@
+{% comment %}
+Плашка состояния фото в кабинете автора. Параметр — `photo`.
+
+Состояние и подпись считает модель (`Photo.upload_state`,
+`Photo.upload_state_label`): шаблон не сравнивает статус публикации
+и стадию обработки сам, иначе правило «что сильнее» расползлось бы
+по страницам и разошлось.
+{% endcomment %}
+<span class="badge-status badge-status--{{ photo.upload_state }}">{{ photo.upload_state_label }}</span>

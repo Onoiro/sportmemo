@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load i18n pagination %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <div class="d-flex flex-wrap gap-3 align-items-start justify-content-between">
+            <div>
+                <h1 class="page-header__title">{% trans "Мои фото" %}</h1>
+                <p class="page-header__lead">
+                    {% trans "Публикует фото модератор — обычно в течение дня. До публикации фото видите только вы и модератор." %}
+                </p>
+            </div>
+            {% comment %}
+            Обновление — обычная ссылка, а не htmx: статус меняет модератор,
+            и человеку достаточно вернуться на страницу. Представление
+            закрыто `@never_cache`, поэтому копия из кэша не соврёт.
+            {% endcomment %}
+            <a class="btn btn-outline-secondary" href="{% url 'photos:my_photos' %}">
+                <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+                {% trans "Обновить" %}
+            </a>
+        </div>
+    </header>
+
+    {% if photos %}
+        <ul class="upload-grid">
+            {% for photo in photos %}
+                <li class="upload-card">
+                    <a class="upload-card__media" href="{{ photo.get_absolute_url }}">
+                        {% if photo.thumbnail %}
+                            <img class="upload-card__image" src="{{ photo.thumbnail.url }}"
+                                 alt="" loading="lazy" decoding="async">
+                        {% else %}
+                            {% comment %}
+                            Обработка могла не дойти до `display` — тогда
+                            превью нет. Заглушка честнее битой картинки.
+                            {% endcomment %}
+                            <span class="upload-card__placeholder">
+                                <i class="bi bi-image" aria-hidden="true"></i>
+                            </span>
+                        {% endif %}
+                    </a>
+                    <div class="upload-card__body">
+                        <p class="upload-card__title">
+                            <a href="{{ photo.get_absolute_url }}">
+                                {% if photo.title %}
+                                    {{ photo.title }}
+                                {% elif photo.original_filename %}
+                                    {{ photo.original_filename }}
+                                {% else %}
+                                    {% trans "Фотография" %}
+                                {% endif %}
+                            </a>
+                        </p>
+                        <p class="upload-card__meta">
+                            {% if photo.year %}{{ photo.year }} · {% endif %}
+                            {{ photo.created_at|date:"j E Y" }}
+                        </p>
+                        {% include "photos/partials/status_badge.html" with photo=photo %}
+                        {% comment %}
+                        Причина решения модератора или ошибки обработки:
+                        без неё «Отклонено» и «Ошибка обработки» ничего
+                        не объясняют, и человек не знает, что исправить.
+                        {% endcomment %}
+                        {% if photo.processing_error %}
+                            <p class="upload-card__reason">{{ photo.processing_error }}</p>
+                        {% elif photo.moderation_reason %}
+                            <p class="upload-card__reason">{{ photo.moderation_reason }}</p>
+                        {% elif photo.deleted_reason %}
+                            <p class="upload-card__reason">{{ photo.deleted_reason }}</p>
+                        {% endif %}
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+        {% if page_obj.has_other_pages %}
+            {% pagination page_obj %}
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-images empty-state__icon" aria-hidden="true"></i>
+            <p class="empty-state__title">{% trans "Вы ещё не загружали фото" %}</p>
+            <p class="mb-3">
+                {% trans "Оцифруйте снимок из бумажного альбома — он попадёт в архив после проверки модератором." %}
+            </p>
+            <a class="btn btn-primary" href="{% url 'photos:photo_upload' %}">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                {% trans "Загрузить фото" %}
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

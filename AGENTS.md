@@ -188,13 +188,16 @@ constructor". Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.17.0; development branch `master`; 1026 tests passing on Python 3.12 and 3.13
+- Version: 0.18.0; development branch `master`; 1114 tests passing on Python 3.12 and 3.13
   (`make test`); linter clean (`make lint`).
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
-  sub-stages 2.1–2.15 are done. Stage 3 (photo processing) has started: sub-stage 3.1
+  sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is in progress: sub-stage 3.1
   (processing foundation) is complete — EXIF by allow-list, orientation, rotation, crop,
   `display`, perceptual hash, backfill; previews come from `display`; `rights_confirmed` is
-  out of the visibility rule. The next one is 3.2 (user photo upload).
+  out of the visibility rule. Sub-stage 3.2 (user photo upload) is complete: the
+  `/photos/upload/` form, the `/photos/mine/` cabinet with seven badges, the `/rules/` page,
+  the EXIF year hint and synchronous processing after saving. The next one is 3.3
+  (Celery pipeline).
 
 ### Public UI
 
@@ -231,6 +234,9 @@ Components and pages. The rules for visibility, privacy and their reasoning live
   comes from the active locale via `date_format`, there are no separate month strings.
 - `/search/` (`search:index`, the `apps/search` app): infrastructure is sub-stage 2.12,
   the interface is 2.13.
+- `/photos/upload/`, `/photos/mine/` (3.2) and `/rules/` (`core:rules`) are the upload form,
+  the author cabinet and the service rules. The form and the cabinet are `noindex`;
+  `/rules/` is indexed.
 - Public queries: `SoftDeleteQuerySet.published()` (filters by `status=Status.PUBLISHED`).
   The `.visible()` method was **removed** in 3.1: after decision 2.1 it filtered nothing, and
   an empty wrapper would lie to the reader. Shared entry points live in
@@ -363,6 +369,32 @@ would tell it that it was caught). A repeated report by the same logged-in user 
 object with the same reason within a day is not created; anonymous users are not checked.
 `/reports/add/` is closed to indexing (`noindex`) and added to `robots.txt`.
 
+**Photo upload (3.2).** The form `/photos/upload/` (logged-in only) and the cabinet
+`/photos/mine/`. **The status rule has one place:** `initial_status_for(user)`
+in `apps/photos/services.py` returns `draft`; the function exists for P3-10
+(trusted author), so the rule changes in one place instead of in the form and
+the view separately. **Team and event are typed as text** with a native
+`<datalist>` hint, and the server resolves the value through
+`resolve_by_name()`: without JavaScript the field works as plain text. An
+ambiguous name (two "Соколы" in different cities) is not guessed but asks for a
+city — a photo on the wrong team is worse than an empty field; the resolution
+queryset includes the user's own draft (a team is created right before
+uploading photos into it). **The daily limit is a rolling 24 hours**
+(`uploads_today()`, the default manager rather than `public`: a deleted photo
+does not give the quota back). **Badge states are `Photo.upload_state`**
+(seven keys: `deleted`, `failed`, `processing`, `published`, `hidden`,
+`rejected`, `review`) and `upload_state_label` in the model: the template
+prints a ready label and does not compare statuses. Checks go from the
+strongest sign — a deleted photo with `published` reads as "Deleted".
+**Processing is still synchronous** — `process_photo()` is called from the view
+right after saving; in 3.3 it becomes a Celery task, and the call site stays
+single. **`/rules/`** (`core:rules`) is open anonymously and indexed; the link
+sits under the upload button and in the footer; the text covers copyright
+(`COPYRIGHT`) and the right to one's image (`PRIVACY`) as separate items.
+**Returning to the form after creating a team** — `next` in `team_create`
+checked with `url_has_allowed_host_and_scheme`, and the photo form accepts
+`?team=<pk>`.
+
 **Admin.** Moderation (publish / hide / reject / soft-delete / restore) is a list action; every
 decision is written to `ModerationAction`. Merging duplicates is the "Merge duplicates into one
 object" action, which opens a separate target selection page (`admin/core/merge_form.html`)
@@ -408,6 +440,25 @@ filled by actions, not by hand.
 - **A processing error never escapes:** `processing_status=failed` plus a short text in
   `processing_error`, the stack goes to the log. Otherwise one broken file would stop the whole
   backfill.
+- **The status of a new photo is decided by `initial_status_for(user)`**
+  (`apps/photos/services.py`), and by nothing else: the rule will change for trusted authors
+  (P3-10), and if it spread over the form and the view, one upload path would publish at once
+  and the other would not. Today it returns `draft`.
+- **Upload limits are constants in `apps/photos/processing.py`** (`MAX_UPLOAD_BYTES`,
+  `MIN_SIDE_PX`, `MAX_SIDE_PX`, `ALLOWED_UPLOAD_FORMATS`): the form checks them and the worker
+  will, so there must be no second set of numbers. Rules that need the model
+  (`DAILY_UPLOAD_LIMIT`, `uploads_today()`, `upload_limit_reached()`, `resolve_by_name()`)
+  live in the service.
+- **The daily quota is a rolling 24 hours over the default manager.** "Per day" for a person
+  means "over the last day", and a photo deleted by a moderator does not give the quota back:
+  otherwise the limit could be bypassed by deleting.
+- **The cabinet badge state is computed by the model** (`Photo.upload_state`,
+  `upload_state_label`), not by the template: deletion is a `deleted_at` flag, not a
+  publication status, and the order of checks (deleted → failed → processing → published →
+  hidden → rejected → review) must live in one place. The template prints a ready label.
+- **A typed team or event name is resolved by the service** (`resolve_by_name()`), not by the
+  form: one rule for the upload form and for the future photo edit. An ambiguous name is not
+  guessed — the user gets an error and clarifies the city.
 - List filters live in `apps/catalog/filters.py`, not in templates and not in views: option
   lookups, parameter parsing and the `canonical` address live in one place, and the template
   gets a ready panel. An invalid parameter value counts as "filter not applied".
