@@ -12,6 +12,8 @@ from django.urls import reverse
 from apps.catalog.forms import MAX_DESCRIPTION_LENGTH, MIN_FOUNDED_YEAR, EventForm
 from apps.catalog.models import Event
 from apps.core.models import Status
+from apps.photos.models import Photo
+from tests.utils import make_image_file
 
 pytestmark = pytest.mark.django_db
 
@@ -453,22 +455,36 @@ class TestEventCreateFromPhotoForm:
         assert response.status_code == 302
         assert response["Location"] == f"{UPLOAD_URL}?event={event.pk}"
 
-    def test_photo_form_prefills_created_event(self, client, user, baseball):
+    def test_photo_details_links_to_event_create(self, client, user, baseball):
+        """Ссылка живёт на втором шаге: событие заводят из полей снимка."""
+        photo = Photo.objects.create(
+            sport=baseball,
+            original=make_image_file("photo.jpg"),
+            uploaded_by=user,
+        )
+        edit_url = f"/photos/{photo.pk}/edit/"
         log_in(client, user)
-        response = client.post(CREATE_URL, form_data(next=UPLOAD_URL))
 
+        html = client.get(edit_url).content.decode()
+
+        assert "Создать событие" in html
+        assert f"{CREATE_URL}?next={edit_url}" in html
+
+    def test_photo_details_prefills_created_event(self, client, user, baseball):
+        """Возврат из формы события подставляет название на шаге 2."""
+        photo = Photo.objects.create(
+            sport=baseball,
+            original=make_image_file("photo.jpg"),
+            uploaded_by=user,
+        )
+        edit_url = f"/photos/{photo.pk}/edit/"
+        log_in(client, user)
+
+        response = client.post(CREATE_URL, form_data(next=edit_url))
         page = client.get(response["Location"])
 
         assert page.status_code == 200
         assert 'value="Кубок России (1994)"' in page.content.decode()
-
-    def test_photo_form_links_to_event_create(self, client, user, baseball):
-        log_in(client, user)
-
-        html = client.get(UPLOAD_URL).content.decode()
-
-        assert "Создать событие" in html
-        assert f"{CREATE_URL}?next={UPLOAD_URL}" in html
 
     def test_event_list_offers_creation_to_logged_in(self, client, user, baseball):
         log_in(client, user)

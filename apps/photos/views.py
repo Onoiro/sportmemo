@@ -1,10 +1,11 @@
-"""Представления фотографий: загрузка, кабинет автора, страница фото."""
+"""Представления фотографий: загрузка, правка данных, кабинет, страница."""
 
 from pathlib import Path
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import F
+from django.http import Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -13,6 +14,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from apps.catalog.models import Event, Team
 from apps.comments.services import comments_context
+from apps.core.models import Status
 from apps.core.schema import compact, photo_schema
 from apps.core.seo import page_meta
 from apps.core.shortcuts import (
@@ -24,23 +26,57 @@ from apps.core.shortcuts import (
     visible_photos,
 )
 from apps.photos import services
-from apps.photos.forms import PhotoUploadForm
+from apps.photos.exif import taken_year
+from apps.photos.forms import PhotoDetailsForm, PhotoFileForm
 from apps.photos.models import Photo
+from apps.photos.tasks import enqueue_photo_processing
 
 
-def _upload_initial(request, sport):
-    """Предзаполнение формы командой и событием из `?team=` и `?event=`.
+def _create_photo(form, user, sport):
+    """Собрать фото из формы файла и поставить обработку в очередь.
 
-    Адрес нужен для возврата из формы создания команды или события: человек
-    заводит запись прямо перед загрузкой фото в неё и не должен вводить
-    название заново. Неизвестный или чужой вид спорта просто не подставляет
-    поле — ошибку формы здесь показывать не за что.
+    Форма — не `ModelForm`: статус и автора нельзя брать из POST. Данные
+    о снимке заполняются следующим шагом: файл не переживает переход,
+    а метаданные переживают.
+
+    Задача ставится сразу после сохранения: пока воркер считает `display`,
+    человек заполняет данные, и ожидание не складывается из двух шагов.
     """
-    if sport is None:
-        return {}
+    data = form.cleaned_data
+    upload = data["original"]
+    photo = Photo(
+        sport=sport,
+        original=upload,
+        status=services.initial_status_for(user),
+        uploaded_by=user,
+        # Имя без пути: браузер присылает его как `C:\...\photo.jpg`,
+        # а поле хранится для поиска в админке.
+        original_filename=Path(upload.name).name[:255],
+        exif=data.get("exif", {}),
+    )
+    photo.save()
+    enqueue_photo_processing(photo)
+    return photo
 
+
+def _photo_edit_initial(request, photo):
+    """Начальные значения второго шага: год из EXIF и вернувшиеся привязки.
+
+    Год из файла — только подсказка (решение 2.6 мастер-плана): он попадает
+    в поле, а не в базу, и человек его подтверждает или исправляет.
+
+    `?team=` и `?event=` приходят из формы создания команды или события:
+    человек заводит запись прямо перед загрузкой фото в неё и не должен
+    вводить название заново. Чужой вид спорта не подставляется — ошибку
+    формы здесь показывать не за что.
+    """
     initial = {}
-    for param, model, label in (
+    if not photo.year:
+        year = taken_year(photo.exif or {})
+        if year is not None:
+            initial["year"] = year
+
+    for param, model, field in (
         ("team", Team, "team_name"),
         ("event", Event, "event_name"),
     ):
@@ -48,79 +84,65 @@ def _upload_initial(request, sport):
         if not value or not value.isdigit():
             continue
         obj = model.objects.filter(
-            pk=value, sport=sport, deleted_at__isnull=True
+            pk=value, sport=photo.sport, deleted_at__isnull=True
         ).first()
         if obj is not None:
-            initial[label] = obj.full_name if model is Team else str(obj)
+            initial[field] = obj.full_name if model is Team else str(obj)
     return initial
 
 
-def _save_uploaded_photo(form, user, sport):
-    """Собрать фото из формы и сразу обработать его.
+def _get_editable_photo_or_404(request, pk):
+    """Фото для правки или 404.
 
-    Форма — не `ModelForm`: статус и автора нельзя брать из POST. Обработка
-    синхронная — в 3.3 она станет задачей Celery, но точка вызова останется
-    одна, и пайплайн не раздвоится.
+    Объект берётся из `Photo.public`: удалённое фото не правит никто, включая
+    автора. Посторонним — 404, а не 403: не раскрываем существование чужого
+    черновика (то же правило, что `can_edit` в каталоге).
     """
-    data = form.cleaned_data
-    upload = data["original"]
-    photo = Photo(
-        sport=sport,
-        original=upload,
-        title=data["title"],
-        caption=data["caption"],
-        year=data["year"],
-        taken_date=data["taken_date"],
-        team=data["team"],
-        event=data["event"],
-        status=services.initial_status_for(user),
-        uploaded_by=user,
-        # Имя без пути: браузер присылает его как `C:\...\photo.jpg`,
-        # а поле хранится для поиска в админке.
-        original_filename=Path(upload.name).name[:255],
-    )
-    photo.save()
-    services.process_photo(photo)
+    try:
+        photo = Photo.public.select_related("team", "event", "sport").get(pk=pk)
+    except Photo.DoesNotExist as exc:
+        raise Http404("Фотография не найдена") from exc
+
+    if not services.can_edit_photo(request.user, photo):
+        raise Http404("Фотография не найдена")
     return photo
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def photo_upload(request):
-    """Загрузка фото: черновик, который публикует модератор.
+    """Первый шаг загрузки: только файл.
 
     Вид спорта берётся из `default_sport()`: выбора в интерфейсе нет, схема
     мультиспортная. Активных видов нет — форма недоступна: показать
     сообщение честнее, чем падать на пустом `sport` при сохранении.
+
+    После сохранения человек попадает на второй шаг, а не в кабинет: без
+    данных о снимке фото в архиве бесполезно, а человек уже настроен их
+    заполнить.
     """
     sport = default_sport()
 
     if sport is None:
         form = None
     elif request.method == "POST":
-        form = PhotoUploadForm(
-            request.POST, request.FILES, user=request.user, sport=sport
-        )
+        form = PhotoFileForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
-            _save_uploaded_photo(form, request.user, sport)
-            messages.success(
+            photo = _create_photo(form, request.user, sport)
+            messages.info(
                 request,
                 _(
-                    "Спасибо! Фотография успешно загружена. Она появится "
-                    "в общем архиве после быстрой проверки модератором."
+                    "Файл сохранён, фотография обрабатывается. "
+                    "Заполните данные о снимке — их можно изменить позже."
                 ),
             )
-            return redirect("photos:my_photos")
+            return redirect("photos:photo_edit", pk=photo.pk)
     else:
-        form = PhotoUploadForm(
-            user=request.user, sport=sport, initial=_upload_initial(request, sport)
-        )
+        form = PhotoFileForm(user=request.user)
 
     context = {
         "form": form,
         "sport": sport,
-        # Адрес этой же формы — адрес возврата из формы команды.
-        "upload_url": reverse("photos:photo_upload"),
         "meta": page_meta(
             request,
             title=_("Загрузка фото"),
@@ -133,6 +155,62 @@ def photo_upload(request):
         ],
     }
     return render(request, "photos/photo_form.html", context)
+
+
+@login_required
+@never_cache
+@require_http_methods(["GET", "POST"])
+def photo_edit(request, pk):
+    """Второй шаг загрузки и правка данных о снимке.
+
+    Одна страница на обе роли: два маршрута с одинаковой формой разошлись бы
+    в правилах доступа (уточнение 5 плана).
+
+    Статус публикации правка не сбрасывает: аудит ведёт история, а модератор
+    проверяет релевантность и качество заполнения, не текст (P3-14).
+    `display` при правке не пересчитывается — данные о снимке не влияют
+    на картинку, пересчёт появится в 3.4 вместе с кропом.
+    """
+    photo = _get_editable_photo_or_404(request, pk)
+
+    if request.method == "POST":
+        form = PhotoDetailsForm(request.POST, instance=photo, user=request.user)
+        if form.is_valid():
+            form.save()
+            if photo.status == Status.PUBLISHED:
+                messages.success(
+                    request,
+                    _("Изменения сохранены. Фото остаётся в архиве."),
+                )
+            else:
+                messages.success(request, _("Изменения сохранены."))
+            return redirect("photos:my_photos")
+    else:
+        form = PhotoDetailsForm(
+            instance=photo,
+            user=request.user,
+            initial=_photo_edit_initial(request, photo),
+        )
+
+    context = {
+        "photo": photo,
+        "form": form,
+        # Адрес возврата из форм команды и события: после создания записи
+        # человек вернётся сюда же, на второй шаг.
+        "edit_url": reverse("photos:photo_edit", args=[photo.pk]),
+        "meta": page_meta(
+            request,
+            title=_("Данные фотографии"),
+            noindex=True,
+            nofollow=True,
+        ),
+        "breadcrumbs": [
+            {"url": reverse("core:home"), "label": _("Главная")},
+            {"url": reverse("photos:my_photos"), "label": _("Мои фото")},
+            {"label": _("Данные фотографии")},
+        ],
+    }
+    return render(request, "photos/photo_details.html", context)
 
 
 @login_required

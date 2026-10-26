@@ -1,4 +1,10 @@
-"""Форма загрузки фотографии: проверка файла и разбор полей."""
+"""Формы загрузки фото: файл отдельно, данные о снимке отдельно.
+
+Две формы вместо одной — решение P3-16. Выбранный файл не переживает
+переход на другую страницу, а данные о снимке переживают. Пока обе роли
+играла одна форма, ошибка в названии команды или уход на её создание
+теряли снимок, и человек выбирал его заново.
+"""
 
 import io
 import warnings
@@ -12,8 +18,9 @@ from PIL import Image, UnidentifiedImageError
 from apps.catalog.models import Event, Team
 from apps.core.forms import BootstrapFormMixin
 from apps.core.models import Status
-from apps.core.shortcuts import default_sport
 from apps.photos import services
+from apps.photos.exif import extract_exif
+from apps.photos.models import Photo
 from apps.photos.processing import (
     ALLOWED_UPLOAD_FORMATS,
     MAX_SIDE_PX,
@@ -25,21 +32,19 @@ from apps.photos.processing import (
 MIN_PHOTO_YEAR = 1850
 
 
-class PhotoUploadForm(BootstrapFormMixin, forms.Form):
-    """Загрузка фото: файл и то, что человек знает о снимке.
+class PhotoFileForm(BootstrapFormMixin, forms.Form):
+    """Первый шаг загрузки: только файл.
+
+    Файл проверяется здесь целиком — размер, формат, стороны, пиксели,
+    декодирование, суточный лимит, — и сразу сохраняется. Данные о снимке
+    заполняются следующим шагом, поэтому ошибка в названии команды больше
+    не отнимает выбранный файл.
 
     Не `ModelForm`: объект собирает представление, и статус с автором туда
     нельзя подставить через POST. Штатный `ImageField` тоже не подходит —
     он проверяет файл через `Image.verify()` и прячет причину отказа
     в общее «некорректное изображение», а человеку нужно знать, что именно
     не так.
-
-    Источник (`Source`) в форму не входит: его заводит модератор, а выбор
-    из списка источников в форме из одного поля стал бы справочником.
-
-    Команда и событие вводятся текстом: подсказку даёт нативное `<datalist>`,
-    а сервер резолвит введённое в объект. Без JavaScript поле работает как
-    обычный текст.
     """
 
     original = forms.FileField(
@@ -48,70 +53,10 @@ class PhotoUploadForm(BootstrapFormMixin, forms.Form):
             attrs={"accept": "image/jpeg,image/png,image/webp,image/heic,image/heif"}
         ),
     )
-    title = forms.CharField(
-        label=_("Заголовок"),
-        max_length=300,
-        required=False,
-        help_text=_("Одна строка о снимке. Можно оставить пустым."),
-    )
-    caption = forms.CharField(
-        label=_("Подпись"),
-        required=False,
-        widget=forms.Textarea(attrs={"rows": 4}),
-        help_text=_("Кто на фото, что происходит, чем снимок важен."),
-    )
-    year = forms.IntegerField(
-        label=_("Год"),
-        required=False,
-        help_text=_("Если знаете. Год из файла — только подсказка."),
-    )
-    taken_date = forms.DateField(
-        label=_("Дата съёмки"),
-        required=False,
-        widget=forms.DateInput(attrs={"type": "date"}),
-    )
-    team_name = forms.CharField(
-        label=_("Команда"),
-        max_length=300,
-        required=False,
-        widget=forms.TextInput(attrs={"list": "team-options", "autocomplete": "off"}),
-        help_text=_(
-            "Начните вводить — появятся команды из архива. "
-            "Если нужной нет, создайте её по ссылке ниже."
-        ),
-    )
-    event_name = forms.CharField(
-        label=_("Событие"),
-        max_length=300,
-        required=False,
-        widget=forms.TextInput(attrs={"list": "event-options", "autocomplete": "off"}),
-        help_text=_("Начните вводить — появятся события из архива."),
-    )
 
-    def __init__(self, *args, user=None, sport=None, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
-        # Вид спорта сужает резолв: продукт односпортный, но схема
-        # мультиспортная, и «Соколы» из другого вида спорта — не наша команда.
-        self.sport = sport if sport is not None else default_sport()
-        # Названия, которые не нашлись в архиве: шаблон покажет рядом
-        # с ошибкой ссылку «создать с таким названием». В текст ошибки
-        # ссылку не вставить — он экранируется.
-        self.unresolved = {}
-
-    @property
-    def team_options(self):
-        """Подсказки `<datalist>` для команды.
-
-        Список строится из той же выборки, что и `clean`: подсказка чужого
-        черновика привела бы человека к ошибке «не удалось найти».
-        """
-        return [team.full_name for team in self._queryset(Team)]
-
-    @property
-    def event_options(self):
-        """Подсказки `<datalist>` для события."""
-        return [str(event) for event in self._queryset(Event)]
 
     def clean_original(self):
         """Проверить файл: размер, формат, стороны, пиксели, декодирование.
@@ -136,6 +81,11 @@ class PhotoUploadForm(BootstrapFormMixin, forms.Form):
                 self._check_format(image)
                 self._check_side(image)
                 self._decode(image)
+                # EXIF читается здесь же: файл уже открыт и декодирован,
+                # и второе открытие ради одного поля стоило бы столько же,
+                # сколько вся проверка. В базу метаданные попадут при
+                # сохранении фото, но год из них — только подсказка.
+                self.cleaned_data["exif"] = extract_exif(image)
             finally:
                 image.close()
         finally:
@@ -147,11 +97,6 @@ class PhotoUploadForm(BootstrapFormMixin, forms.Form):
     def clean(self):
         cleaned_data = super().clean()
         self._check_daily_limit()
-        cleaned_data["team"] = self._resolve(
-            Team, "team_name", cleaned_data, lambda obj: obj.full_name
-        )
-        cleaned_data["event"] = self._resolve(Event, "event_name", cleaned_data, str)
-        self._check_year(cleaned_data)
         return cleaned_data
 
     @staticmethod
@@ -237,6 +182,114 @@ class PhotoUploadForm(BootstrapFormMixin, forms.Form):
                 % {"limit": services.DAILY_UPLOAD_LIMIT}
             )
 
+
+class PhotoDetailsForm(BootstrapFormMixin, forms.ModelForm):
+    """Второй шаг: что человек знает о снимке.
+
+    Одна форма служит и вторым шагом, и правкой: два маршрута с одинаковой
+    формой разошлись бы в правилах доступа. Все поля необязательные —
+    черновик нельзя блокировать, человек вернётся и дополнит позже.
+
+    Источник (`Source`) в форму не входит: его заводит модератор, а выбор
+    из списка источников в форме из одного поля стал бы справочником.
+
+    Команда и событие вводятся текстом: подсказку даёт нативное `<datalist>`,
+    а сервер резолвит введённое в объект. Без JavaScript поле работает как
+    обычный текст.
+    """
+
+    team_name = forms.CharField(
+        label=_("Команда"),
+        max_length=300,
+        required=False,
+        widget=forms.TextInput(attrs={"list": "team-options", "autocomplete": "off"}),
+        help_text=_(
+            "Начните вводить — появятся команды из архива. "
+            "Если нужной нет, создайте её по ссылке ниже."
+        ),
+    )
+    event_name = forms.CharField(
+        label=_("Событие"),
+        max_length=300,
+        required=False,
+        widget=forms.TextInput(attrs={"list": "event-options", "autocomplete": "off"}),
+        help_text=_("Начните вводить — появятся события из архива."),
+    )
+
+    class Meta:
+        model = Photo
+        # `team` и `event` сюда не входят: они приходят названием и ставятся
+        # в объект в `save()` после резолва.
+        fields = ["title", "caption", "year", "taken_date"]
+        labels = {
+            "title": _("Заголовок"),
+            "caption": _("Подпись"),
+            "year": _("Год"),
+            "taken_date": _("Дата съёмки"),
+        }
+        help_texts = {
+            "title": _("Одна строка о снимке. Можно оставить пустым."),
+            "caption": _("Кто на фото, что происходит, чем снимок важен."),
+            "year": _("Если знаете. Год из файла — только подсказка."),
+        }
+        widgets = {
+            "caption": forms.Textarea(attrs={"rows": 4}),
+            "taken_date": forms.DateInput(attrs={"type": "date"}),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+        # Названия, которые не нашлись в архиве: шаблон покажет рядом
+        # с ошибкой ссылку «создать с таким названием». В текст ошибки
+        # ссылку не вставить — он экранируется.
+        self.unresolved = {}
+        if self.instance.pk and not self.is_bound:
+            # Форма правки показывает текущие привязки: пустое поле
+            # заставило бы вводить название заново, а человек, стерев его
+            # не нарочно, отвязал бы фото от команды.
+            if self.instance.team_id:
+                self.initial.setdefault("team_name", self.instance.team.full_name)
+            if self.instance.event_id:
+                self.initial.setdefault("event_name", str(self.instance.event))
+
+    @property
+    def team_options(self):
+        """Подсказки `<datalist>` для команды.
+
+        Список строится из той же выборки, что и `clean`: подсказка чужого
+        черновика привела бы человека к ошибке «не удалось найти».
+        """
+        return [team.full_name for team in self._queryset(Team)]
+
+    @property
+    def event_options(self):
+        """Подсказки `<datalist>` для события."""
+        return [str(event) for event in self._queryset(Event)]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        cleaned_data["team"] = self._resolve(
+            Team, "team_name", cleaned_data, lambda obj: obj.full_name
+        )
+        cleaned_data["event"] = self._resolve(Event, "event_name", cleaned_data, str)
+        self._check_year(cleaned_data)
+        return cleaned_data
+
+    def save(self, commit=True):
+        """Сохранить поля и привязки, введённые названием.
+
+        `team` и `event` не входят в `Meta.fields`, поэтому в объект они
+        попадают только здесь. Пустое поле отвязывает фото: форма показывает
+        текущее название, и стереть его — осознанное действие.
+        """
+        photo = super().save(commit=False)
+        photo.team = self.cleaned_data.get("team")
+        photo.event = self.cleaned_data.get("event")
+        if commit:
+            photo.save()
+        return photo
+
     def _resolve(self, model, field_name, cleaned_data, label):
         """Резолв названия в объект с понятной ошибкой при промахе.
 
@@ -257,17 +310,23 @@ class PhotoUploadForm(BootstrapFormMixin, forms.Form):
         return resolved
 
     def _queryset(self, model):
-        """Что видно при резолве: опубликованное и своё.
+        """Что видно при резолве: опубликованное, своё и текущая привязка.
 
         Свой черновик нужен: команду заводят прямо перед загрузкой фото
-        в неё, и модератор ещё не успел её опубликовать.
+        в неё, и модератор ещё не успел её опубликовать. Текущая привязка
+        входит всегда: правку не должно блокировать название, которое
+        человек не менял, иначе модератор не сохранил бы чужой черновик.
         """
-        if self.sport is None:
+        sport = getattr(self.instance, "sport", None)
+        if sport is None:
             return model.objects.none()
         visible = Q(status=Status.PUBLISHED)
         if self.user is not None and self.user.is_authenticated:
             visible |= Q(created_by=self.user)
-        return model.objects.filter(sport=self.sport, deleted_at__isnull=True).filter(
+        current = self.instance.team_id if model is Team else self.instance.event_id
+        if current:
+            visible |= Q(pk=current)
+        return model.objects.filter(sport=sport, deleted_at__isnull=True).filter(
             visible
         )
 

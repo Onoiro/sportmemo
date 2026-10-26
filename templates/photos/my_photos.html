@@ -74,6 +74,19 @@
                         {% elif photo.deleted_reason %}
                             <p class="upload-card__reason">{{ photo.deleted_reason }}</p>
                         {% endif %}
+                        {% comment %}
+                        Данные о снимке правятся в любой момент, в том числе
+                        после публикации (P3-14). У удалённого фото правки нет:
+                        представление берёт объект из `Photo.public` и отдало бы
+                        404 — ссылка вела бы в тупик.
+                        {% endcomment %}
+                        {% if not photo.is_deleted %}
+                            <a class="upload-card__action"
+                               href="{% url 'photos:photo_edit' photo.pk %}">
+                                <i class="bi bi-pencil" aria-hidden="true"></i>
+                                {% trans "Изменить данные" %}
+                            </a>
+                        {% endif %}
                     </div>
                 </li>
             {% endfor %}

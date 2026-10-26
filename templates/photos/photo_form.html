@@ -10,7 +10,7 @@
     <header class="page-header">
         <h1 class="page-header__title">{% trans "Загрузка фото" %}</h1>
         <p class="page-header__lead">
-            {% trans "Публикует фото модератор — обычно в течение дня." %}
+            {% trans "Сначала файл, потом данные: снимок сохраняется сразу, а что на нём — заполним на следующем шаге. Публикует фото модератор — обычно в течение дня." %}
         </p>
     </header>
 
@@ -25,13 +25,8 @@
             <p class="mb-0">{% trans "Раздел ещё настраивается. Загляните позже." %}</p>
         </div>
     {% else %}
-        {% comment %}
-        Тексты для скрипта лежат в data-атрибутах: строки интерфейса
-        остаются в gettext, а `photo-form.js` только выводит их.
-        {% endcomment %}
         <form class="photo-form" method="post" action="{% url 'photos:photo_upload' %}"
-              enctype="multipart/form-data" novalidate
-              data-year-hint="{% trans "Год взят из файла — проверьте, пожалуйста." %}">
+              enctype="multipart/form-data" novalidate>
             {% csrf_token %}
 
             {% if form.non_field_errors %}
@@ -71,70 +66,15 @@
                 <div class="photo-form__field">
                     <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
                     {{ field }}
-                    {% if field.name == "team_name" %}
-                        {% comment %}
-                        Команду заводят прямо перед загрузкой фото в неё:
-                        возврат сюда с подставленным названием избавляет
-                        от второго ввода и от опечатки в нём.
-                        {% endcomment %}
-                        <a class="photo-form__link"
-                           href="{% url 'catalog:team_create' %}?next={{ upload_url|urlencode }}">
-                            {% trans "Создать команду" %}
-                        </a>
-                        <datalist id="team-options">
-                            {% for name in form.team_options %}
-                                <option value="{{ name }}"></option>
-                            {% endfor %}
-                        </datalist>
-                    {% elif field.name == "event_name" %}
-                        {% comment %}
-                        Событие заводят там же, где команду: поле требует
-                        существующей записи, и без этой ссылки человек
-                        остался бы в тупике.
-                        {% endcomment %}
-                        <a class="photo-form__link"
-                           href="{% url 'catalog:event_create' %}?next={{ upload_url|urlencode }}">
-                            {% trans "Создать событие" %}
-                        </a>
-                        <datalist id="event-options">
-                            {% for name in form.event_options %}
-                                <option value="{{ name }}"></option>
-                            {% endfor %}
-                        </datalist>
-                    {% endif %}
                     {% if field.help_text %}
                         <div class="form-text">{{ field.help_text }}</div>
                     {% endif %}
-                    {% if field.name == "year" %}
-                        {% comment %}
-                        Место для подсказки «год из файла»: пустой блок
-                        не занимает места, а скрипт показывает его, только
-                        когда действительно подставил год.
-                        {% endcomment %}
-                        <div class="form-text" id="year-hint" hidden></div>
-                    {% endif %}
                     {{ field.errors }}
-                    {% if field.name == "team_name" and form.unresolved.team_name %}
-                        {% comment %}
-                        Текст ошибки экранируется, ссылку в него не вставить.
-                        Поэтому выход из тупика «не удалось найти» стоит
-                        рядом, с уже подставленным названием.
-                        {% endcomment %}
-                        <a class="photo-form__link"
-                           href="{% url 'catalog:team_create' %}?next={{ upload_url|urlencode }}&amp;name={{ form.unresolved.team_name|urlencode }}">
-                            {% blocktranslate with name=form.unresolved.team_name %}Создать команду «{{ name }}»{% endblocktranslate %}
-                        </a>
-                    {% elif field.name == "event_name" and form.unresolved.event_name %}
-                        <a class="photo-form__link"
-                           href="{% url 'catalog:event_create' %}?next={{ upload_url|urlencode }}&amp;name={{ form.unresolved.event_name|urlencode }}">
-                            {% blocktranslate with name=form.unresolved.event_name %}Создать событие «{{ name }}»{% endblocktranslate %}
-                        </a>
-                    {% endif %}
                 </div>
             {% endfor %}
 
             <div class="photo-form__actions">
-                <button class="btn btn-primary" type="submit">{% trans "Загрузить" %}</button>
+                <button class="btn btn-primary" type="submit">{% trans "Продолжить" %}</button>
                 <a class="btn btn-outline-secondary" href="{% url 'photos:my_photos' %}">
                     {% trans "Мои фото" %}
                 </a>
@@ -158,12 +98,9 @@
 {% block extra_js %}
     {% if form %}
         {% comment %}
-        `exifr` читает только `DateTimeOriginal` из локального файла: сетевых
-        запросов нет, EXIF никуда не уходит. Скрипт формы грузится после него.
-        Без формы (нет активного вида спорта) оба файла не нужны: 76 КБ
-        на странице-заглушке не помогли бы никому.
+        Скрипт нужен только ради превью и кнопки «Убрать фото»: без него
+        форма отправляется как обычная multipart-форма.
         {% endcomment %}
-        <script src="{% static 'vendor/exifr/exifr.min.js' %}"></script>
         <script src="{% static 'js/photo-form.js' %}"></script>
     {% endif %}
 {% endblock %}

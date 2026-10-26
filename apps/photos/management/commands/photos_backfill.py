@@ -6,14 +6,15 @@
 пайплайна быть не должно.
 
 Ошибка одного фото не прерывает проход — иначе один битый файл остановил бы
-весь архив.
+весь архив. Недоступное хранилище тоже не прерывает проход: фото остаётся
+необработанным, а следующая попытка — за человеком.
 """
 
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 
 from apps.photos.models import Photo, ProcessingStatus
-from apps.photos.services import process_photo
+from apps.photos.services import StorageUnavailable, process_photo
 
 
 class Command(BaseCommand):
@@ -50,7 +51,7 @@ class Command(BaseCommand):
         if limit is not None:
             photos = photos[:limit]
 
-        processed = skipped = failed = 0
+        processed = skipped = failed = unavailable = 0
         for photo in photos:
             label = f"#{photo.pk} {photo.original.name or '(нет файла)'}"
             if dry_run:
@@ -63,7 +64,16 @@ class Command(BaseCommand):
                 self.stdout.write(f"пропущено (нет оригинала): {label}")
                 continue
 
-            process_photo(photo)
+            try:
+                process_photo(photo)
+            except StorageUnavailable as exc:
+                # Статус не трогаем: повтор возможен, когда хранилище
+                # вернётся, и фото не должно читаться как «ошибка».
+                unavailable += 1
+                self.stdout.write(
+                    self.style.WARNING(f"хранилище недоступно: {label} — {exc}")
+                )
+                continue
             if photo.processing_status == ProcessingStatus.PROCESSED:
                 processed += 1
                 self.stdout.write(f"обработано: {label}")
@@ -78,6 +88,7 @@ class Command(BaseCommand):
             return
         self.stdout.write(
             self.style.SUCCESS(
-                f"Обработано: {processed}, пропущено: {skipped}, ошибок: {failed}"
+                f"Обработано: {processed}, пропущено: {skipped}, "
+                f"ошибок: {failed}, хранилище недоступно: {unavailable}"
             )
         )

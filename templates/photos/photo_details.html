@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1 class="page-header__title">{% trans "Данные фотографии" %}</h1>
+        <p class="page-header__lead">
+            {% trans "Все поля необязательные: заполните то, что знаете. Вернуться можно в любой момент." %}
+        </p>
+    </header>
+
+    <div class="photo-details">
+        {% comment %}
+        Миниатюра из `display`, а не из оригинала: оригинал хранит EXIF
+        и GPS и в интерфейс не попадает. Пока воркер не посчитал `display`,
+        превью нет — заглушка честнее битой картинки.
+        {% endcomment %}
+        <div class="photo-details__media">
+            {% if photo.thumbnail %}
+                <img class="photo-details__image" src="{{ photo.thumbnail.url }}"
+                     alt="{{ photo.title }}" loading="lazy" decoding="async">
+            {% else %}
+                <div class="photo-details__placeholder">
+                    <i class="bi bi-image" aria-hidden="true"></i>
+                </div>
+            {% endif %}
+            {% include "photos/partials/status_badge.html" with photo=photo %}
+            {% if photo.upload_state == "failed" and photo.processing_error %}
+                {% comment %}
+                Причина отказа: без неё «Ошибка обработки» ничего не объясняет,
+                и человек не знает, что делать — загрузить другой файл
+                или позвать модератора.
+                {% endcomment %}
+                <p class="photo-details__error">{{ photo.processing_error }}</p>
+            {% endif %}
+        </div>
+
+        <form class="photo-details__form" method="post"
+              action="{% url 'photos:photo_edit' photo.pk %}" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            {% for field in form %}
+                <div class="photo-details__field">
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.name == "team_name" %}
+                        {% comment %}
+                        Команду заводят прямо перед загрузкой фото в неё:
+                        возврат сюда с подставленным названием избавляет
+                        от второго ввода и от опечатки в нём.
+                        {% endcomment %}
+                        <a class="photo-form__link"
+                           href="{% url 'catalog:team_create' %}?next={{ edit_url|urlencode }}">
+                            {% trans "Создать команду" %}
+                        </a>
+                        <datalist id="team-options">
+                            {% for name in form.team_options %}
+                                <option value="{{ name }}"></option>
+                            {% endfor %}
+                        </datalist>
+                    {% elif field.name == "event_name" %}
+                        {% comment %}
+                        Событие заводят там же, где команду: поле требует
+                        существующей записи, и без этой ссылки человек
+                        остался бы в тупике.
+                        {% endcomment %}
+                        <a class="photo-form__link"
+                           href="{% url 'catalog:event_create' %}?next={{ edit_url|urlencode }}">
+                            {% trans "Создать событие" %}
+                        </a>
+                        <datalist id="event-options">
+                            {% for name in form.event_options %}
+                                <option value="{{ name }}"></option>
+                            {% endfor %}
+                        </datalist>
+                    {% endif %}
+                    {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% if field.name == "year" %}
+                        {% comment %}
+                        Подсказка стоит, только пока год взят из файла:
+                        у сохранённого года `photo.year` заполнен, и напоминать
+                        человеку не о чем. Год из EXIF часто оказывается годом
+                        сканера — подтвердить его должен человек.
+                        {% endcomment %}
+                        {% if form.initial.year and not photo.year %}
+                            <div class="form-text">
+                                {% trans "Год взят из файла — проверьте, пожалуйста." %}
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                    {{ field.errors }}
+                    {% if field.name == "team_name" and form.unresolved.team_name %}
+                        {% comment %}
+                        Текст ошибки экранируется, ссылку в него не вставить.
+                        Поэтому выход из тупика «не удалось найти» стоит
+                        рядом, с уже подставленным названием.
+                        {% endcomment %}
+                        <a class="photo-form__link"
+                           href="{% url 'catalog:team_create' %}?next={{ edit_url|urlencode }}&amp;name={{ form.unresolved.team_name|urlencode }}">
+                            {% blocktranslate with name=form.unresolved.team_name %}Создать команду «{{ name }}»{% endblocktranslate %}
+                        </a>
+                    {% elif field.name == "event_name" and form.unresolved.event_name %}
+                        <a class="photo-form__link"
+                           href="{% url 'catalog:event_create' %}?next={{ edit_url|urlencode }}&amp;name={{ form.unresolved.event_name|urlencode }}">
+                            {% blocktranslate with name=form.unresolved.event_name %}Создать событие «{{ name }}»{% endblocktranslate %}
+                        </a>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <div class="photo-details__actions">
+                <button class="btn btn-primary" type="submit">{% trans "Сохранить" %}</button>
+                <a class="btn btn-outline-secondary" href="{% url 'photos:my_photos' %}">
+                    {% trans "Мои фото" %}
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

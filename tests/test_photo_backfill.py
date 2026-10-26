@@ -3,12 +3,13 @@
 import io
 
 import pytest
+from django.contrib.auth.models import AnonymousUser
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 
 from apps.photos.models import Photo, ProcessingStatus
 from apps.photos.processing import CROP_VERSION
-from apps.photos.services import process_photo
+from apps.photos.services import StorageUnavailable, can_edit_photo, process_photo
 from tests.utils import QUADRANT_COLORS, make_image_file, make_quadrant_image
 
 pytestmark = pytest.mark.django_db
@@ -134,6 +135,20 @@ class TestProcessPhotoSuccess:
         assert result.display.name != first_display
 
 
+class TestCanEditPhoto:
+    def test_author_can_edit(self, photo, user):
+        assert can_edit_photo(user, photo)
+
+    def test_moderator_can_edit_foreign_photo(self, photo, moderator):
+        assert can_edit_photo(moderator, photo)
+
+    def test_stranger_cannot_edit(self, photo, other_user):
+        assert not can_edit_photo(other_user, photo)
+
+    def test_anonymous_cannot_edit(self, photo):
+        assert not can_edit_photo(AnonymousUser(), photo)
+
+
 class TestProcessPhotoFailure:
     def test_broken_file_gives_failed_status(self, baseball, user):
         broken = SimpleUploadedFile(
@@ -156,7 +171,23 @@ class TestProcessPhotoFailure:
         result = process_photo(photo)
 
         assert result.processing_status == ProcessingStatus.FAILED
-        assert result.processing_error
+        assert "не найден" in result.processing_error
+
+    def test_storage_error_is_raised_for_retry(self, baseball, user, monkeypatch):
+        """Недоступное хранилище — не отказ обработки, а повод повторить."""
+        photo = _photo(baseball, user)
+
+        def broken_open(*args, **kwargs):
+            raise OSError("connection refused")
+
+        monkeypatch.setattr(photo.original.storage, "open", broken_open)
+
+        with pytest.raises(StorageUnavailable):
+            process_photo(photo)
+
+        # Статус «в обработке» уже записан: фото не выглядит обработанным.
+        photo.refresh_from_db()
+        assert photo.processing_status == ProcessingStatus.PROCESSING
 
     def test_garbage_crop_data_does_not_break_processing(self, baseball, user):
         photo = _photo(
@@ -261,3 +292,34 @@ class TestPhotosBackfill:
         call_command("photos_backfill", stdout=out)
 
         assert "Обработано: 0" in out.getvalue()
+
+    def test_storage_unavailable_does_not_stop_the_pass(
+        self, baseball, user, monkeypatch
+    ):
+        """Один недоступный объект не должен останавливать весь архив."""
+        from django.core.management import call_command
+
+        from apps.photos import services
+
+        unavailable = _photo(baseball, user)
+        good = _photo(baseball, user)
+        original = services.process_photo
+
+        def flaky(photo):
+            if photo.pk == unavailable.pk:
+                raise StorageUnavailable("connection refused")
+            return original(photo)
+
+        monkeypatch.setattr(
+            "apps.photos.management.commands.photos_backfill.process_photo", flaky
+        )
+
+        out = io.StringIO()
+        call_command("photos_backfill", stdout=out)
+
+        unavailable.refresh_from_db()
+        good.refresh_from_db()
+        # Недоступное фото не помечено ошибкой: повтор ещё возможен.
+        assert unavailable.processing_status != ProcessingStatus.FAILED
+        assert good.processing_status == ProcessingStatus.PROCESSED
+        assert "хранилище недоступно: 1" in out.getvalue()

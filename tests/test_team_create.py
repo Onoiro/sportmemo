@@ -19,6 +19,7 @@ from apps.catalog.forms import (
 )
 from apps.catalog.models import Team
 from apps.core.models import Status
+from apps.photos.models import Photo
 from tests.utils import make_image_file
 
 pytestmark = pytest.mark.django_db
@@ -355,10 +356,17 @@ class TestTeamCreateNext:
         assert response.status_code == 302
         assert response["Location"] == f"{self.UPLOAD_URL}?team={team.pk}"
 
-    def test_photo_form_prefills_created_team(self, client, user, baseball):
+    def test_photo_details_prefills_created_team(self, client, user, baseball):
+        """Возврат из формы команды подставляет название на шаге 2."""
+        photo = Photo.objects.create(
+            sport=baseball,
+            original=make_image_file("photo.jpg"),
+            uploaded_by=user,
+        )
+        edit_url = f"/photos/{photo.pk}/edit/"
         log_in(client, user)
-        response = client.post(CREATE_URL, form_data(next=self.UPLOAD_URL))
 
+        response = client.post(CREATE_URL, form_data(next=edit_url))
         page = client.get(response["Location"])
 
         assert page.status_code == 200
@@ -406,13 +414,20 @@ class TestTeamCreateNext:
 
         assert 'name="next"' not in html
 
-    def test_photo_form_links_to_team_create(self, client, user, baseball):
+    def test_photo_details_links_to_team_create(self, client, user, baseball):
+        """Ссылка живёт на втором шаге: команду заводят из полей снимка."""
+        photo = Photo.objects.create(
+            sport=baseball,
+            original=make_image_file("photo.jpg"),
+            uploaded_by=user,
+        )
+        edit_url = f"/photos/{photo.pk}/edit/"
         log_in(client, user)
 
-        html = client.get(self.UPLOAD_URL).content.decode()
+        html = client.get(edit_url).content.decode()
 
         assert "Создать команду" in html
-        assert f"{CREATE_URL}?next={self.UPLOAD_URL}" in html
+        assert f"{CREATE_URL}?next={edit_url}" in html
 
     def test_name_query_prefills_field(self, client, user, baseball):
         """Ссылка «создать команду с таким названием» не должна заставлять

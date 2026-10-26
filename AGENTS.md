@@ -188,7 +188,7 @@ constructor". Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.19.0; development branch `master`; 1172 tests passing on Python 3.12 and 3.13
+- Version: 0.20.0; development branch `master`; 1207 tests passing on Python 3.12 and 3.13
   (`make test`); linter clean (`make lint`).
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is in progress: sub-stage 3.1
@@ -196,8 +196,11 @@ constructor". Legal pages and SMTP are stage 4.
   `display`, perceptual hash, backfill; previews come from `display`; `rights_confirmed` is
   out of the visibility rule. Sub-stage 3.2 (user photo upload) is complete: the
   `/photos/upload/` form, the `/photos/mine/` cabinet with seven badges, the `/rules/` page,
-  the EXIF year hint and synchronous processing after saving. The next one is 3.3
-  (Celery pipeline).
+  the EXIF year hint. Sub-stage 3.3 (Celery pipeline and two-step upload) is complete:
+  step 1 saves the file, step 2 `/photos/<pk>/edit/` holds the photo details and the edit
+  page (author and moderator), `process_photo_task` retries only on `StorageUnavailable`,
+  `enqueue_photo_processing` is the only place that queues the task, the admin action
+  "Process again", and EXIF is read on the server. The next one is 3.4 (frame correction).
 
 ### Public UI
 
@@ -234,9 +237,9 @@ Components and pages. The rules for visibility, privacy and their reasoning live
   comes from the active locale via `date_format`, there are no separate month strings.
 - `/search/` (`search:index`, the `apps/search` app): infrastructure is sub-stage 2.12,
   the interface is 2.13.
-- `/photos/upload/`, `/photos/mine/` (3.2) and `/rules/` (`core:rules`) are the upload form,
-  the author cabinet and the service rules. The form and the cabinet are `noindex`;
-  `/rules/` is indexed.
+- `/photos/upload/`, `/photos/<pk>/edit/`, `/photos/mine/` (3.2, 3.3) and `/rules/`
+  (`core:rules`) are the two upload steps, the author cabinet and the service rules. Both
+  step forms and the cabinet are `noindex`; `/rules/` is indexed.
 - Public queries: `SoftDeleteQuerySet.published()` (filters by `status=Status.PUBLISHED`).
   The `.visible()` method was **removed** in 3.1: after decision 2.1 it filtered nothing, and
   an empty wrapper would lie to the reader. Shared entry points live in
@@ -386,38 +389,39 @@ would tell it that it was caught). A repeated report by the same logged-in user 
 object with the same reason within a day is not created; anonymous users are not checked.
 `/reports/add/` is closed to indexing (`noindex`) and added to `robots.txt`.
 
-**Photo upload (3.2).** The form `/photos/upload/` (logged-in only) and the cabinet
-`/photos/mine/`. **The status rule has one place:** `initial_status_for(user)`
-in `apps/photos/services.py` returns `draft`; the function exists for P3-10
-(trusted author), so the rule changes in one place instead of in the form and
-the view separately. **Team and event are typed as text** with a native
-`<datalist>` hint, and the server resolves the value through
-`resolve_by_name()`: without JavaScript the field works as plain text. An
-ambiguous name (two "Соколы" in different cities) is not guessed but asks for a
-city — a photo on the wrong team is worse than an empty field; the resolution
-queryset includes the user's own draft (a team is created right before
-uploading photos into it). **The daily limit is a rolling 24 hours**
-(`uploads_today()`, the default manager rather than `public`: a deleted photo
-does not give the quota back). **Badge states are `Photo.upload_state`**
-(seven keys: `deleted`, `failed`, `processing`, `published`, `hidden`,
-`rejected`, `review`) and `upload_state_label` in the model: the template
-prints a ready label and does not compare statuses. Checks go from the
-strongest sign — a deleted photo with `published` reads as "Deleted".
-**Processing is still synchronous** — `process_photo()` is called from the view
-right after saving; in 3.3 it becomes a Celery task, and the call site stays
-single. **`/rules/`** (`core:rules`) is open anonymously and indexed; the link
-sits under the upload button and in the footer; the text covers copyright
-(`COPYRIGHT`) and the right to one's image (`PRIVACY`) as separate items.
-**Returning to the form after creating a team** — `next` in `team_create`
-checked with `url_has_allowed_host_and_scheme`, and the photo form accepts
-`?team=<pk>`. **A chosen file can be removed** with the "Remove photo" button
-under the preview: the file field has no native clear control, and without it
-someone who picked the wrong shot has to find the right one again. The button
-lives in `photo-form.js` together with the preview and clears the field, the
-`objectURL` and the EXIF year hint. A failed name resolution leads to the
-"Create team “…”" link (`?name=` in `team_create` prefills the form): the error
-text is escaped, so a link cannot go inside it, and
-`PhotoUploadForm.unresolved` hands the unresolved names to the template.
+**Photo upload (3.2, 3.3).** Two steps: `/photos/upload/` (logged-in only) saves the file,
+`/photos/<pk>/edit/` holds the photo details and doubles as the edit page. Two forms instead
+of one exist because a chosen file does not survive a page transition: an error in the team
+name or a detour to create a team used to lose the shot. **The status rule has one place:**
+`initial_status_for(user)` in `apps/photos/services.py` returns `draft`; the function exists
+for P3-10 (trusted author), so the rule changes in one place instead of in the form and the
+view separately. **Team and event are typed as text** with a native `<datalist>` hint, and the
+server resolves the value through `resolve_by_name()`: without JavaScript the field works as
+plain text. An ambiguous name (two "Соколы" in different cities) is not guessed but asks for
+a city — a photo on the wrong team is worse than an empty field; the resolution queryset
+includes the user's own draft (a team is created right before uploading photos into it).
+**The daily limit is a rolling 24 hours** (`uploads_today()`, the default manager rather than
+`public`: a deleted photo does not give the quota back). **Badge states are
+`Photo.upload_state`** (seven keys: `deleted`, `failed`, `processing`, `published`, `hidden`,
+`rejected`, `review`) and `upload_state_label` in the model: the template prints a ready label
+and does not compare statuses. Checks go from the strongest sign — a deleted photo with
+`published` reads as "Deleted". **Processing runs in the background:** the step 1 view saves
+the photo and queues the task through `enqueue_photo_processing()`, and `process_photo_task`
+runs the pipeline (retries only on `StorageUnavailable`). **`/rules/`** (`core:rules`) is open
+anonymously and indexed; the link sits under the upload button and in the footer; the text
+covers copyright (`COPYRIGHT`) and the right to one's image (`PRIVACY`) as separate items.
+**Returning to step 2 after creating a team or an event** — `next` in `team_create` checked
+with `url_has_allowed_host_and_scheme`, and step 2 accepts `?team=<pk>` and `?event=<pk>`.
+**A chosen file can be removed** with the "Remove photo" button under the preview: the file
+field has no native clear control, and without it someone who picked the wrong shot has to
+find the right one again. The button lives in `photo-form.js` together with the preview and
+clears the field and the `objectURL`. **The EXIF year hint comes from the server** —
+`extract_exif()` runs in `PhotoFileForm` on the already opened file, and step 2 takes
+`taken_year(photo.exif)` as `initial`; there is no EXIF parser in the browser (`exifr` was
+removed from the vendor directory). A failed name resolution leads to the "Create team “…”"
+link (`?name=` in `team_create` prefills the form): the error text is escaped, so a link
+cannot go inside it, and `PhotoDetailsForm.unresolved` hands the unresolved names to the
+template.
 
 **Admin.** Moderation (publish / hide / reject / soft-delete / restore) is a list action; every
 decision is written to `ModerationAction`. Merging duplicates is the "Merge duplicates into one
@@ -468,6 +472,32 @@ filled by actions, not by hand.
   (`apps/photos/services.py`), and by nothing else: the rule will change for trusted authors
   (P3-10), and if it spread over the form and the view, one upload path would publish at once
   and the other would not. Today it returns `draft`.
+- **Editing photo details is allowed by `can_edit_photo(user, photo)`**
+  (`apps/photos/services.py`), not by the view: the author (`uploaded_by`) or a moderator,
+  with the object taken from `Photo.public`. Everyone else gets **404, not 403**: the
+  existence of someone else's draft must not leak, the same rule as `can_edit` in the catalog.
+  A deleted photo is edited by nobody, the author included. Editing a published photo
+  **does not reset its status** (P3-14): the history log is the audit trail, and the moderator
+  checks relevance and completeness of the data, not the text.
+- **The processing task is queued only by `enqueue_photo_processing(photo)`**
+  (`apps/photos/tasks.py`): the step 1 view and the admin action "Process again". The view
+  does not decide how to queue — otherwise one processing path would be synchronous and the
+  other background, and behaviour would depend on where the request came from.
+- **Only `StorageUnavailable` is worth retrying** — temporary unavailability of the storage
+  (MinIO/S3). A broken file or too many pixels will not change on a retry, so they go straight
+  to `failed`. An exception never leaves the task: otherwise it would retry forever. Once the
+  retries are exhausted the task must call `fail_photo()`, or the photo would stay in
+  "Processing" forever.
+- **`processing_status=processing` is set at the start of the pipeline** with `update()`,
+  not `save()`: without that status a photo would stay in "Processing" even after a worker
+  crash, and the service note would write a history record and move `updated_at` (which feeds
+  `lastmod` in the sitemap).
+- **Step 2 does not recompute `display`:** title, year and links do not change the picture.
+  The recompute arrives in 3.4 together with `crop_data`, and the task will do it, not the
+  view.
+- **EXIF is read on the server at upload** (`PhotoFileForm` → `extract_exif()`, the file is
+  already opened and decoded), not in the browser: there is no second EXIF parser in the
+  project. The year from it only fills the field `initial`, never the database.
 - **Upload limits are constants in `apps/photos/processing.py`** (`MAX_UPLOAD_BYTES`,
   `MIN_SIDE_PX`, `MAX_SIDE_PX`, `ALLOWED_UPLOAD_FORMATS`): the form checks them and the worker
   will, so there must be no second set of numbers. Rules that need the model

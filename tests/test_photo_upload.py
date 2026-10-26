@@ -2,7 +2,6 @@
 
 import io
 from datetime import timedelta
-from urllib.parse import quote
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -14,7 +13,7 @@ from apps.catalog.models import Event, Team
 from apps.core.models import Status
 from apps.core.shortcuts import PHOTO_PAGE_SIZE, default_sport, visible_photos
 from apps.photos import services
-from apps.photos.forms import PhotoUploadForm
+from apps.photos.forms import PhotoDetailsForm, PhotoFileForm
 from apps.photos.models import Photo, ProcessingStatus
 from apps.photos.processing import MAX_SIDE_PX, MAX_UPLOAD_BYTES, MIN_SIDE_PX
 from tests.factories import PhotoFactory, TeamFactory
@@ -234,11 +233,26 @@ class TestUploadState:
         }
 
 
-def _form(user, files=None, **data):
-    """Форма с файлом и полями данных; любое поле можно переопределить."""
+def _file_form(user, files=None):
+    """Форма первого шага: только файл."""
     if files is None:
         files = {"original": make_upload()}
-    return PhotoUploadForm(data=data, files=files, user=user)
+    return PhotoFileForm(data={}, files=files, user=user)
+
+
+def _details_form(user, photo, **data):
+    """Форма второго шага для черновика; поля можно переопределить."""
+    return PhotoDetailsForm(data=data, instance=photo, user=user)
+
+
+def _draft(user, sport, **kwargs):
+    """Черновик без обработки: второй шаг живёт на нём."""
+    return Photo.objects.create(
+        sport=sport,
+        original=make_image_file("photo.jpg"),
+        uploaded_by=user,
+        **kwargs,
+    )
 
 
 def _errors_text(form):
@@ -248,12 +262,12 @@ def _errors_text(form):
     )
 
 
-class TestPhotoUploadForm:
-    """Проверка файла и полей: каждый отказ с понятным текстом."""
+class TestPhotoFileForm:
+    """Первый шаг: каждый отказ с понятным текстом."""
 
     @pytest.mark.django_db
     def test_valid_upload_passes(self, user, baseball):
-        form = _form(user, title="Финал", year=1994)
+        form = _file_form(user)
 
         assert form.is_valid(), form.errors
 
@@ -261,7 +275,7 @@ class TestPhotoUploadForm:
     def test_file_is_readable_after_validation(self, user, baseball):
         upload = make_upload()
         size = upload.size
-        form = _form(user, files={"original": upload})
+        form = _file_form(user, files={"original": upload})
 
         assert form.is_valid(), form.errors
         # Без перемотки сохранение получило бы пустой файл.
@@ -277,7 +291,7 @@ class TestPhotoUploadForm:
     @pytest.mark.django_db
     def test_too_large_file_is_rejected(self, user, baseball, monkeypatch):
         monkeypatch.setattr("apps.photos.forms.MAX_UPLOAD_BYTES", 1024)
-        form = _form(user, files={"original": make_upload()})
+        form = _file_form(user, files={"original": make_upload()})
 
         assert not form.is_valid()
         assert "Файл больше" in _errors_text(form)
@@ -287,7 +301,7 @@ class TestPhotoUploadForm:
         upload = SimpleUploadedFile(
             "scan.pdf", b"%PDF-1.4 not an image", content_type="application/pdf"
         )
-        form = _form(user, files={"original": upload})
+        form = _file_form(user, files={"original": upload})
 
         assert not form.is_valid()
         assert "Не удалось прочитать изображение" in _errors_text(form)
@@ -296,14 +310,14 @@ class TestPhotoUploadForm:
     def test_unsupported_format_is_rejected(self, user, baseball):
         # GIF Pillow открывает, но в архив он не идёт: формат проверяется
         # по содержимому, а не по расширению.
-        form = _form(user, files={"original": make_upload(image_format="GIF")})
+        form = _file_form(user, files={"original": make_upload(image_format="GIF")})
 
         assert not form.is_valid()
         assert "Поддерживаются форматы" in _errors_text(form)
 
     @pytest.mark.django_db
     def test_small_side_is_rejected(self, user, baseball):
-        form = _form(user, files={"original": make_upload(size=(200, 200))})
+        form = _file_form(user, files={"original": make_upload(size=(200, 200))})
 
         assert not form.is_valid()
         assert "Слишком маленькое изображение" in _errors_text(form)
@@ -313,7 +327,7 @@ class TestPhotoUploadForm:
         # Реальные 20000×20000 заняли бы гигабайт памяти, а проверяется
         # логика сравнения, а не число.
         monkeypatch.setattr("apps.photos.forms.MAX_SIDE_PX", 500)
-        form = _form(user, files={"original": make_upload(size=(800, 400))})
+        form = _file_form(user, files={"original": make_upload(size=(800, 400))})
 
         assert not form.is_valid()
         assert "Слишком большое изображение" in _errors_text(form)
@@ -323,7 +337,7 @@ class TestPhotoUploadForm:
         # Pillow бросает исключение лишь при двойном превышении, а 60 Мпикс
         # дают только предупреждение: без его перехвата файл прошёл бы форму.
         monkeypatch.setattr(Image, "MAX_IMAGE_PIXELS", 100_000)
-        form = _form(user, files={"original": make_upload(size=(400, 400))})
+        form = _file_form(user, files={"original": make_upload(size=(400, 400))})
 
         assert not form.is_valid()
         assert "Изображение слишком большое" in _errors_text(form)
@@ -335,14 +349,14 @@ class TestPhotoUploadForm:
         data = buffer.getvalue()
         upload = SimpleUploadedFile("cut.jpg", data[: len(data) // 2])
 
-        form = _form(user, files={"original": upload})
+        form = _file_form(user, files={"original": upload})
 
         assert not form.is_valid()
         assert "повреждён" in _errors_text(form)
 
     @pytest.mark.django_db
     def test_heic_is_accepted(self, user, baseball):
-        form = _form(user, files={"original": make_upload(image_format="HEIF")})
+        form = _file_form(user, files={"original": make_upload(image_format="HEIF")})
 
         assert form.is_valid(), form.errors
 
@@ -350,7 +364,7 @@ class TestPhotoUploadForm:
     def test_daily_limit_blocks_the_next_upload(self, user, baseball):
         _make_photos(user, services.DAILY_UPLOAD_LIMIT)
 
-        form = _form(user)
+        form = _file_form(user)
 
         assert not form.is_valid()
         assert "не больше" in _errors_text(form)
@@ -359,18 +373,56 @@ class TestPhotoUploadForm:
     def test_daily_limit_ignores_other_authors(self, user, other_user, baseball):
         _make_photos(other_user, services.DAILY_UPLOAD_LIMIT)
 
-        assert _form(user).is_valid()
+        assert _file_form(user).is_valid()
+
+    @pytest.mark.django_db
+    def test_exif_is_returned_for_saving(self, user, baseball):
+        """EXIF читается на сервере: второй парсер в браузере не нужен."""
+        upload = make_upload(taken_at="1994:05:01 12:00:00")
+
+        form = _file_form(user, files={"original": upload})
+
+        assert form.is_valid(), form.errors
+        assert form.cleaned_data["exif"]["DateTimeOriginal"] == "1994:05:01 12:00:00"
+
+
+class TestPhotoDetailsForm:
+    """Второй шаг: поля о снимке, резолв названий, проверка года."""
+
+    @pytest.mark.django_db
+    def test_valid_details_pass(self, user, baseball):
+        photo = _draft(user, baseball)
+
+        form = _details_form(user, photo, title="Финал", year=1994)
+
+        assert form.is_valid(), form.errors
+
+    @pytest.mark.django_db
+    def test_save_writes_fields(self, user, baseball):
+        photo = _draft(user, baseball)
+        form = _details_form(user, photo, title="Финал", caption="Финал 1994")
+
+        assert form.is_valid(), form.errors
+        form.save()
+
+        photo.refresh_from_db()
+        assert photo.title == "Финал"
+        assert photo.caption == "Финал 1994"
 
     @pytest.mark.django_db
     def test_year_out_of_range_is_rejected(self, user, baseball):
-        form = _form(user, year=timezone.localdate().year + 1)
+        photo = _draft(user, baseball)
+
+        form = _details_form(user, photo, year=timezone.localdate().year + 1)
 
         assert not form.is_valid()
         assert "Год должен быть между" in _errors_text(form)
 
     @pytest.mark.django_db
     def test_year_must_match_taken_date(self, user, baseball):
-        form = _form(user, year=1994, taken_date="1995-05-01")
+        photo = _draft(user, baseball)
+
+        form = _details_form(user, photo, year=1994, taken_date="1995-05-01")
 
         assert not form.is_valid()
         assert "не совпадает с годом" in _errors_text(form)
@@ -378,19 +430,34 @@ class TestPhotoUploadForm:
     @pytest.mark.django_db
     def test_own_draft_team_is_found(self, user, baseball):
         team = TeamFactory(name="Соколы", city="Тула", created_by=user)
+        photo = _draft(user, baseball)
 
-        form = _form(user, team_name="Соколы (Тула)")
+        form = _details_form(user, photo, team_name="Соколы (Тула)")
 
         assert form.is_valid(), form.errors
         assert form.cleaned_data["team"] == team
+
+    @pytest.mark.django_db
+    def test_save_links_resolved_team(self, user, baseball):
+        """Привязки приходят текстом, поэтому в объект их ставит `save()`."""
+        team = TeamFactory(name="Соколы", city="Тула", created_by=user)
+        photo = _draft(user, baseball)
+        form = _details_form(user, photo, team_name="Соколы (Тула)")
+
+        assert form.is_valid(), form.errors
+        form.save()
+
+        photo.refresh_from_db()
+        assert photo.team == team
 
     @pytest.mark.django_db
     def test_other_author_published_team_is_found(self, user, other_user, baseball):
         team = TeamFactory(
             name="Соколы", city="Москва", created_by=other_user, status=Status.PUBLISHED
         )
+        photo = _draft(user, baseball)
 
-        form = _form(user, team_name="Соколы")
+        form = _details_form(user, photo, team_name="Соколы")
 
         assert form.is_valid(), form.errors
         assert form.cleaned_data["team"] == team
@@ -398,8 +465,9 @@ class TestPhotoUploadForm:
     @pytest.mark.django_db
     def test_foreign_draft_team_is_not_found(self, user, other_user, baseball):
         TeamFactory(name="Соколы", city="Москва", created_by=other_user)
+        photo = _draft(user, baseball)
 
-        form = _form(user, team_name="Соколы")
+        form = _details_form(user, photo, team_name="Соколы")
 
         assert not form.is_valid()
         assert "Не удалось найти" in _errors_text(form)
@@ -408,8 +476,9 @@ class TestPhotoUploadForm:
     def test_ambiguous_team_name_asks_for_city(self, user, baseball):
         TeamFactory(name="Соколы", city="Москва", created_by=user)
         TeamFactory(name="Соколы", city="Тула", created_by=user)
+        photo = _draft(user, baseball)
 
-        form = _form(user, team_name="Соколы")
+        form = _details_form(user, photo, team_name="Соколы")
 
         assert not form.is_valid()
         assert "Не удалось найти" in _errors_text(form)
@@ -419,24 +488,48 @@ class TestPhotoUploadForm:
         event = Event.objects.create(
             sport=baseball, name="Первенство России", created_by=user
         )
+        photo = _draft(user, baseball)
 
-        form = _form(user, event_name="первенство россии")
+        form = _details_form(user, photo, event_name="первенство россии")
 
         assert form.is_valid(), form.errors
         assert form.cleaned_data["event"] == event
 
     @pytest.mark.django_db
     def test_empty_names_leave_links_empty(self, user, baseball):
-        form = _form(user, team_name="   ", event_name="")
+        photo = _draft(user, baseball)
+
+        form = _details_form(user, photo, team_name="   ", event_name="")
 
         assert form.is_valid(), form.errors
         assert form.cleaned_data["team"] is None
         assert form.cleaned_data["event"] is None
 
     @pytest.mark.django_db
+    def test_current_team_is_prefilled(self, user, baseball):
+        """Форма правки показывает текущую привязку, а не пустое поле."""
+        team = TeamFactory(name="Соколы", city="Тула", created_by=user)
+        photo = _draft(user, baseball, team=team)
+
+        form = PhotoDetailsForm(instance=photo, user=user)
+
+        assert form.initial["team_name"] == "Соколы (Тула)"
+
+    @pytest.mark.django_db
+    def test_current_team_survives_foreign_draft(self, user, other_user, baseball):
+        """Модератор не должен спотыкаться о название, которое не менял."""
+        team = TeamFactory(name="Соколы", city="Москва", created_by=other_user)
+        photo = _draft(user, baseball, team=team)
+
+        form = _details_form(user, photo, team_name="Соколы")
+
+        assert form.is_valid(), form.errors
+        assert form.cleaned_data["team"] == team
+
+    @pytest.mark.django_db
     def test_help_text_explains_that_names_come_from_archive(self, user, baseball):
         """Человек должен знать до отправки, что поле — выбор из архива."""
-        form = PhotoUploadForm(user=user, sport=baseball)
+        form = PhotoDetailsForm(instance=_draft(user, baseball), user=user)
 
         assert "появятся команды из архива" in str(form.fields["team_name"].help_text)
         assert "появятся события из архива" in str(form.fields["event_name"].help_text)
@@ -444,7 +537,7 @@ class TestPhotoUploadForm:
     @pytest.mark.django_db
     def test_unresolved_team_is_remembered(self, user, baseball):
         """Название нужно шаблону: по нему строится ссылка «создать»."""
-        form = _form(user, team_name="Неизвестные")
+        form = _details_form(user, _draft(user, baseball), team_name="Неизвестные")
 
         assert not form.is_valid()
         assert form.unresolved["team_name"] == "Неизвестные"
@@ -452,8 +545,9 @@ class TestPhotoUploadForm:
     @pytest.mark.django_db
     def test_resolved_team_is_not_in_unresolved(self, user, baseball):
         TeamFactory(name="Соколы", city="Москва", created_by=user)
+        photo = _draft(user, baseball)
 
-        form = _form(user, team_name="Соколы")
+        form = _details_form(user, photo, team_name="Соколы")
 
         assert form.is_valid(), form.errors
         assert form.unresolved == {}
@@ -484,20 +578,38 @@ class TestPhotoUploadView:
     def test_upload_creates_draft_photo(self, client, user, baseball):
         client.force_login(user)
 
-        response = client.post(
-            UPLOAD_URL, {"original": make_upload(), "title": "Финал", "year": 1994}
-        )
+        response = client.post(UPLOAD_URL, {"original": make_upload()})
 
-        assert response.status_code == 302
-        assert response["Location"] == MY_PHOTOS_URL
+        # Второй шаг, а не кабинет: без данных о снимке фото в архиве
+        # бесполезно, а человек уже настроен их заполнить.
         photo = Photo.objects.get()
+        assert response.status_code == 302
+        assert response["Location"] == f"/photos/{photo.pk}/edit/"
         assert photo.status == Status.DRAFT
         assert photo.uploaded_by == user
         assert photo.sport == baseball
         assert photo.original_filename == "photo.jpg"
-        # Обработка синхронная: без неё карточка кабинета была бы пустой.
+        # Обработка идёт задачей: в eager-режиме она уже закончена.
         assert photo.display
         assert photo.processing_status == ProcessingStatus.PROCESSED
+
+    def test_upload_enqueues_processing(self, client, user, baseball, monkeypatch):
+        """Обработка идёт задачей: в запросе её быть не должно."""
+        queued = []
+        monkeypatch.setattr(
+            "apps.photos.views.enqueue_photo_processing",
+            lambda photo: queued.append(photo.pk),
+        )
+        client.force_login(user)
+
+        response = client.post(UPLOAD_URL, {"original": make_upload()})
+
+        photo = Photo.objects.get()
+        assert queued == [photo.pk]
+        assert response["Location"] == f"/photos/{photo.pk}/edit/"
+        # Задача не выполнялась: файл ещё ждёт воркера.
+        assert not photo.display
+        assert photo.processing_status == ProcessingStatus.UPLOADED
 
     def test_my_photos_shows_new_upload(self, client, user, baseball):
         client.force_login(user)
@@ -524,14 +636,17 @@ class TestPhotoUploadView:
         assert response.status_code == 302
         assert response["Location"] == f"{LOGIN_URL}?next={MY_PHOTOS_URL}"
 
-    def test_team_query_prefills_name(self, client, user, baseball):
-        team = TeamFactory(name="Соколы", city="Тула", created_by=user)
+    def test_first_step_has_only_the_file_field(self, client, user, baseball):
+        """Данные о снимке переехали на второй шаг: файл не переживает
+        переход, а метаданные переживают.
+        """
         client.force_login(user)
 
-        response = client.get(UPLOAD_URL, {"team": team.pk})
+        html = client.get(UPLOAD_URL).content.decode()
 
-        assert response.status_code == 200
-        assert 'value="Соколы (Тула)"' in response.content.decode()
+        assert 'name="original"' in html
+        assert 'name="title"' not in html
+        assert 'name="team_name"' not in html
 
     def test_unknown_team_query_is_ignored(self, client, user, baseball):
         client.force_login(user)
@@ -549,19 +664,6 @@ class TestPhotoUploadView:
         html = client.get(UPLOAD_URL).content.decode()
 
         assert "Убрать фото" in html
-
-    def test_unresolved_team_offers_creation_link(self, client, user, baseball):
-        """Ошибка «не удалось найти» без выхода — тупик для новичка."""
-        client.force_login(user)
-
-        response = client.post(
-            UPLOAD_URL, {"original": make_upload(), "team_name": "Неизвестные"}
-        )
-
-        html = response.content.decode()
-        assert "Не удалось найти" in html
-        assert "Создать команду «Неизвестные»" in html
-        assert f"name={quote('Неизвестные')}" in html
 
     def test_put_is_not_allowed(self, client, user, baseball):
         client.force_login(user)
@@ -689,7 +791,7 @@ class TestUploadedPhotoIsNotPublic:
 
 
 class TestExifYearHint:
-    """Год из файла — подсказка в браузере, а не запись в базу."""
+    """Год из файла — подсказка, а не запись в базу."""
 
     def test_exif_year_is_not_saved_without_confirmation(self, client, user, baseball):
         client.force_login(user)
@@ -702,12 +804,15 @@ class TestExifYearHint:
         # EXIF при этом сохранён: он подсказка модератору.
         assert photo.exif["DateTimeOriginal"] == "1994:05:01 12:00:00"
 
-    def test_confirmed_year_is_saved(self, client, user, baseball):
-        client.force_login(user)
-        upload = make_upload(taken_at="1994:05:01 12:00:00")
+    @pytest.mark.django_db
+    def test_confirmed_year_is_saved(self, user, baseball):
+        """Год подтверждают на втором шаге: форма файла его не принимает."""
+        photo = _draft(user, baseball)
 
-        client.post(UPLOAD_URL, {"original": upload, "year": 1994})
+        form = _details_form(user, photo, year=1994)
 
+        assert form.is_valid(), form.errors
+        form.save()
         assert Photo.objects.get().year == 1994
 
 
@@ -838,6 +943,122 @@ class TestMyPhotosCabinet:
 
         assert "Вы ещё не загружали фото" in html
         assert UPLOAD_URL in html
+
+
+class TestPhotoEditView:
+    """Второй шаг и правка данных: доступ, сохранение, статус."""
+
+    def _upload(self, client, user):
+        client.force_login(user)
+        client.post(UPLOAD_URL, {"original": make_upload()})
+        return Photo.objects.get()
+
+    def _edit_url(self, photo):
+        return f"/photos/{photo.pk}/edit/"
+
+    def test_anonymous_is_redirected_to_login(self, client, user, baseball):
+        photo = _draft(user, baseball)
+        url = self._edit_url(photo)
+
+        response = client.get(url)
+
+        assert response.status_code == 302
+        assert response["Location"] == f"{LOGIN_URL}?next={url}"
+
+    def test_author_opens_details_page(self, client, user, baseball):
+        photo = self._upload(client, user)
+
+        response = client.get(self._edit_url(photo))
+
+        assert response.status_code == 200
+        assert 'name="team_name"' in response.content.decode()
+
+    def test_post_saves_fields_and_links(self, client, user, baseball):
+        team = TeamFactory(name="Соколы", city="Тула", created_by=user)
+        photo = self._upload(client, user)
+
+        response = client.post(
+            self._edit_url(photo),
+            {
+                "title": "Финал",
+                "caption": "Финал 1994 года",
+                "year": 1994,
+                "team_name": "Соколы (Тула)",
+            },
+        )
+
+        assert response.status_code == 302
+        assert response["Location"] == MY_PHOTOS_URL
+        photo.refresh_from_db()
+        assert photo.title == "Финал"
+        assert photo.caption == "Финал 1994 года"
+        assert photo.year == 1994
+        assert photo.team == team
+
+    def test_foreign_photo_gives_404(self, client, user, other_user, baseball):
+        photo = _draft(user, baseball)
+        client.force_login(other_user)
+
+        assert client.get(self._edit_url(photo)).status_code == 404
+
+    def test_moderator_edits_foreign_photo(self, client, user, moderator, baseball):
+        photo = _draft(user, baseball)
+        client.force_login(moderator)
+
+        assert client.get(self._edit_url(photo)).status_code == 200
+
+    def test_deleted_photo_gives_404_even_to_author(self, client, user, baseball):
+        photo = _draft(user, baseball)
+        photo.soft_delete()
+        client.force_login(user)
+
+        assert client.get(self._edit_url(photo)).status_code == 404
+
+    def test_editing_published_photo_keeps_status(self, client, user, baseball):
+        """Правки автора не должны ждать модератора (P3-14)."""
+        photo = _draft(user, baseball, status=Status.PUBLISHED)
+        client.force_login(user)
+
+        response = client.post(self._edit_url(photo), {"title": "Уточнение"})
+
+        assert response.status_code == 302
+        photo.refresh_from_db()
+        assert photo.status == Status.PUBLISHED
+        assert photo.title == "Уточнение"
+
+    def test_created_team_name_is_prefilled(self, client, user, baseball):
+        """Возврат из формы команды подставляет название, а не теряет его."""
+        photo = self._upload(client, user)
+        team = TeamFactory(name="Русстар", city="Москва", created_by=user)
+
+        html = client.get(self._edit_url(photo), {"team": team.pk}).content.decode()
+
+        assert 'value="Русстар (Москва)"' in html
+
+    def test_unknown_team_query_is_ignored(self, client, user, baseball):
+        photo = self._upload(client, user)
+
+        response = client.get(self._edit_url(photo), {"team": "999"})
+
+        assert response.status_code == 200
+
+    def test_exif_year_is_prefilled(self, client, user, baseball):
+        client.force_login(user)
+        client.post(
+            UPLOAD_URL, {"original": make_upload(taken_at="1994:05:01 12:00:00")}
+        )
+        photo = Photo.objects.get()
+
+        html = client.get(self._edit_url(photo)).content.decode()
+
+        assert 'value="1994"' in html
+
+    def test_details_page_is_noindex(self, client, user, baseball):
+        photo = self._upload(client, user)
+
+        html = client.get(self._edit_url(photo)).content.decode()
+
+        assert 'content="noindex, nofollow"' in html
 
 
 class TestRulesPage:

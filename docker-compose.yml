@@ -110,6 +110,10 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      # Воркер читает оригинал из хранилища сразу после загрузки: без MinIO
+      # первая же задача ушла бы в ретраи и закончилась ошибкой.
+      minio:
+        condition: service_healthy
     restart: unless-stopped
     logging: *default_logging
 

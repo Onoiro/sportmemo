@@ -2,13 +2,15 @@
 
 Сервис знает о модели и хранилище, но вся работа с пикселями лежит
 в `apps/photos/processing.py`. Здесь — порядок шагов, запись полей
-и превращение любой ошибки в статус `failed`: исключение наружу
-не выходит, иначе один битый файл уронил бы проход бэкфилла.
+и превращение ошибки в статус `failed`: иначе один битый файл уронил бы
+проход бэкфилла. Наружу выходит только `StorageUnavailable` — временная
+недоступность хранилища, единственный случай, который имеет смысл
+повторить.
 
-Здесь же правила загрузки: начальный статус нового фото, суточный лимит
-и резолв названия команды или события, введённого текстом. Они общие
-для формы и представления, поэтому живут в сервисе, а не в каждом
-из них по отдельности.
+Здесь же правила загрузки: начальный статус нового фото, суточный лимит,
+право на правку метаданных и резолв названия команды или события,
+введённого текстом. Они общие для формы и представления, поэтому живут
+в сервисе, а не в каждом из них по отдельности.
 """
 
 import io
@@ -52,6 +54,30 @@ PROCESSED_FIELDS = (
 # Сколько фото человек может загрузить за сутки. Ограничение защищает
 # и сервер, и очередь модерации от одного разошедшегося альбома.
 DAILY_UPLOAD_LIMIT = 50
+
+
+class StorageUnavailable(Exception):
+    """Хранилище временно недоступно (MinIO/S3).
+
+    Единственная ошибка обработки, которую имеет смысл повторить: битый
+    файл или превышение пикселей от повтора не исправятся, а недоступное
+    хранилище — может быть. Наружу выходит только она: остальные ошибки
+    сервис превращает в `failed`.
+    """
+
+
+def can_edit_photo(user, photo) -> bool:
+    """Может ли пользователь править метаданные фотографии.
+
+    Правит автор и модератор. Посторонним — 404, а не 403: не раскрываем
+    существование чужого черновика (то же правило, что `can_edit`
+    в каталоге). Удалённое фото не правит никто, включая автора, поэтому
+    объект для проверки берётся из `Photo.public`.
+    """
+    if user is None or not user.is_authenticated:
+        return False
+    is_moderator = bool(getattr(user, "is_moderator", False))
+    return is_moderator or photo.uploaded_by_id == user.pk
 
 
 def initial_status_for(user) -> Status:
@@ -118,11 +144,13 @@ def resolve_by_name(model, value, queryset, label):
     return None
 
 
-def _fail(photo, message: str) -> Photo:
+def fail_photo(photo, message: str) -> Photo:
     """Записать ошибку обработки и вернуть объект.
 
     В `processing_error` идёт короткий текст, а не трейсбек: поле
-    показывается человеку, а стек лежит в логе.
+    показывается человеку, а стек лежит в логе. Функция публичная, потому
+    что задаче нужно оставить след после исчерпания ретраев: молча
+    упавшая задача оставила бы фото в «Обрабатывается» навсегда.
     """
     photo.processing_status = ProcessingStatus.FAILED
     photo.processing_error = message
@@ -130,15 +158,35 @@ def _fail(photo, message: str) -> Photo:
     return photo
 
 
-def _load_original(photo) -> Image.Image:
-    """Прочитать оригинал в память и полностью декодировать.
+class _OriginalMissing(Exception):
+    """Файла оригинала нет в хранилище — повтор не поможет."""
+
+
+def _read_original_bytes(photo) -> bytes:
+    """Прочитать файл оригинала из хранилища.
+
+    `FileNotFoundError` — не временная ошибка: файла нет, и повтор его
+    не создаст. Поэтому он превращается в обычный отказ обработки.
+    Остальные `OSError` приходят от недоступного хранилища — их повторяют.
+    """
+    try:
+        with photo.original.storage.open(photo.original.name, "rb") as handle:
+            return handle.read()
+    except FileNotFoundError as exc:
+        logger.warning("Оригинал фото #%s не найден в хранилище", photo.pk)
+        raise _OriginalMissing from exc
+    except OSError as exc:
+        logger.warning("Хранилище недоступно для фото #%s: %s", photo.pk, exc)
+        raise StorageUnavailable(str(exc)) from exc
+
+
+def _decode_original(data: bytes) -> Image.Image:
+    """Полностью декодировать оригинал.
 
     `Image.open` ленив: битый файл падает на первом обращении к пикселям,
-    а не на открытии. Поэтому `load()` вызывается здесь, внутри общего
-    `try` — иначе ошибка декодирования всплыла бы на ресайзе.
+    а не на открытии. Поэтому `load()` вызывается здесь — иначе ошибка
+    декодирования всплыла бы на ресайзе.
     """
-    with photo.original.storage.open(photo.original.name, "rb") as handle:
-        data = handle.read()
     image = Image.open(io.BytesIO(data))
     image.load()
     return image
@@ -151,12 +199,27 @@ def process_photo(photo: Photo) -> Photo:
     `crop_data`). Старый файл остаётся в хранилище: сборка мусора отложена
     до P3-11, а удалять файл, на который могла попасть ссылка из кэша
     мессенджера, хуже, чем оставить его лежать.
+
+    `StorageUnavailable` не ловится: повтор — решение вызывающего, а
+    команда бэкфилла пропускает такое фото и идёт дальше.
     """
     if not photo.original:
-        return _fail(photo, "Оригинал не загружен")
+        return fail_photo(photo, "Оригинал не загружен")
+
+    # Статус «в обработке» виден и в кабинете, и в админке. Без него фото
+    # осталось бы в «Обрабатывается» и после падения воркера — не отличить
+    # работающую обработку от брошенной. Пишем через `update()`: служебная
+    # пометка не должна попадать в журнал истории и сдвигать `updated_at`
+    # (он идёт в `lastmod` карты сайта).
+    if photo.processing_status != ProcessingStatus.PROCESSING:
+        photo.processing_status = ProcessingStatus.PROCESSING
+        Photo.objects.filter(pk=photo.pk).update(
+            processing_status=ProcessingStatus.PROCESSING
+        )
 
     try:
-        image = _load_original(photo)
+        data = _read_original_bytes(photo)
+        image = _decode_original(data)
         # EXIF читается до транспонирования: `exif_transpose` возвращает
         # копию без тега `Orientation`, и ориентация потерялась бы.
         exif = extract_exif(image)
@@ -171,12 +234,14 @@ def process_photo(photo: Photo) -> Photo:
 
         display = make_display(working)
         payload = encode_display(display)
+    except _OriginalMissing:
+        return fail_photo(photo, "Оригинал не найден в хранилище")
     except Image.DecompressionBombError:
         logger.exception("Фото #%s больше допустимого размера", photo.pk)
-        return _fail(photo, "Слишком большое изображение")
+        return fail_photo(photo, "Слишком большое изображение")
     except (UnidentifiedImageError, OSError, ValueError) as exc:
         logger.exception("Не удалось обработать фото #%s", photo.pk)
-        return _fail(photo, f"Не удалось прочитать файл: {type(exc).__name__}")
+        return fail_photo(photo, f"Не удалось прочитать файл: {type(exc).__name__}")
 
     # Старый файл `display` не удаляем: см. docstring.
     photo.display.save("display.jpg", ContentFile(payload), save=False)

@@ -249,6 +249,10 @@ SERVER_EMAIL = DEFAULT_FROM_EMAIL
 # --- Celery ---
 CELERY_BROKER_URL = env("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = env("REDIS_URL", default="redis://localhost:6379/0")
+# В dev задачи идут синхронно: Redis ради одной задачи обработки фото
+# поднимать не обязательно, а поведение остаётся тем же. На боевом сервере
+# `DEBUG=False`, и обработка уходит в воркер. `EAGER_PROPAGATES` здесь
+# не ставится: в dev исключение задачи должно уйти в лог, а не в запрос.
 CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=DEBUG)
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_TRACK_STARTED = True

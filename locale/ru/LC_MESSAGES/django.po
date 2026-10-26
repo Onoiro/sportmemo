@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-25 22:34+0300\n"
+"POT-Creation-Date: 2026-10-26 01:48+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,7 +29,7 @@ msgstr "Профиль"
 msgid "Согласия"
 msgstr "Согласия"
 
-#: apps/accounts/admin.py:47 apps/photos/admin.py:104
+#: apps/accounts/admin.py:47 apps/photos/admin.py:105
 msgid "Права"
 msgstr "Права"
 
@@ -126,8 +126,9 @@ msgstr "Профиль обновлён"
 #: apps/catalog/views.py:590 apps/catalog/views.py:649
 #: apps/catalog/views.py:691 apps/catalog/views.py:718 apps/core/views.py:114
 #: apps/core/views.py:144 apps/core/views.py:192 apps/moderation/views.py:111
-#: apps/photos/views.py:131 apps/photos/views.py:165 apps/photos/views.py:195
-#: apps/search/views.py:40 templates/partials/footer.html:20
+#: apps/photos/views.py:153 apps/photos/views.py:208 apps/photos/views.py:243
+#: apps/photos/views.py:273 apps/search/views.py:40
+#: templates/partials/footer.html:20
 msgid "Главная"
 msgstr "Главная"
 
@@ -136,12 +137,12 @@ msgid "Содержание"
 msgstr "Содержание"
 
 #: apps/catalog/admin.py:71 apps/catalog/admin.py:131 apps/catalog/admin.py:181
-#: apps/comments/admin.py:42 apps/photos/admin.py:108
+#: apps/comments/admin.py:42 apps/photos/admin.py:109
 msgid "Публикация"
 msgstr "Публикация"
 
 #: apps/catalog/admin.py:75 apps/catalog/admin.py:135 apps/catalog/admin.py:185
-#: apps/comments/admin.py:45 apps/photos/admin.py:112
+#: apps/comments/admin.py:45 apps/photos/admin.py:113
 msgid "Служебное"
 msgstr "Служебное"
 
@@ -163,6 +164,7 @@ msgid "Новая команда: %(name)s"
 msgstr "Новая команда: %(name)s"
 
 #: apps/catalog/emails.py:38
+#, python-format
 msgid "Новое событие: %(name)s"
 msgstr "Новое событие: %(name)s"
 
@@ -212,7 +214,8 @@ msgid "Все десятилетия"
 msgstr "Все десятилетия"
 
 #: apps/catalog/filters.py:320 apps/catalog/forms.py:207
-#: apps/photos/forms.py:64 templates/catalog/email/new_event_notification.txt:5
+#: apps/photos/forms.py:227
+#: templates/catalog/email/new_event_notification.txt:5
 #: templates/catalog/partials/roster_form.html:11
 #: templates/photos/photo_detail.html:44
 msgid "Год"
@@ -246,6 +249,9 @@ msgid ""
 "Москвы». Один и тот же турнир разных лет — отдельные записи: название "
 "совпадает, год разный."
 msgstr ""
+"Пишите так, как событие называют в архиве: «Кубок России», «Первенство "
+"Москвы». Один и тот же турнир разных лет — отдельные записи: название "
+"совпадает, год разный."
 
 #: apps/catalog/forms.py:32
 msgid "Если знаете. Из даты начала год подставится сам."
@@ -284,7 +290,7 @@ msgstr "Описание не должно быть длиннее %(limit)s с�
 msgid "Эмблема не должна быть больше %(limit)s МБ."
 msgstr "Эмблема не должна быть больше %(limit)s МБ."
 
-#: apps/catalog/forms.py:148 apps/photos/forms.py:189
+#: apps/catalog/forms.py:148 apps/photos/forms.py:134
 #, python-format
 msgid "Поддерживаются форматы: %(formats)s."
 msgstr "Поддерживаются форматы: %(formats)s."
@@ -309,7 +315,7 @@ msgstr "Дата окончания"
 msgid "Страна"
 msgstr "Страна"
 
-#: apps/catalog/forms.py:287 apps/photos/forms.py:284
+#: apps/catalog/forms.py:287 apps/photos/forms.py:343
 #, python-format
 msgid "Год должен быть между %(min)s и %(max)s."
 msgstr "Год должен быть между %(min)s и %(max)s."
@@ -317,7 +323,8 @@ msgstr "Год должен быть между %(min)s и %(max)s."
 #: apps/catalog/forms.py:315
 msgid ""
 "Событие с таким названием и годом уже есть в архиве. Проверьте список выше."
-msgstr "Событие с таким названием и годом уже есть в архиве. Проверьте список выше."
+msgstr ""
+"Событие с таким названием и годом уже есть в архиве. Проверьте список выше."
 
 #: apps/catalog/models.py:75 apps/photos/models.py:381
 msgid "игрок"
@@ -672,7 +679,7 @@ msgstr "Новая команда"
 msgid "Создать"
 msgstr "Создать"
 
-#: apps/catalog/views.py:540 apps/catalog/views.py:672
+#: apps/catalog/views.py:540 apps/catalog/views.py:672 apps/photos/views.py:186
 msgid "Изменения сохранены."
 msgstr "Изменения сохранены."
 
@@ -681,7 +688,7 @@ msgid "Редактирование команды"
 msgstr "Редактирование команды"
 
 #: apps/catalog/views.py:550 apps/catalog/views.py:682
-#: templates/accounts/profile.html:102
+#: templates/accounts/profile.html:102 templates/photos/photo_details.html:129
 msgid "Сохранить"
 msgstr "Сохранить"
 
@@ -944,7 +951,7 @@ msgstr "порядок сортировки"
 msgid "виды спорта"
 msgstr "виды спорта"
 
-#: apps/core/schema.py:150 apps/photos/views.py:204 apps/photos/views.py:208
+#: apps/core/schema.py:150 apps/photos/views.py:282 apps/photos/views.py:286
 #: templates/photos/my_photos.html:58 templates/photos/photo_detail.html:37
 msgid "Фотография"
 msgstr "Фотография"
@@ -971,7 +978,7 @@ msgstr ""
 "нарушении прав."
 
 #: apps/core/views.py:138 apps/core/views.py:145 apps/core/views.py:193
-#: apps/photos/views.py:198 templates/core/home.html:61
+#: apps/photos/views.py:276 templates/core/home.html:61
 #: templates/core/year_list.html:11 templates/partials/footer.html:14
 #: templates/partials/navbar.html:20
 msgid "Годы"
@@ -981,7 +988,7 @@ msgstr "Годы"
 msgid "Хронология архива SportMemo: годы и фотографии каждого года."
 msgstr "Хронология архива SportMemo: годы и фотографии каждого года."
 
-#: apps/core/views.py:187 apps/core/views.py:194 apps/photos/views.py:201
+#: apps/core/views.py:187 apps/core/views.py:194 apps/photos/views.py:279
 #: templates/core/year_detail.html:12
 #, python-format
 msgid "%(year)s год"
@@ -1142,84 +1149,47 @@ msgstr "Жалоба на этот объект уже отправлена."
 msgid "Сообщить об ошибке"
 msgstr "Сообщить об ошибке"
 
-#: apps/photos/admin.py:84
+#: apps/photos/admin.py:85
 msgid "Привязка"
 msgstr "Привязка"
 
-#: apps/photos/admin.py:86
+#: apps/photos/admin.py:87
 msgid "Производные"
 msgstr "Производные"
 
-#: apps/photos/admin.py:100
+#: apps/photos/admin.py:101
 msgid "Обработка"
 msgstr "Обработка"
 
-#: apps/photos/forms.py:46
+#: apps/photos/admin.py:127
+msgid "Обработать заново"
+msgstr "Обработать заново"
+
+#: apps/photos/admin.py:146
+#, python-format
+msgid "Поставлено в обработку: %(count)d."
+msgstr "Поставлено в обработку: %(count)d."
+
+#: apps/photos/forms.py:51
 msgid "Фото"
 msgstr "Фото"
 
-#: apps/photos/forms.py:52
-msgid "Заголовок"
-msgstr "Заголовок"
-
-#: apps/photos/forms.py:55
-msgid "Одна строка о снимке. Можно оставить пустым."
-msgstr "Одна строка о снимке. Можно оставить пустым."
-
-#: apps/photos/forms.py:58
-msgid "Подпись"
-msgstr "Подпись"
-
-#: apps/photos/forms.py:61
-msgid "Кто на фото, что происходит, чем снимок важен."
-msgstr "Кто на фото, что происходит, чем снимок важен."
-
-#: apps/photos/forms.py:66
-msgid "Если знаете. Год из файла — только подсказка."
-msgstr "Если знаете. Год из файла — только подсказка."
-
-#: apps/photos/forms.py:69 templates/photos/photo_detail.html:50
-msgid "Дата съёмки"
-msgstr "Дата съёмки"
-
-#: apps/photos/forms.py:74 apps/search/services.py:153
-#: templates/photos/photo_detail.html:59
-msgid "Команда"
-msgstr "Команда"
-
-#: apps/photos/forms.py:79
-msgid ""
-"Начните вводить — появятся команды из архива. Если нужной нет, создайте её "
-"по ссылке ниже."
-msgstr ""
-"Начните вводить — появятся команды из архива. Если нужной нет, создайте её "
-"по ссылке ниже."
-
-#: apps/photos/forms.py:84 apps/search/services.py:159
-#: templates/photos/photo_detail.html:69
-msgid "Событие"
-msgstr "Событие"
-
-#: apps/photos/forms.py:88
-msgid "Начните вводить — появятся события из архива."
-msgstr "Начните вводить — появятся события из архива."
-
-#: apps/photos/forms.py:125
+#: apps/photos/forms.py:70
 #, python-format
 msgid "Файл больше %(limit)s МБ."
 msgstr "Файл больше %(limit)s МБ."
 
-#: apps/photos/forms.py:175
+#: apps/photos/forms.py:120
 msgid ""
 "Не удалось прочитать изображение. Подходят файлы JPEG, PNG, WebP и HEIC."
 msgstr ""
 "Не удалось прочитать изображение. Подходят файлы JPEG, PNG, WebP и HEIC."
 
-#: apps/photos/forms.py:181
+#: apps/photos/forms.py:126
 msgid "Не удалось прочитать изображение: файл повреждён."
 msgstr "Не удалось прочитать изображение: файл повреждён."
 
-#: apps/photos/forms.py:199
+#: apps/photos/forms.py:144
 #, python-format
 msgid ""
 "Слишком маленькое изображение: %(width)s×%(height)s px, меньшая сторона "
@@ -1228,7 +1198,7 @@ msgstr ""
 "Слишком маленькое изображение: %(width)s×%(height)s px, меньшая сторона "
 "должна быть не меньше %(min)s px."
 
-#: apps/photos/forms.py:207
+#: apps/photos/forms.py:152
 #, python-format
 msgid ""
 "Слишком большое изображение: %(width)s×%(height)s px, большая сторона может "
@@ -1237,28 +1207,74 @@ msgstr ""
 "Слишком большое изображение: %(width)s×%(height)s px, большая сторона может "
 "быть до %(max)s px."
 
-#: apps/photos/forms.py:224
+#: apps/photos/forms.py:169
 msgid "Файл повреждён: изображение не удалось прочитать целиком."
 msgstr "Файл повреждён: изображение не удалось прочитать целиком."
 
-#: apps/photos/forms.py:234
+#: apps/photos/forms.py:179
 #, python-format
 msgid ""
 "За сутки можно загрузить не больше %(limit)s фотографий. Попробуйте позже."
 msgstr ""
 "За сутки можно загрузить не больше %(limit)s фотографий. Попробуйте позже."
 
-#: apps/photos/forms.py:252
+#: apps/photos/forms.py:202 apps/search/services.py:153
+#: templates/photos/photo_detail.html:59
+msgid "Команда"
+msgstr "Команда"
+
+#: apps/photos/forms.py:207
+msgid ""
+"Начните вводить — появятся команды из архива. Если нужной нет, создайте её "
+"по ссылке ниже."
+msgstr ""
+"Начните вводить — появятся команды из архива. Если нужной нет, создайте её "
+"по ссылке ниже."
+
+#: apps/photos/forms.py:212 apps/search/services.py:159
+#: templates/photos/photo_detail.html:69
+msgid "Событие"
+msgstr "Событие"
+
+#: apps/photos/forms.py:216
+msgid "Начните вводить — появятся события из архива."
+msgstr "Начните вводить — появятся события из архива."
+
+#: apps/photos/forms.py:225
+msgid "Заголовок"
+msgstr "Заголовок"
+
+#: apps/photos/forms.py:226
+msgid "Подпись"
+msgstr "Подпись"
+
+#: apps/photos/forms.py:228 templates/photos/photo_detail.html:50
+msgid "Дата съёмки"
+msgstr "Дата съёмки"
+
+#: apps/photos/forms.py:231
+msgid "Одна строка о снимке. Можно оставить пустым."
+msgstr "Одна строка о снимке. Можно оставить пустым."
+
+#: apps/photos/forms.py:232
+msgid "Кто на фото, что происходит, чем снимок важен."
+msgstr "Кто на фото, что происходит, чем снимок важен."
+
+#: apps/photos/forms.py:233
+msgid "Если знаете. Год из файла — только подсказка."
+msgstr "Если знаете. Год из файла — только подсказка."
+
+#: apps/photos/forms.py:305
 #, python-format
 msgid "Не удалось найти «%(name)s». Проверьте название."
 msgstr "Не удалось найти «%(name)s». Проверьте название."
 
-#: apps/photos/forms.py:291
+#: apps/photos/forms.py:350
 #, python-format
 msgid "Дата съёмки не совпадает с годом %(year)s."
 msgstr "Дата съёмки не совпадает с годом %(year)s."
 
-#: apps/photos/forms.py:302
+#: apps/photos/forms.py:361
 #, python-format
 msgid "Изображение слишком большое: больше %(mpix)s Мпикс."
 msgstr "Изображение слишком большое: больше %(mpix)s Мпикс."
@@ -1527,26 +1543,44 @@ msgstr "человек на фото"
 msgid "люди на фото"
 msgstr "люди на фото"
 
-#: apps/photos/views.py:109
-msgid ""
-"Спасибо! Фотография успешно загружена. Она появится в общем архиве после "
-"быстрой проверки модератором."
-msgstr ""
-"Спасибо! Фотография успешно загружена. Она появится в общем архиве после "
-"быстрой проверки модератором."
+#: apps/photos/tasks.py:54
+msgid "Хранилище недоступно, попробуйте позже"
+msgstr "Хранилище недоступно, попробуйте позже"
 
-#: apps/photos/views.py:126 apps/photos/views.py:132
+#: apps/photos/tasks.py:63
+#, python-format
+msgid "Ошибка обработки: %(error)s"
+msgstr "Ошибка обработки: %(error)s"
+
+#: apps/photos/views.py:135
+msgid ""
+"Файл сохранён, фотография обрабатывается. Заполните данные о снимке — их "
+"можно изменить позже."
+msgstr ""
+"Файл сохранён, фотография обрабатывается. Заполните данные о снимке — их "
+"можно изменить позже."
+
+#: apps/photos/views.py:148 apps/photos/views.py:154
 #: templates/photos/photo_form.html:11
 msgid "Загрузка фото"
 msgstr "Загрузка фото"
 
-#: apps/photos/views.py:160 apps/photos/views.py:166
+#: apps/photos/views.py:183
+msgid "Изменения сохранены. Фото остаётся в архиве."
+msgstr "Изменения сохранены. Фото остаётся в архиве."
+
+#: apps/photos/views.py:203 apps/photos/views.py:210
+#: templates/photos/photo_details.html:11
+msgid "Данные фотографии"
+msgstr "Данные фотографии"
+
+#: apps/photos/views.py:209 apps/photos/views.py:238 apps/photos/views.py:244
 #: templates/partials/navbar.html:71 templates/photos/my_photos.html:13
-#: templates/photos/photo_form.html:148
+#: templates/photos/photo_details.html:131 templates/photos/photo_form.html:83
 msgid "Мои фото"
 msgstr "Мои фото"
 
-#: apps/photos/views.py:217
+#: apps/photos/views.py:295
 msgid "Фотография из архива SportMemo"
 msgstr "Фотография из архива SportMemo"
 
@@ -1945,6 +1979,7 @@ msgid "Слить"
 msgstr "Слить"
 
 #: templates/catalog/email/new_event_notification.txt:1
+#, python-format
 msgid "Новое событие в архиве SportMemo: %(name)s"
 msgstr "Новое событие в архиве SportMemo: %(name)s"
 
@@ -2028,9 +2063,9 @@ msgstr "ожидает проверки модератором"
 msgid ""
 "Если это другое событие (например, турнир с тем же названием в другом "
 "городе), отметьте подтверждение ниже."
-msgstr "Если это другое событие (например, турнир с тем же названием в другом городе), отметьте подтверждение ниже."
-"Если это разные команды (например, одноимённые в разных городах), отметьте "
-"подтверждение ниже."
+msgstr ""
+"Если это другое событие (например, турнир с тем же названием в другом "
+"городе), отметьте подтверждение ниже."
 
 #: templates/catalog/event_list.html:13
 #, python-format
@@ -2042,7 +2077,7 @@ msgstr[2] "Найдено %(counter)s событий"
 msgstr[3] "Найдено %(counter)s событий"
 
 #: templates/catalog/event_list.html:19 templates/catalog/my_events.html:52
-#: templates/photos/photo_form.html:104
+#: templates/photos/photo_details.html:82
 msgid "Создать событие"
 msgstr "Создать событие"
 
@@ -2072,9 +2107,9 @@ msgstr "События появятся здесь, когда их добавя
 msgid ""
 "Публикует событие модератор — обычно в течение дня. До публикации событие "
 "видите только вы и модератор."
-msgstr "Публикует событие модератор — обычно в течение дня. До публикации событие видите только вы и модератор."
-"Публикует фото модератор — обычно в течение дня. До публикации фото видите "
-"только вы и модератор."
+msgstr ""
+"Публикует событие модератор — обычно в течение дня. До публикации событие "
+"видите только вы и модератор."
 
 #: templates/catalog/my_events.html:46
 msgid "Вы ещё не создавали событий"
@@ -2084,7 +2119,9 @@ msgstr "Вы ещё не создавали событий"
 msgid ""
 "Если вашего турнира или встречи нет в архиве — заведите событие. Публикует "
 "модератор."
-msgstr "Если вашего турнира или встречи нет в архиве — заведите событие. Публикует модератор."
+msgstr ""
+"Если вашего турнира или встречи нет в архиве — заведите событие. Публикует "
+"модератор."
 
 #: templates/catalog/my_teams.html:18
 msgid ""
@@ -2103,7 +2140,7 @@ msgid "Если вашей команды нет в архиве — завед�
 msgstr "Если вашей команды нет в архиве — заведите её. Публикует модератор."
 
 #: templates/catalog/my_teams.html:52 templates/catalog/team_list.html:19
-#: templates/photos/photo_form.html:88
+#: templates/photos/photo_details.html:66
 msgid "Создать команду"
 msgstr "Создать команду"
 
@@ -2336,7 +2373,7 @@ msgid "Хронология архива: что происходило в ка�
 msgstr "Хронология архива: что происходило в каждом году."
 
 #: templates/core/home.html:71 templates/partials/navbar.html:29
-#: templates/photos/my_photos.html:96
+#: templates/photos/my_photos.html:110
 msgid "Загрузить фото"
 msgstr "Загрузить фото"
 
@@ -2634,11 +2671,15 @@ msgstr ""
 msgid "Обновить"
 msgstr "Обновить"
 
-#: templates/photos/my_photos.html:90
+#: templates/photos/my_photos.html:91
+msgid "Изменить данные"
+msgstr "Изменить данные"
+
+#: templates/photos/my_photos.html:104
 msgid "Вы ещё не загружали фото"
 msgstr "Вы ещё не загружали фото"
 
-#: templates/photos/my_photos.html:92
+#: templates/photos/my_photos.html:106
 msgid ""
 "Оцифруйте снимок из бумажного альбома — он попадёт в архив после проверки "
 "модератором."
@@ -2687,40 +2728,53 @@ msgstr "Владелец оригинала"
 msgid "Люди на фото"
 msgstr "Люди на фото"
 
+#: templates/photos/photo_details.html:13
+msgid ""
+"Все поля необязательные: заполните то, что знаете. Вернуться можно в любой "
+"момент."
+msgstr ""
+"Все поля необязательные: заполните то, что знаете. Вернуться можно в любой "
+"момент."
+
+#: templates/photos/photo_details.html:103
+msgid "Год взят из файла — проверьте, пожалуйста."
+msgstr "Год взят из файла — проверьте, пожалуйста."
+
+#: templates/photos/photo_details.html:117
+#, python-format
+msgid "Создать команду «%(name)s»"
+msgstr "Создать команду «%(name)s»"
+
+#: templates/photos/photo_details.html:122
+#, python-format
+msgid "Создать событие «%(name)s»"
+msgstr "Создать событие «%(name)s»"
+
 #: templates/photos/photo_form.html:13
-msgid "Публикует фото модератор — обычно в течение дня."
-msgstr "Публикует фото модератор — обычно в течение дня."
+msgid ""
+"Сначала файл, потом данные: снимок сохраняется сразу, а что на нём — "
+"заполним на следующем шаге. Публикует фото модератор — обычно в течение дня."
+msgstr ""
+"Сначала файл, потом данные: снимок сохраняется сразу, а что на нём — "
+"заполним на следующем шаге. Публикует фото модератор — обычно в течение дня."
 
 #: templates/photos/photo_form.html:25
 msgid "Загрузка фото пока недоступна"
 msgstr "Загрузка фото пока недоступна"
 
-#: templates/photos/photo_form.html:36
-msgid "Год взят из файла — проверьте, пожалуйста."
-msgstr "Год взят из файла — проверьте, пожалуйста."
-
-#: templates/photos/photo_form.html:59
+#: templates/photos/photo_form.html:53
 msgid "Предпросмотр недоступен в этом браузере, но файл выбран."
 msgstr "Предпросмотр недоступен в этом браузере, но файл выбран."
 
-#: templates/photos/photo_form.html:71
+#: templates/photos/photo_form.html:65
 msgid "Убрать фото"
 msgstr "Убрать фото"
 
-#: templates/photos/photo_form.html:134
-#, python-format
-msgid "Создать команду «%(name)s»"
-msgstr "Создать команду «%(name)s»"
+#: templates/photos/photo_form.html:81
+msgid "Продолжить"
+msgstr "Продолжить"
 
-#: templates/photos/photo_form.html:139
-msgid "Создать событие «%(name)s»"
-msgstr "Создать событие «%(name)s»"
-
-#: templates/photos/photo_form.html:146
-msgid "Загрузить"
-msgstr "Загрузить"
-
-#: templates/photos/photo_form.html:161
+#: templates/photos/photo_form.html:96
 #, python-format
 msgid ""
 "Загружая фото, вы подтверждаете соблюдение <a href=\"%(rules_url)s\">Правил "

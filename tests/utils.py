@@ -58,6 +58,15 @@ def make_upload(name="photo.jpg", size=(400, 400), image_format="JPEG", taken_at
     return SimpleUploadedFile(name, buffer.read(), content_type=content_type)
 
 
+def make_broken_upload(name="broken.jpg"):
+    """Файл, который Pillow не откроет: битый оригинал в хранилище.
+
+    Нужен тестам задачи: обработка обязана поставить `failed`, а не уйти
+    в бесконечный повтор.
+    """
+    return SimpleUploadedFile(name, b"not an image", content_type="image/jpeg")
+
+
 def make_quadrant_image(size=(200, 200)):
     """Картинка из четырёх цветных квадрантов.
 

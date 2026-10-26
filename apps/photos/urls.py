@@ -1,4 +1,4 @@
-"""Маршруты фотографий: загрузка, кабинет автора, страница фото."""
+"""Маршруты фотографий: загрузка, правка данных, кабинет, страница фото."""
 
 from django.urls import path
 
@@ -13,5 +13,8 @@ urlpatterns = [
     path("photos/upload/", views.photo_upload, name="photo_upload"),
     path("photos/mine/", views.my_photos, name="my_photos"),
     path("photos/grid/", views.grid, name="grid"),
+    # `edit` стоит до `photo_detail`: иначе тот перехватил бы адрес
+    # и отдал бы страницу фото вместо формы.
+    path("photos/<int:pk>/edit/", views.photo_edit, name="photo_edit"),
     path("photos/<int:pk>/", views.photo_detail, name="photo_detail"),
 ]

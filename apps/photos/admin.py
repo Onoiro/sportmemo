@@ -1,6 +1,6 @@
 """Админка фотографий."""
 
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.utils.translation import gettext_lazy as _
 
 from apps.core.admin_mixins import (
@@ -9,6 +9,7 @@ from apps.core.admin_mixins import (
     ModerationActionsMixin,
 )
 from apps.photos.models import Photo, PhotoPerson, Source
+from apps.photos.tasks import enqueue_photo_processing
 
 
 class PhotoPersonInline(admin.TabularInline):
@@ -77,7 +78,7 @@ class PhotoAdmin(ModerationActionsMixin, BaseHistoryAdmin):
         "crop_data",
     )
     inlines = (PhotoPersonInline,)
-    actions = MODERATION_ACTIONS
+    actions = (*MODERATION_ACTIONS, "action_reprocess")
     date_hierarchy = "created_at"
     fieldsets = (
         (None, {"fields": ("sport", "title", "caption", "original")}),
@@ -122,6 +123,29 @@ class PhotoAdmin(ModerationActionsMixin, BaseHistoryAdmin):
             },
         ),
     )
+
+    @admin.action(description=_("Обработать заново"))
+    def action_reprocess(self, request, queryset):
+        """Пересчитать производные поля выбранных фото.
+
+        Единственный способ починить фото, у которого обработка упала или
+        «залипла» после падения воркера: в кабинете автора такой кнопки нет
+        осознанно, а автоматическая проверка залипших задач появится вместе
+        с beat.
+        """
+        queued = 0
+        for photo in queryset:
+            # Удалённое фото задача пропустила бы, и человек решил бы,
+            # что действие сработало.
+            if photo.is_deleted:
+                continue
+            enqueue_photo_processing(photo)
+            queued += 1
+        self.message_user(
+            request,
+            _("Поставлено в обработку: %(count)d.") % {"count": queued},
+            messages.SUCCESS,
+        )
 
 
 @admin.register(PhotoPerson)
