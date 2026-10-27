@@ -31,8 +31,10 @@ from apps.photos.processing import (
     encode_display,
     fit_max_side,
     make_display,
+    normalize_crop_data,
     normalize_orientation,
     perceptual_hash,
+    scale_crop_data,
 )
 
 logger = logging.getLogger(__name__)
@@ -200,6 +202,12 @@ def process_photo(photo: Photo) -> Photo:
     до P3-11, а удалять файл, на который могла попасть ссылка из кэша
     мессенджера, хуже, чем оставить его лежать.
 
+    Координаты `crop_data` приходят из браузера в полном размере кадра:
+    иначе при смене `WORK_COPY_MAX_SIDE` все сохранённые кропы поехали бы.
+    Работа же идёт с уменьшенной рабочей копией, поэтому координаты
+    пересчитываются на неё — без масштаба кроп фото больше 2500 px
+    вырезал бы не тот участок (клампинг по границам скрыл бы ошибку).
+
     `StorageUnavailable` не ловится: повтор — решение вызывающего, а
     команда бэкфилла пропускает такое фото и идёт дальше.
     """
@@ -225,12 +233,18 @@ def process_photo(photo: Photo) -> Photo:
         exif = extract_exif(image)
 
         working = normalize_orientation(image)
+        # Размер «как видит человек» нужен до уменьшения копии: он задаёт
+        # систему координат `crop_data` и знаменатель масштаба.
+        source_width = working.width
         # Рабочая копия до 2500 px: дальше вся работа идёт с ней,
         # а `display` всё равно не больше 1280 px.
         working = fit_max_side(working, WORK_COPY_MAX_SIDE)
-        crop_data = photo.crop_data if isinstance(photo.crop_data, dict) else {}
+        factor = working.width / source_width
+        # Нормализация нужна сервису отдельно: в базе мог оказаться мусор
+        # или запись старой версии — правило «что считается кропом» одно.
+        crop_data = normalize_crop_data(photo.crop_data)
         working = apply_rotation(working, crop_data.get("rotate", 0))
-        working = apply_crop(working, crop_data)
+        working = apply_crop(working, scale_crop_data(crop_data, factor))
 
         display = make_display(working)
         payload = encode_display(display)

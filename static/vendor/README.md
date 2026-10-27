@@ -14,6 +14,8 @@
 | Bootstrap Icons (шрифты) | 1.13.2 | `bootstrap-icons/fonts/` | MIT |
 | htmx | 2.0.11 | `htmx/htmx.min.js` | BSD-2-Clause |
 | Alpine.js | 3.17.4 | `alpine/alpine.min.js` | MIT |
+| Cropper.js (JS) | 1.6.2 | `cropperjs/cropper.min.js` | MIT |
+| Cropper.js (CSS) | 1.6.2 | `cropperjs/cropper.min.css` | MIT |
 
 ## Важно: шрифты иконок
 
@@ -31,13 +33,16 @@ e4fd49181388c48ec5040bd3fe66f57c29c8e67fcd8502b3354b96ec7ab47cc7  bootstrap/js/b
 24929e8a44da027588f833d4e82240ee734bd65bf962b08b0545af58a9ce80fa  bootstrap-icons/fonts/bootstrap-icons.woff
 d6fdc75f204e6bdefa99b69bf1e6d4ac69b8a364f77929f45c13476b4000f717  htmx/htmx.min.js
 232519394c6c8fdba6f362b1d9da16106db513cdbf899011f00daab4051df31c  alpine/alpine.min.js
+6290a3fa581b17ccf4692cf3ec617a74ae65de88d9140c72d492ae9b47707efb  cropperjs/cropper.min.js
+23679f552ce73499f817de22b5dcdd9e1e5a1e50cd9d77e34bbd31bf65a85186  cropperjs/cropper.min.css
 ```
 
 ## Как обновить
 
 1. Проверить актуальную версию на [getbootstrap.com](https://getbootstrap.com/),
    [icons.getbootstrap.com](https://icons.getbootstrap.com/), [htmx.org](https://htmx.org/),
-   [alpinejs.dev](https://alpinejs.dev/).
+   [alpinejs.dev](https://alpinejs.dev/),
+   [github.com/fengyuanchen/cropperjs](https://github.com/fengyuanchen/cropperjs).
 2. Скачать файлы из npm-пакета через jsDelivr, например:
 
    ```bash

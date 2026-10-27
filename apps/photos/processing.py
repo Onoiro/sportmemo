@@ -94,48 +94,159 @@ def apply_rotation(image: Image.Image, degrees) -> Image.Image:
     return image.rotate(-degrees, expand=True)
 
 
-def _crop_box(image: Image.Image, crop_data: dict):
-    """Координаты кропа после клампинга по границам изображения."""
-    width, height = image.size
+def _as_int(value):
+    """Привести значение из JSON к int: браузер присылает float."""
     try:
-        left = int(crop_data["x"])
-        top = int(crop_data["y"])
-        crop_width = int(crop_data["width"])
-        crop_height = int(crop_data["height"])
-    except (KeyError, TypeError, ValueError):
+        return int(float(value))
+    except (TypeError, ValueError, OverflowError):
         return None
 
-    left = max(0, min(left, width))
-    top = max(0, min(top, height))
-    right = max(0, min(left + crop_width, width))
-    bottom = max(0, min(top + crop_height, height))
-    if right - left < MIN_CROP_SIDE or bottom - top < MIN_CROP_SIDE:
+
+def _normalize_rotate(value) -> int:
+    """Свести угол к 0/90/180/270: других поворотов сервер не умеет."""
+    degrees = _as_int(value)
+    if degrees is None or degrees % 90 != 0:
+        return 0
+    return degrees % 360
+
+
+def _crop_box(crop_data: dict, size=None):
+    """Координаты кропа после клампинга по границам кадра.
+
+    Без `size` координаты только проверяются: размер полного кадра
+    известен не всем вызывающим, а формат проверить нужно всем.
+    """
+    left = _as_int(crop_data.get("x"))
+    top = _as_int(crop_data.get("y"))
+    width = _as_int(crop_data.get("width"))
+    height = _as_int(crop_data.get("height"))
+    if left is None or top is None or width is None or height is None:
+        logger.warning("crop_data без числовых координат, кроп пропущен")
         return None
-    return (left, top, right, bottom)
+
+    # Отрицательные координаты — мусор в любом случае: `Image.crop`
+    # заполнил бы вышедшую за кадр часть чёрным.
+    left = max(0, left)
+    top = max(0, top)
+    if size is not None:
+        frame_width, frame_height = size
+        left = min(left, frame_width)
+        top = min(top, frame_height)
+        width = max(0, min(left + width, frame_width)) - left
+        height = max(0, min(top + height, frame_height)) - top
+
+    if width < MIN_CROP_SIDE or height < MIN_CROP_SIDE:
+        logger.warning("crop_data меньше %s px, кроп пропущен", MIN_CROP_SIDE)
+        return None
+    return (left, top, width, height)
+
+
+def normalize_crop_data(crop_data, size=None) -> dict:
+    """Единственное правило «что считается кропом».
+
+    Форма отдаёт сюда данные из браузера, сервис — то, что лежит в базе:
+    правило должно быть одно, иначе форма принимала бы кроп, который
+    сервис молча выбрасывает. Мусор (не словарь, чужая версия,
+    нечисловые координаты, кроп меньше 100 px) — «без кропа»
+    с предупреждением в лог, а не исключение: данные приходят из браузера.
+    """
+    if not crop_data:
+        return {}
+    if not isinstance(crop_data, dict):
+        logger.warning("crop_data не словарь, кроп пропущен")
+        return {}
+    version = crop_data.get("version")
+    if version != CROP_VERSION:
+        logger.warning("crop_data версии %r, кроп пропущен", version)
+        return {}
+
+    box = _crop_box(crop_data, size)
+    if box is None:
+        return {}
+
+    left, top, width, height = box
+    result = {
+        "version": CROP_VERSION,
+        "x": left,
+        "y": top,
+        "width": width,
+        "height": height,
+        "rotate": _normalize_rotate(crop_data.get("rotate")),
+    }
+    # Размер полного кадра нужен только рамке в админке: сервер считает
+    # от реального файла, а присланному числу не доверяет.
+    for key in ("source_width", "source_height"):
+        value = _as_int(crop_data.get(key))
+        if value is not None:
+            result[key] = value
+    return result
+
+
+def scale_crop_data(crop_data, factor, size=None) -> dict:
+    """Пересчитать координаты кропа в другую систему координат.
+
+    `crop_data` хранит координаты полного кадра «как видит человек»:
+    сервер кроит рабочую копию, и без масштаба кроп больше 2500 px
+    вырезал бы не тот участок. `MIN_CROP_SIDE` проверяется уже после
+    масштаба: кроп в 150 px полного кадра на копии — мусор.
+    """
+    normalized = normalize_crop_data(crop_data)
+    if not normalized:
+        return {}
+    try:
+        factor = float(factor)
+    except (TypeError, ValueError, OverflowError):
+        logger.warning("Масштаб %r не число, кроп пропущен", factor)
+        return {}
+    if factor <= 0:
+        logger.warning("Масштаб %r не положителен, кроп пропущен", factor)
+        return {}
+
+    scaled = dict(normalized)
+    for key in ("x", "y", "width", "height"):
+        scaled[key] = int(round(normalized[key] * factor))
+    return normalize_crop_data(scaled, size=size)
+
+
+def oriented_size(image: Image.Image) -> tuple[int, int]:
+    """Размер кадра «как видит человек» — после EXIF-ориентации.
+
+    `exif_transpose` дал бы тот же ответ, но на 60 Мпикс он копирует
+    всё изображение: для размера достаточно прочитать один тег.
+    """
+    width, height = image.size
+    try:
+        raw = image.getexif().get(274)
+    except (AttributeError, OSError) as exc:
+        logger.warning("EXIF не читается (%s), размер берём как есть", exc)
+        return width, height
+    if raw is None:
+        return width, height
+    orientation = _as_int(raw)
+    if orientation is None:
+        logger.warning("Битый EXIF Orientation %r, размер берём как есть", raw)
+        return width, height
+    # 5/6/7/8 — поворот на 90 или 270 градусов: стороны меняются местами.
+    if orientation in (5, 6, 7, 8):
+        return height, width
+    return width, height
 
 
 def apply_crop(image: Image.Image, crop_data) -> Image.Image:
     """Вырезать участок по `crop_data`.
 
-    Мусор в данных (не словарь, чужая версия, отсутствующие координаты,
-    кроп меньше 100 px) — это «без кропа» с предупреждением в лог.
-    Сервис обязан не падать: данные приходят из браузера, а форма
-    проверит их только в 3.4.
+    Правила «что считается кропом» живут в `normalize_crop_data()`:
+    второй набор в этой функции разошёлся бы с формой.
     """
-    if not crop_data:
+    data = normalize_crop_data(crop_data, size=image.size)
+    if not data:
         return image
-    if not isinstance(crop_data, dict):
-        logger.warning("crop_data не словарь, кроп пропущен")
-        return image
-    version = crop_data.get("version")
-    if version != CROP_VERSION:
-        logger.warning("crop_data версии %r, кроп пропущен", version)
-        return image
-
-    box = _crop_box(image, crop_data)
-    if box is None:
-        logger.warning("crop_data вне границ изображения, кроп пропущен")
-        return image
+    box = (
+        data["x"],
+        data["y"],
+        data["x"] + data["width"],
+        data["y"] + data["height"],
+    )
     return image.crop(box)
 
 

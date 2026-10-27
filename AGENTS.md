@@ -188,7 +188,7 @@ constructor". Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.20.0; development branch `master`; 1207 tests passing on Python 3.12 and 3.13
+- Version: 0.21.0; development branch `master`; 1284 tests passing on Python 3.12 and 3.13
   (`make test`); linter clean (`make lint`).
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is in progress: sub-stage 3.1
@@ -200,7 +200,10 @@ constructor". Legal pages and SMTP are stage 4.
   step 1 saves the file, step 2 `/photos/<pk>/edit/` holds the photo details and the edit
   page (author and moderator), `process_photo_task` retries only on `StorageUnavailable`,
   `enqueue_photo_processing` is the only place that queues the task, the admin action
-  "Process again", and EXIF is read on the server. The next one is 3.4 (frame correction).
+  "Process again", and EXIF is read on the server. Sub-stage 3.4 (frame correction in the
+  browser) is complete: Cropper.js on step 1, `crop_data` in the "as a person sees it" system
+  scaled to the working copy, and the crop frame in the admin. The next one is 3.5
+  (perceptual hash and similar photo search).
 
 ### Public UI
 
@@ -414,7 +417,7 @@ covers copyright (`COPYRIGHT`) and the right to one's image (`PRIVACY`) as separ
 with `url_has_allowed_host_and_scheme`, and step 2 accepts `?team=<pk>` and `?event=<pk>`.
 **A chosen file can be removed** with the "Remove photo" button under the preview: the file
 field has no native clear control, and without it someone who picked the wrong shot has to
-find the right one again. The button lives in `photo-form.js` together with the preview and
+find the right one again. The button lives in `photo-crop.js` together with the cropper and
 clears the field and the `objectURL`. **The EXIF year hint comes from the server** —
 `extract_exif()` runs in `PhotoFileForm` on the already opened file, and step 2 takes
 `taken_year(photo.exif)` as `initial`; there is no EXIF parser in the browser (`exifr` was
@@ -465,6 +468,27 @@ filled by actions, not by hand.
 - **A crop is `crop_data`, not a new file.** Garbage in the data (not a dict, unknown version,
   coordinates outside the image, a crop smaller than 100 px) is treated as "no crop" with a
   log warning: the service must not crash on browser input.
+- **Crop coordinates live in the "as a person sees it" system and in the full frame size.**
+  Not in the size of the browser canvas and not in the size of the working copy: otherwise a
+  change of `CROP_CANVAS_MAX_SIDE` or `WORK_COPY_MAX_SIDE` would move every saved crop. The
+  server scales them to the working copy (`scale_crop_data()`, factor is
+  `working_width / source_width`) inside `process_photo()`.
+- **The rule for "what counts as a crop" lives in `normalize_crop_data()`**
+  (`apps/photos/processing.py`): type and version check, conversion to `int`, angle
+  normalization, clamping to the frame, `MIN_CROP_SIDE`. The form and the service call it
+  instead of checking fields on their own: otherwise the form would accept a crop that the
+  service silently drops.
+- **`crop_data` is edited only on step 1** (`/photos/upload/`). Re-cropping an uploaded photo
+  needs the original to be sent to the browser, and the original is not sent to anyone — that
+  is P3-18. Editing details on step 2 does not touch the crop.
+- **The browser normalizes EXIF with `createImageBitmap`, not with Cropper.** The cropper's
+  `checkOrientation` is off: the browser has already turned the image, and a second
+  normalization would turn it again and move the coordinates by 90°. The browser and the
+  server share one coordinate system — "as a person sees it".
+- **The admin crop frame is turned back before it is drawn.** `crop_overlay` shows the
+  original, which is turned by EXIF only, while `crop_data` keeps the frame of the turned
+  image. A mirrored orientation (2/4/5/7) adds a note about imprecision: a mirror cannot be
+  shown with percentages.
 - **A processing error never escapes:** `processing_status=failed` plus a short text in
   `processing_error`, the stack goes to the log. Otherwise one broken file would stop the whole
   backfill.
@@ -493,8 +517,8 @@ filled by actions, not by hand.
   crash, and the service note would write a history record and move `updated_at` (which feeds
   `lastmod` in the sitemap).
 - **Step 2 does not recompute `display`:** title, year and links do not change the picture.
-  The recompute arrives in 3.4 together with `crop_data`, and the task will do it, not the
-  view.
+  The crop is edited only on step 1, so the processing task still owns the recompute, never
+  the view.
 - **EXIF is read on the server at upload** (`PhotoFileForm` → `extract_exif()`, the file is
   already opened and decoded), not in the browser: there is no second EXIF parser in the
   project. The year from it only fills the field `initial`, never the database.

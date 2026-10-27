@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-26 01:48+0300\n"
+"POT-Creation-Date: 2026-10-27 17:47+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,7 +29,7 @@ msgstr "Профиль"
 msgid "Согласия"
 msgstr "Согласия"
 
-#: apps/accounts/admin.py:47 apps/photos/admin.py:105
+#: apps/accounts/admin.py:47 apps/photos/admin.py:166
 msgid "Права"
 msgstr "Права"
 
@@ -126,8 +126,8 @@ msgstr "Профиль обновлён"
 #: apps/catalog/views.py:590 apps/catalog/views.py:649
 #: apps/catalog/views.py:691 apps/catalog/views.py:718 apps/core/views.py:114
 #: apps/core/views.py:144 apps/core/views.py:192 apps/moderation/views.py:111
-#: apps/photos/views.py:153 apps/photos/views.py:208 apps/photos/views.py:243
-#: apps/photos/views.py:273 apps/search/views.py:40
+#: apps/photos/views.py:156 apps/photos/views.py:211 apps/photos/views.py:246
+#: apps/photos/views.py:276 apps/search/views.py:40
 #: templates/partials/footer.html:20
 msgid "Главная"
 msgstr "Главная"
@@ -137,12 +137,12 @@ msgid "Содержание"
 msgstr "Содержание"
 
 #: apps/catalog/admin.py:71 apps/catalog/admin.py:131 apps/catalog/admin.py:181
-#: apps/comments/admin.py:42 apps/photos/admin.py:109
+#: apps/comments/admin.py:42 apps/photos/admin.py:170
 msgid "Публикация"
 msgstr "Публикация"
 
 #: apps/catalog/admin.py:75 apps/catalog/admin.py:135 apps/catalog/admin.py:185
-#: apps/comments/admin.py:45 apps/photos/admin.py:113
+#: apps/comments/admin.py:45 apps/photos/admin.py:174
 msgid "Служебное"
 msgstr "Служебное"
 
@@ -214,7 +214,7 @@ msgid "Все десятилетия"
 msgstr "Все десятилетия"
 
 #: apps/catalog/filters.py:320 apps/catalog/forms.py:207
-#: apps/photos/forms.py:227
+#: apps/photos/forms.py:273
 #: templates/catalog/email/new_event_notification.txt:5
 #: templates/catalog/partials/roster_form.html:11
 #: templates/photos/photo_detail.html:44
@@ -290,7 +290,7 @@ msgstr "Описание не должно быть длиннее %(limit)s с�
 msgid "Эмблема не должна быть больше %(limit)s МБ."
 msgstr "Эмблема не должна быть больше %(limit)s МБ."
 
-#: apps/catalog/forms.py:148 apps/photos/forms.py:134
+#: apps/catalog/forms.py:148 apps/photos/forms.py:180
 #, python-format
 msgid "Поддерживаются форматы: %(formats)s."
 msgstr "Поддерживаются форматы: %(formats)s."
@@ -315,7 +315,7 @@ msgstr "Дата окончания"
 msgid "Страна"
 msgstr "Страна"
 
-#: apps/catalog/forms.py:287 apps/photos/forms.py:343
+#: apps/catalog/forms.py:287 apps/photos/forms.py:389
 #, python-format
 msgid "Год должен быть между %(min)s и %(max)s."
 msgstr "Год должен быть между %(min)s и %(max)s."
@@ -679,7 +679,7 @@ msgstr "Новая команда"
 msgid "Создать"
 msgstr "Создать"
 
-#: apps/catalog/views.py:540 apps/catalog/views.py:672 apps/photos/views.py:186
+#: apps/catalog/views.py:540 apps/catalog/views.py:672 apps/photos/views.py:189
 msgid "Изменения сохранены."
 msgstr "Изменения сохранены."
 
@@ -951,7 +951,7 @@ msgstr "порядок сортировки"
 msgid "виды спорта"
 msgstr "виды спорта"
 
-#: apps/core/schema.py:150 apps/photos/views.py:282 apps/photos/views.py:286
+#: apps/core/schema.py:150 apps/photos/views.py:285 apps/photos/views.py:289
 #: templates/photos/my_photos.html:58 templates/photos/photo_detail.html:37
 msgid "Фотография"
 msgstr "Фотография"
@@ -978,7 +978,7 @@ msgstr ""
 "нарушении прав."
 
 #: apps/core/views.py:138 apps/core/views.py:145 apps/core/views.py:193
-#: apps/photos/views.py:276 templates/core/home.html:61
+#: apps/photos/views.py:279 templates/core/home.html:61
 #: templates/core/year_list.html:11 templates/partials/footer.html:14
 #: templates/partials/navbar.html:20
 msgid "Годы"
@@ -988,7 +988,7 @@ msgstr "Годы"
 msgid "Хронология архива SportMemo: годы и фотографии каждого года."
 msgstr "Хронология архива SportMemo: годы и фотографии каждого года."
 
-#: apps/core/views.py:187 apps/core/views.py:194 apps/photos/views.py:279
+#: apps/core/views.py:187 apps/core/views.py:194 apps/photos/views.py:282
 #: templates/core/year_detail.html:12
 #, python-format
 msgid "%(year)s год"
@@ -1149,47 +1149,80 @@ msgstr "Жалоба на этот объект уже отправлена."
 msgid "Сообщить об ошибке"
 msgstr "Сообщить об ошибке"
 
-#: apps/photos/admin.py:85
+#: apps/photos/admin.py:145
 msgid "Привязка"
 msgstr "Привязка"
 
-#: apps/photos/admin.py:87
+#: apps/photos/admin.py:147
 msgid "Производные"
 msgstr "Производные"
 
-#: apps/photos/admin.py:101
+#: apps/photos/admin.py:162
 msgid "Обработка"
 msgstr "Обработка"
 
-#: apps/photos/admin.py:127
+#: apps/photos/admin.py:188
+msgid "Рамка кропа"
+msgstr "Рамка кропа"
+
+#: apps/photos/admin.py:207
+msgid "Оригинал не загружен"
+msgstr "Оригинал не загружен"
+
+#: apps/photos/admin.py:212
+msgid "Без кропа: показывается весь кадр"
+msgstr "Без кропа: показывается весь кадр"
+
+#: apps/photos/admin.py:218
+msgid "Рамка недоступна: в данных кропа нет размера кадра"
+msgstr "Рамка недоступна: в данных кропа нет размера кадра"
+
+#: apps/photos/admin.py:232
+msgid "Затемнено то, что осталось за кадром."
+msgstr "Затемнено то, что осталось за кадром."
+
+#: apps/photos/admin.py:235
+#, python-format
+msgid "Кадр повёрнут на %(degrees)s°."
+msgstr "Кадр повёрнут на %(degrees)s°."
+
+#: apps/photos/admin.py:238
+msgid "Зеркальная ориентация: рамка может быть неточной."
+msgstr "Зеркальная ориентация: рамка может быть неточной."
+
+#: apps/photos/admin.py:252
 msgid "Обработать заново"
 msgstr "Обработать заново"
 
-#: apps/photos/admin.py:146
+#: apps/photos/admin.py:271
 #, python-format
 msgid "Поставлено в обработку: %(count)d."
 msgstr "Поставлено в обработку: %(count)d."
 
-#: apps/photos/forms.py:51
+#: apps/photos/forms.py:57
 msgid "Фото"
 msgstr "Фото"
 
-#: apps/photos/forms.py:70
+#: apps/photos/forms.py:66
+msgid "Обрезка кадра"
+msgstr "Обрезка кадра"
+
+#: apps/photos/forms.py:88
 #, python-format
 msgid "Файл больше %(limit)s МБ."
 msgstr "Файл больше %(limit)s МБ."
 
-#: apps/photos/forms.py:120
+#: apps/photos/forms.py:166
 msgid ""
 "Не удалось прочитать изображение. Подходят файлы JPEG, PNG, WebP и HEIC."
 msgstr ""
 "Не удалось прочитать изображение. Подходят файлы JPEG, PNG, WebP и HEIC."
 
-#: apps/photos/forms.py:126
+#: apps/photos/forms.py:172
 msgid "Не удалось прочитать изображение: файл повреждён."
 msgstr "Не удалось прочитать изображение: файл повреждён."
 
-#: apps/photos/forms.py:144
+#: apps/photos/forms.py:190
 #, python-format
 msgid ""
 "Слишком маленькое изображение: %(width)s×%(height)s px, меньшая сторона "
@@ -1198,7 +1231,7 @@ msgstr ""
 "Слишком маленькое изображение: %(width)s×%(height)s px, меньшая сторона "
 "должна быть не меньше %(min)s px."
 
-#: apps/photos/forms.py:152
+#: apps/photos/forms.py:198
 #, python-format
 msgid ""
 "Слишком большое изображение: %(width)s×%(height)s px, большая сторона может "
@@ -1207,23 +1240,23 @@ msgstr ""
 "Слишком большое изображение: %(width)s×%(height)s px, большая сторона может "
 "быть до %(max)s px."
 
-#: apps/photos/forms.py:169
+#: apps/photos/forms.py:215
 msgid "Файл повреждён: изображение не удалось прочитать целиком."
 msgstr "Файл повреждён: изображение не удалось прочитать целиком."
 
-#: apps/photos/forms.py:179
+#: apps/photos/forms.py:225
 #, python-format
 msgid ""
 "За сутки можно загрузить не больше %(limit)s фотографий. Попробуйте позже."
 msgstr ""
 "За сутки можно загрузить не больше %(limit)s фотографий. Попробуйте позже."
 
-#: apps/photos/forms.py:202 apps/search/services.py:153
+#: apps/photos/forms.py:248 apps/search/services.py:153
 #: templates/photos/photo_detail.html:59
 msgid "Команда"
 msgstr "Команда"
 
-#: apps/photos/forms.py:207
+#: apps/photos/forms.py:253
 msgid ""
 "Начните вводить — появятся команды из архива. Если нужной нет, создайте её "
 "по ссылке ниже."
@@ -1231,50 +1264,50 @@ msgstr ""
 "Начните вводить — появятся команды из архива. Если нужной нет, создайте её "
 "по ссылке ниже."
 
-#: apps/photos/forms.py:212 apps/search/services.py:159
+#: apps/photos/forms.py:258 apps/search/services.py:159
 #: templates/photos/photo_detail.html:69
 msgid "Событие"
 msgstr "Событие"
 
-#: apps/photos/forms.py:216
+#: apps/photos/forms.py:262
 msgid "Начните вводить — появятся события из архива."
 msgstr "Начните вводить — появятся события из архива."
 
-#: apps/photos/forms.py:225
+#: apps/photos/forms.py:271
 msgid "Заголовок"
 msgstr "Заголовок"
 
-#: apps/photos/forms.py:226
+#: apps/photos/forms.py:272
 msgid "Подпись"
 msgstr "Подпись"
 
-#: apps/photos/forms.py:228 templates/photos/photo_detail.html:50
+#: apps/photos/forms.py:274 templates/photos/photo_detail.html:50
 msgid "Дата съёмки"
 msgstr "Дата съёмки"
 
-#: apps/photos/forms.py:231
+#: apps/photos/forms.py:277
 msgid "Одна строка о снимке. Можно оставить пустым."
 msgstr "Одна строка о снимке. Можно оставить пустым."
 
-#: apps/photos/forms.py:232
+#: apps/photos/forms.py:278
 msgid "Кто на фото, что происходит, чем снимок важен."
 msgstr "Кто на фото, что происходит, чем снимок важен."
 
-#: apps/photos/forms.py:233
+#: apps/photos/forms.py:279
 msgid "Если знаете. Год из файла — только подсказка."
 msgstr "Если знаете. Год из файла — только подсказка."
 
-#: apps/photos/forms.py:305
+#: apps/photos/forms.py:351
 #, python-format
 msgid "Не удалось найти «%(name)s». Проверьте название."
 msgstr "Не удалось найти «%(name)s». Проверьте название."
 
-#: apps/photos/forms.py:350
+#: apps/photos/forms.py:396
 #, python-format
 msgid "Дата съёмки не совпадает с годом %(year)s."
 msgstr "Дата съёмки не совпадает с годом %(year)s."
 
-#: apps/photos/forms.py:361
+#: apps/photos/forms.py:407
 #, python-format
 msgid "Изображение слишком большое: больше %(mpix)s Мпикс."
 msgstr "Изображение слишком большое: больше %(mpix)s Мпикс."
@@ -1552,7 +1585,7 @@ msgstr "Хранилище недоступно, попробуйте позже
 msgid "Ошибка обработки: %(error)s"
 msgstr "Ошибка обработки: %(error)s"
 
-#: apps/photos/views.py:135
+#: apps/photos/views.py:138
 msgid ""
 "Файл сохранён, фотография обрабатывается. Заполните данные о снимке — их "
 "можно изменить позже."
@@ -1560,27 +1593,27 @@ msgstr ""
 "Файл сохранён, фотография обрабатывается. Заполните данные о снимке — их "
 "можно изменить позже."
 
-#: apps/photos/views.py:148 apps/photos/views.py:154
+#: apps/photos/views.py:151 apps/photos/views.py:157
 #: templates/photos/photo_form.html:11
 msgid "Загрузка фото"
 msgstr "Загрузка фото"
 
-#: apps/photos/views.py:183
+#: apps/photos/views.py:186
 msgid "Изменения сохранены. Фото остаётся в архиве."
 msgstr "Изменения сохранены. Фото остаётся в архиве."
 
-#: apps/photos/views.py:203 apps/photos/views.py:210
+#: apps/photos/views.py:206 apps/photos/views.py:213
 #: templates/photos/photo_details.html:11
 msgid "Данные фотографии"
 msgstr "Данные фотографии"
 
-#: apps/photos/views.py:209 apps/photos/views.py:238 apps/photos/views.py:244
+#: apps/photos/views.py:212 apps/photos/views.py:241 apps/photos/views.py:247
 #: templates/partials/navbar.html:71 templates/photos/my_photos.html:13
-#: templates/photos/photo_details.html:131 templates/photos/photo_form.html:83
+#: templates/photos/photo_details.html:131 templates/photos/photo_form.html:130
 msgid "Мои фото"
 msgstr "Мои фото"
 
-#: apps/photos/views.py:295
+#: apps/photos/views.py:298
 msgid "Фотография из архива SportMemo"
 msgstr "Фотография из архива SportMemo"
 
@@ -1847,8 +1880,7 @@ msgstr "Регистрация"
 
 #: templates/account/signup.html:10
 msgid "Аккаунт нужен, чтобы загружать фотографии и следить за своими правками."
-msgstr ""
-"Аккаунт нужен, чтобы загружать фотографии и следить за своими правками."
+msgstr "Аккаунт нужен, чтобы загружать фотографии и следить за своими правками."
 
 #: templates/account/signup.html:30
 msgid "Уже есть аккаунт? Войти"
@@ -2762,19 +2794,41 @@ msgstr ""
 msgid "Загрузка фото пока недоступна"
 msgstr "Загрузка фото пока недоступна"
 
-#: templates/photos/photo_form.html:53
-msgid "Предпросмотр недоступен в этом браузере, но файл выбран."
-msgstr "Предпросмотр недоступен в этом браузере, но файл выбран."
+#: templates/photos/photo_form.html:47
+msgid ""
+"Предпросмотр и обрезка недоступны в этом браузере. Файл загрузится целиком."
+msgstr ""
+"Предпросмотр и обрезка недоступны в этом браузере. Файл загрузится целиком."
 
-#: templates/photos/photo_form.html:65
+#: templates/photos/photo_form.html:67
+msgid "Повернуть влево"
+msgstr "Повернуть влево"
+
+#: templates/photos/photo_form.html:72
+msgid "Повернуть вправо"
+msgstr "Повернуть вправо"
+
+#: templates/photos/photo_form.html:77
+msgid "Сбросить"
+msgstr "Сбросить"
+
+#: templates/photos/photo_form.html:90
 msgid "Убрать фото"
 msgstr "Убрать фото"
 
-#: templates/photos/photo_form.html:81
+#: templates/photos/photo_form.html:102
+msgid ""
+"Обрезать и поворачивать кадр можно только с включённым JavaScript. Файл "
+"загрузится целиком."
+msgstr ""
+"Обрезать и поворачивать кадр можно только с включённым JavaScript. Файл "
+"загрузится целиком."
+
+#: templates/photos/photo_form.html:128
 msgid "Продолжить"
 msgstr "Продолжить"
 
-#: templates/photos/photo_form.html:96
+#: templates/photos/photo_form.html:143
 #, python-format
 msgid ""
 "Загружая фото, вы подтверждаете соблюдение <a href=\"%(rules_url)s\">Правил "

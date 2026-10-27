@@ -53,6 +53,9 @@ def _create_photo(form, user, sport):
         # а поле хранится для поиска в админке.
         original_filename=Path(upload.name).name[:255],
         exif=data.get("exif", {}),
+        # Инструкция обработки, а не новый файл: оригинал остаётся целым
+        # (инвариант № 4). Пустой словарь — «без кропа», обычный путь.
+        crop_data=data.get("crop_data", {}),
     )
     photo.save()
     enqueue_photo_processing(photo)

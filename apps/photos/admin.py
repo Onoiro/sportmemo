@@ -1,6 +1,7 @@
 """Админка фотографий."""
 
 from django.contrib import admin, messages
+from django.utils.html import format_html, format_html_join
 from django.utils.translation import gettext_lazy as _
 
 from apps.core.admin_mixins import (
@@ -9,7 +10,65 @@ from apps.core.admin_mixins import (
     ModerationActionsMixin,
 )
 from apps.photos.models import Photo, PhotoPerson, Source
+from apps.photos.processing import normalize_crop_data
 from apps.photos.tasks import enqueue_photo_processing
+
+# Ориентации EXIF, при которых кадр зеркалится. Браузер отражает картинку
+# сам, а проценты рамки считаются от транспонированного кадра: стороны
+# совпадают, а отражение — нет.
+MIRRORED_ORIENTATIONS = frozenset({2, 4, 5, 7})
+
+
+def _percent(value, total) -> float:
+    """Доля от стороны кадра в процентах, обрезанная по 0–100."""
+    if not total:
+        return 0.0
+    return round(min(max(value / total * 100, 0.0), 100.0), 2)
+
+
+def _crop_box_in_frame(crop_data: dict):
+    """Координаты кропа в системе исходного кадра и его размер.
+
+    `crop_data` хранит рамку в системе «как видит человек» — то есть уже
+    повёрнутой, если человек нажал «повернуть». В админке показывается
+    оригинал, который браузер разворачивает только по EXIF, а не по нашему
+    повороту. Без обратного пересчёта рамка на повёрнутом фото стояла бы
+    поперёк кадра и врала модератору.
+
+    `source_width`/`source_height` описывают повёрнутый кадр, поэтому для
+    поворота на 90/270 стороны меняются местами ещё раз.
+    """
+    frame_width = crop_data.get("source_width")
+    frame_height = crop_data.get("source_height")
+    if not frame_width or not frame_height:
+        return None
+    rotate = crop_data.get("rotate", 0)
+    if rotate % 180:
+        frame_width, frame_height = frame_height, frame_width
+
+    left = crop_data["x"]
+    top = crop_data["y"]
+    width = crop_data["width"]
+    height = crop_data["height"]
+    # Обратный поворот по часовой: точка (x, y) повёрнутого кадра пришла
+    # из (y, H - x) исходного.
+    if rotate == 90:
+        left, top, width, height = top, frame_height - left - width, height, width
+    elif rotate == 180:
+        left = frame_width - left - width
+        top = frame_height - top - height
+    elif rotate == 270:
+        left, top, width, height = frame_width - top - height, left, height, width
+    return left, top, width, height, frame_width, frame_height
+
+
+def _mirrored(obj) -> bool:
+    """Кадр зеркалится EXIF-ориентацией: проценты рамки тогда неточны."""
+    try:
+        orientation = int(obj.exif.get("Orientation", 1))
+    except (AttributeError, TypeError, ValueError):
+        return False
+    return orientation in MIRRORED_ORIENTATIONS
 
 
 class PhotoPersonInline(admin.TabularInline):
@@ -75,6 +134,7 @@ class PhotoAdmin(ModerationActionsMixin, BaseHistoryAdmin):
         "width",
         "height",
         "phash",
+        "crop_overlay",
         "crop_data",
     )
     inlines = (PhotoPersonInline,)
@@ -89,6 +149,7 @@ class PhotoAdmin(ModerationActionsMixin, BaseHistoryAdmin):
                 "fields": (
                     "processed",
                     "display",
+                    "crop_overlay",
                     "crop_data",
                     "width",
                     "height",
@@ -123,6 +184,70 @@ class PhotoAdmin(ModerationActionsMixin, BaseHistoryAdmin):
             },
         ),
     )
+
+    @admin.display(description=_("Рамка кропа"))
+    def crop_overlay(self, obj):
+        """Показать, какой участок оригинала попал в `display`.
+
+        Рамка рисуется поверх оригинала: модератору нужно видеть, что
+        осталось за кадром, а `display` этого не показывает — там уже
+        вырезанный участок.
+
+        Браузер сам применяет EXIF-ориентацию к `<img>`, поэтому проценты
+        считаются от транспонированного кадра. При зеркальной ориентации
+        (2/4/5/7) рамка может быть неточной: отражение по процентам
+        не выразить — об этом стоит сказать прямо, а не показывать
+        неверную картинку молча.
+        """
+        if obj is None:
+            # Страница добавления: показывать нечего, а `obj.original`
+            # у несуществующего фото нет.
+            return ""
+        if not obj.original:
+            return _("Оригинал не загружен")
+        # Правило «что считается кропом» одно — то же, что у формы и сервиса:
+        # мусор в поле не должен ломать страницу админки.
+        crop_data = normalize_crop_data(obj.crop_data)
+        if not crop_data:
+            return _("Без кропа: показывается весь кадр")
+
+        box = _crop_box_in_frame(crop_data)
+        if box is None:
+            # `source_width`/`source_height` появились в версии 1 формата:
+            # у старых записей их нет, и процент посчитать не от чего.
+            return _("Рамка недоступна: в данных кропа нет размера кадра")
+        left, top, width, height, frame_width, frame_height = box
+
+        frame_style = format_html(
+            "position:absolute;"
+            "left:{}%;top:{}%;width:{}%;height:{}%;"
+            "border:2px solid var(--body-quiet-color, #666);"
+            "box-shadow:0 0 0 9999px rgba(0, 0, 0, 0.45);"
+            "pointer-events:none;",
+            _percent(left, frame_width),
+            _percent(top, frame_height),
+            _percent(width, frame_width),
+            _percent(height, frame_height),
+        )
+        notes = [_("Затемнено то, что осталось за кадром.")]
+        if crop_data.get("rotate"):
+            notes.append(
+                _("Кадр повёрнут на %(degrees)s°.") % {"degrees": crop_data["rotate"]}
+            )
+        if _mirrored(obj):
+            notes.append(_("Зеркальная ориентация: рамка может быть неточной."))
+
+        return format_html(
+            '<div style="position:relative;display:inline-block;'
+            'max-width:40rem;overflow:hidden;line-height:0;">'
+            '<img src="{}" alt="" style="max-width:100%;height:auto;">'
+            '<div style="{}"></div>'
+            "</div>"
+            '<p style="margin:0.5rem 0 0;">{}</p>',
+            obj.original.url,
+            frame_style,
+            format_html_join(" ", "{}", ((note,) for note in notes)),
+        )
 
     @admin.action(description=_("Обработать заново"))
     def action_reprocess(self, request, queryset):

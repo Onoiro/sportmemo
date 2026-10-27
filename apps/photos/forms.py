@@ -7,6 +7,8 @@
 """
 
 import io
+import json
+import logging
 import warnings
 
 from django import forms
@@ -26,7 +28,11 @@ from apps.photos.processing import (
     MAX_SIDE_PX,
     MAX_UPLOAD_BYTES,
     MIN_SIDE_PX,
+    normalize_crop_data,
+    oriented_size,
 )
+
+logger = logging.getLogger(__name__)
 
 # Раньше бейсбола в России не было, а будущий год — заведомая опечатка.
 MIN_PHOTO_YEAR = 1850
@@ -53,10 +59,22 @@ class PhotoFileForm(BootstrapFormMixin, forms.Form):
             attrs={"accept": "image/jpeg,image/png,image/webp,image/heic,image/heif"}
         ),
     )
+    # Кроп приходит из браузера: рамка и поворот собираются в JSON на
+    # отправке формы. Поле скрытое и необязательное — без JavaScript его
+    # просто нет, и фото загружается целиком.
+    crop_data = forms.CharField(
+        label=_("Обрезка кадра"),
+        required=False,
+        widget=forms.HiddenInput,
+    )
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
+        # Размер кадра «как видит человек» заполняет `clean_original`:
+        # координаты кропа приходят в этой системе, и без размера их
+        # не к чему клампить.
+        self._source_size = None
 
     def clean_original(self):
         """Проверить файл: размер, формат, стороны, пиксели, декодирование.
@@ -81,6 +99,11 @@ class PhotoFileForm(BootstrapFormMixin, forms.Form):
                 self._check_format(image)
                 self._check_side(image)
                 self._decode(image)
+                # Размер «как видит человек» нужен разбору `crop_data`:
+                # координаты браузера живут в этой системе. Считаем здесь,
+                # пока файл открыт, — второе открытие стоило бы столько же,
+                # сколько вся проверка.
+                self._source_size = oriented_size(image)
                 # EXIF читается здесь же: файл уже открыт и декодирован,
                 # и второе открытие ради одного поля стоило бы столько же,
                 # сколько вся проверка. В базу метаданные попадут при
@@ -97,7 +120,30 @@ class PhotoFileForm(BootstrapFormMixin, forms.Form):
     def clean(self):
         cleaned_data = super().clean()
         self._check_daily_limit()
+        cleaned_data["crop_data"] = self._clean_crop_data(cleaned_data)
         return cleaned_data
+
+    def _clean_crop_data(self, cleaned_data):
+        """Разобрать скрытое поле: JSON из браузера или пустая строка.
+
+        Битый JSON — не повод отказывать в загрузке: кроп необязателен,
+        а фото человек уже выбрал. Правила «что считается кропом» живут
+        в `normalize_crop_data()` — второй набор в форме разошёлся бы
+        с сервисом.
+        """
+        raw = (cleaned_data.get("crop_data") or "").strip()
+        if not raw:
+            return {}
+        # Файл не прошёл проверку — размер кадра неизвестен, а без него
+        # координаты не к чему привязать.
+        if "original" not in cleaned_data:
+            return {}
+        try:
+            data = json.loads(raw)
+        except ValueError:
+            logger.warning("crop_data не разбирается как JSON, кроп пропущен")
+            return {}
+        return normalize_crop_data(data, size=self._source_size)
 
     @staticmethod
     def _open_image(buffer):

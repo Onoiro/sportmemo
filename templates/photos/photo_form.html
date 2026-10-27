@@ -34,43 +34,87 @@
             {% endif %}
 
             {% comment %}
-            Предпросмотр кадра. Контейнер скрыт атрибутом `hidden`, а не CSS:
-            без JavaScript он остаётся пустым и не занимает места, а скрипт
-            формы показывает его сам, когда файл выбран.
+            Обрезка кадра. Кроп — инструкция обработки, а не новый файл:
+            оригинал сохраняется целиком. Рамку рисует Cropper.js поверх
+            холста, а скрипт формы показывает блок, когда файл выбран,
+            поэтому без JavaScript здесь остаётся только подпись.
+            Блок скрыт целиком, а не по частям: пустая рамка над полем
+            файла выглядела бы поломкой формы.
             {% endcomment %}
-            <div class="photo-preview" id="photo-preview" hidden>
-                <img class="photo-preview__image" id="photo-preview-image" alt="">
+            <div class="photo-crop" id="photo-crop" hidden
+                 data-fallback-note="{% trans 'Предпросмотр и обрезка недоступны в этом браузере. Файл загрузится целиком.' %}">
+                <div class="photo-crop__stage" id="photo-crop-stage" hidden>
+                    <canvas class="photo-crop__canvas" id="photo-crop-canvas" hidden></canvas>
+                    {% comment %}
+                    HEIC умеет читать не каждый браузер. Показать нечего —
+                    скрипт прячет картинку и оставляет пояснение: иначе
+                    битое изображение выглядело бы поломкой формы.
+                    {% endcomment %}
+                    <img class="photo-crop__preview" id="photo-crop-preview" alt="" hidden>
+                </div>
                 {% comment %}
-                HEIC умеет читать не каждый браузер. Скрываем только
-                картинку: контейнер с кнопкой «Убрать фото» должен
-                остаться, иначе человек не поймёт, что файл выбран,
-                и не сможет его снять.
+                Кнопки поворота показывает скрипт вместе с кропером: без
+                него они крутили бы пустоту.
                 {% endcomment %}
-                <p class="photo-preview__note" id="photo-preview-note" hidden>
-                    {% trans "Предпросмотр недоступен в этом браузере, но файл выбран." %}
-                </p>
-                {% comment %}
-                Убрать выбранный файл иначе нечем: у поля файла нет кнопки
-                «очистить», а без неё человек, выбравший не тот снимок,
-                вынужден искать в проводнике нужный. Кнопку показывает
-                скрипт вместе с превью, поэтому без JavaScript её нет.
-                {% endcomment %}
-                <button class="btn btn-sm btn-outline-secondary photo-preview__remove"
-                        type="button" id="photo-preview-remove">
-                    <i class="bi bi-x-lg" aria-hidden="true"></i>
-                    {% trans "Убрать фото" %}
-                </button>
+                <div class="photo-crop__tools" id="photo-crop-tools" hidden>
+                    <button class="btn btn-sm btn-outline-secondary" type="button"
+                            data-crop-action="rotate-left">
+                        <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                        {% trans "Повернуть влево" %}
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" type="button"
+                            data-crop-action="rotate-right">
+                        <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+                        {% trans "Повернуть вправо" %}
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" type="button"
+                            data-crop-action="reset">
+                        <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                        {% trans "Сбросить" %}
+                    </button>
+                </div>
+                <div class="photo-crop__actions" id="photo-crop-actions" hidden>
+                    {% comment %}
+                    Убрать выбранный файл иначе нечем: у поля файла нет
+                    кнопки «очистить», а без неё человек, выбравший не тот
+                    снимок, вынужден искать в проводнике нужный.
+                    {% endcomment %}
+                    <button class="btn btn-sm btn-outline-secondary" type="button"
+                            id="photo-crop-remove">
+                        <i class="bi bi-x-lg" aria-hidden="true"></i>
+                        {% trans "Убрать фото" %}
+                    </button>
+                </div>
+                <p class="photo-crop__note" id="photo-crop-note" hidden></p>
             </div>
+            {% comment %}
+            Подпись стоит вне скрытого блока: внутри него `<noscript>`
+            никогда не был бы виден, а именно ради него всё и затевалось.
+            {% endcomment %}
+            <noscript>
+                <p class="photo-crop__note">
+                    {% trans "Обрезать и поворачивать кадр можно только с включённым JavaScript. Файл загрузится целиком." %}
+                </p>
+            </noscript>
 
             {% for field in form %}
-                <div class="photo-form__field">
-                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {% if field.is_hidden %}
+                    {% comment %}
+                    Скрытое `crop_data` заполняет скрипт: без JavaScript
+                    оно пустое, и подпись к невидимому полю только
+                    сбивала бы с толку.
+                    {% endcomment %}
                     {{ field }}
-                    {% if field.help_text %}
-                        <div class="form-text">{{ field.help_text }}</div>
-                    {% endif %}
-                    {{ field.errors }}
-                </div>
+                {% else %}
+                    <div class="photo-form__field">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+                        {{ field.errors }}
+                    </div>
+                {% endif %}
             {% endfor %}
 
             <div class="photo-form__actions">
@@ -95,12 +139,20 @@
 </div>
 {% endblock %}
 
+{% block extra_head %}
+    {% if form %}
+        <link rel="stylesheet" href="{% static 'vendor/cropperjs/cropper.min.css' %}">
+    {% endif %}
+{% endblock %}
+
 {% block extra_js %}
     {% if form %}
         {% comment %}
-        Скрипт нужен только ради превью и кнопки «Убрать фото»: без него
-        форма отправляется как обычная multipart-форма.
+        Кропер и сбор координат. Без этих скриптов форма отправляется как
+        обычная multipart-форма, а кадр сохраняется целиком: обрезка —
+        необязательный шаг, а не условие загрузки.
         {% endcomment %}
-        <script src="{% static 'js/photo-form.js' %}"></script>
+        <script src="{% static 'vendor/cropperjs/cropper.min.js' %}"></script>
+        <script src="{% static 'js/photo-crop.js' %}"></script>
     {% endif %}
 {% endblock %}
