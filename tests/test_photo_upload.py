@@ -15,7 +15,12 @@ from apps.core.shortcuts import PHOTO_PAGE_SIZE, default_sport, visible_photos
 from apps.photos import services
 from apps.photos.forms import PhotoDetailsForm, PhotoFileForm
 from apps.photos.models import Photo, ProcessingStatus
-from apps.photos.processing import MAX_SIDE_PX, MAX_UPLOAD_BYTES, MIN_SIDE_PX
+from apps.photos.processing import (
+    MAX_SIDE_PX,
+    MAX_UPLOAD_BYTES,
+    MIN_SIDE_PX,
+    PHASH_HEX_LENGTH,
+)
 from tests.factories import PhotoFactory, TeamFactory
 from tests.utils import make_image_file, make_upload
 
@@ -690,7 +695,7 @@ class TestPhotoUploadView:
 
         photo = Photo.objects.get()
         assert (photo.width, photo.height) == (600, 400)
-        assert len(photo.phash) == 16
+        assert len(photo.phash) == PHASH_HEX_LENGTH
 
     def test_original_filename_keeps_only_name(self, client, user, baseball):
         client.force_login(user)

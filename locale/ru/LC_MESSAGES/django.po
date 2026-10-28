@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 17:47+0300\n"
+"POT-Creation-Date: 2026-10-28 17:16+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,7 +29,7 @@ msgstr "Профиль"
 msgid "Согласия"
 msgstr "Согласия"
 
-#: apps/accounts/admin.py:47 apps/photos/admin.py:166
+#: apps/accounts/admin.py:47 apps/photos/admin.py:173
 msgid "Права"
 msgstr "Права"
 
@@ -137,12 +137,12 @@ msgid "Содержание"
 msgstr "Содержание"
 
 #: apps/catalog/admin.py:71 apps/catalog/admin.py:131 apps/catalog/admin.py:181
-#: apps/comments/admin.py:42 apps/photos/admin.py:170
+#: apps/comments/admin.py:42 apps/photos/admin.py:177
 msgid "Публикация"
 msgstr "Публикация"
 
 #: apps/catalog/admin.py:75 apps/catalog/admin.py:135 apps/catalog/admin.py:185
-#: apps/comments/admin.py:45 apps/photos/admin.py:174
+#: apps/comments/admin.py:45 apps/photos/admin.py:181
 msgid "Служебное"
 msgstr "Служебное"
 
@@ -214,7 +214,7 @@ msgid "Все десятилетия"
 msgstr "Все десятилетия"
 
 #: apps/catalog/filters.py:320 apps/catalog/forms.py:207
-#: apps/photos/forms.py:273
+#: apps/photos/forms.py:273 templates/admin/photos/photo/similar.html:31
 #: templates/catalog/email/new_event_notification.txt:5
 #: templates/catalog/partials/roster_form.html:11
 #: templates/photos/photo_detail.html:44
@@ -1149,57 +1149,67 @@ msgstr "Жалоба на этот объект уже отправлена."
 msgid "Сообщить об ошибке"
 msgstr "Сообщить об ошибке"
 
-#: apps/photos/admin.py:145
+#: apps/photos/admin.py:151
 msgid "Привязка"
 msgstr "Привязка"
 
-#: apps/photos/admin.py:147
+#: apps/photos/admin.py:153
 msgid "Производные"
 msgstr "Производные"
 
-#: apps/photos/admin.py:162
+#: apps/photos/admin.py:169
 msgid "Обработка"
 msgstr "Обработка"
 
-#: apps/photos/admin.py:188
+#: apps/photos/admin.py:195 apps/photos/admin.py:235
+#: templates/admin/photos/photo/similar.html:10
+#: templates/admin/photos/photo/similar.html:15
+msgid "Похожие фото"
+msgstr "Похожие фото"
+
+#: apps/photos/admin.py:211
+msgid "Показать похожие фото"
+msgstr "Показать похожие фото"
+
+#: apps/photos/admin.py:243
 msgid "Рамка кропа"
 msgstr "Рамка кропа"
 
-#: apps/photos/admin.py:207
+#: apps/photos/admin.py:262
 msgid "Оригинал не загружен"
 msgstr "Оригинал не загружен"
 
-#: apps/photos/admin.py:212
+#: apps/photos/admin.py:267
 msgid "Без кропа: показывается весь кадр"
 msgstr "Без кропа: показывается весь кадр"
 
-#: apps/photos/admin.py:218
+#: apps/photos/admin.py:273
 msgid "Рамка недоступна: в данных кропа нет размера кадра"
 msgstr "Рамка недоступна: в данных кропа нет размера кадра"
 
-#: apps/photos/admin.py:232
+#: apps/photos/admin.py:287
 msgid "Затемнено то, что осталось за кадром."
 msgstr "Затемнено то, что осталось за кадром."
 
-#: apps/photos/admin.py:235
+#: apps/photos/admin.py:290
 #, python-format
 msgid "Кадр повёрнут на %(degrees)s°."
 msgstr "Кадр повёрнут на %(degrees)s°."
 
-#: apps/photos/admin.py:238
+#: apps/photos/admin.py:293
 msgid "Зеркальная ориентация: рамка может быть неточной."
 msgstr "Зеркальная ориентация: рамка может быть неточной."
 
-#: apps/photos/admin.py:252
+#: apps/photos/admin.py:307
 msgid "Обработать заново"
 msgstr "Обработать заново"
 
-#: apps/photos/admin.py:271
+#: apps/photos/admin.py:326
 #, python-format
 msgid "Поставлено в обработку: %(count)d."
 msgstr "Поставлено в обработку: %(count)d."
 
-#: apps/photos/forms.py:57
+#: apps/photos/forms.py:57 templates/admin/photos/photo/similar.html:30
 msgid "Фото"
 msgstr "Фото"
 
@@ -1252,6 +1262,7 @@ msgstr ""
 "За сутки можно загрузить не больше %(limit)s фотографий. Попробуйте позже."
 
 #: apps/photos/forms.py:248 apps/search/services.py:153
+#: templates/admin/photos/photo/similar.html:32
 #: templates/photos/photo_detail.html:59
 msgid "Команда"
 msgstr "Команда"
@@ -1576,6 +1587,14 @@ msgstr "человек на фото"
 msgid "люди на фото"
 msgstr "люди на фото"
 
+#: apps/photos/similar.py:78
+msgid "вероятный дубликат"
+msgstr "вероятный дубликат"
+
+#: apps/photos/similar.py:80
+msgid "похоже"
+msgstr "похоже"
+
 #: apps/photos/tasks.py:54
 msgid "Хранилище недоступно, попробуйте позже"
 msgstr "Хранилище недоступно, попробуйте позже"
@@ -1880,7 +1899,8 @@ msgstr "Регистрация"
 
 #: templates/account/signup.html:10
 msgid "Аккаунт нужен, чтобы загружать фотографии и следить за своими правками."
-msgstr "Аккаунт нужен, чтобы загружать фотографии и следить за своими правками."
+msgstr ""
+"Аккаунт нужен, чтобы загружать фотографии и следить за своими правками."
 
 #: templates/account/signup.html:30
 msgid "Уже есть аккаунт? Войти"
@@ -1976,6 +1996,7 @@ msgid "Изменить адрес почты"
 msgstr "Изменить адрес почты"
 
 #: templates/admin/core/merge_form.html:6
+#: templates/admin/photos/photo/similar.html:6
 msgid "Home"
 msgstr "Home"
 
@@ -2009,6 +2030,42 @@ msgstr "— выберите —"
 #: templates/admin/core/merge_form.html:45
 msgid "Слить"
 msgstr "Слить"
+
+#: templates/admin/photos/photo/similar.html:18
+msgid "Сравнение по перцептивному хешу. Совпадение — подсказка, решать вам."
+msgstr "Сравнение по перцептивному хешу. Совпадение — подсказка, решать вам."
+
+#: templates/admin/photos/photo/similar.html:23
+msgid "Хеш ещё не посчитан: фото ещё обрабатывается или обработка упала."
+msgstr "Хеш ещё не посчитан: фото ещё обрабатывается или обработка упала."
+
+#: templates/admin/photos/photo/similar.html:29
+msgid "Миниатюра"
+msgstr "Миниатюра"
+
+#: templates/admin/photos/photo/similar.html:33
+msgid "Статус"
+msgstr "Статус"
+
+#: templates/admin/photos/photo/similar.html:34
+msgid "Расстояние"
+msgstr "Расстояние"
+
+#: templates/admin/photos/photo/similar.html:48
+msgid "нет превью"
+msgstr "нет превью"
+
+#: templates/admin/photos/photo/similar.html:61
+msgid "не указан"
+msgstr "не указан"
+
+#: templates/admin/photos/photo/similar.html:83
+msgid "Похожих не найдено"
+msgstr "Похожих не найдено"
+
+#: templates/admin/photos/photo/similar.html:94
+msgid "Вернуться к фото"
+msgstr "Вернуться к фото"
 
 #: templates/catalog/email/new_event_notification.txt:1
 #, python-format

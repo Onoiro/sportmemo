@@ -1,0 +1,97 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate "Home" %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; <a href="{% url opts|admin_urlname:'change' original.pk %}">{{ original }}</a>
+    &rsaquo; {% translate "Похожие фото" %}
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>{% translate "Похожие фото" %}</h1>
+
+<p>
+    {% translate "Сравнение по перцептивному хешу. Совпадение — подсказка, решать вам." %}
+</p>
+
+{% if hash_missing %}
+    <p class="help">
+        {% translate "Хеш ещё не посчитан: фото ещё обрабатывается или обработка упала." %}
+    </p>
+{% elif similar %}
+    <table style="width:auto;">
+        <thead>
+            <tr>
+                <th>{% translate "Миниатюра" %}</th>
+                <th>{% translate "Фото" %}</th>
+                <th>{% translate "Год" %}</th>
+                <th>{% translate "Команда" %}</th>
+                <th>{% translate "Статус" %}</th>
+                <th>{% translate "Расстояние" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in similar %}
+            <tr>
+                <td>
+                    {% if item.photo.thumbnail %}
+                        <img src="{{ item.photo.thumbnail.url }}" alt=""
+                             width="96" height="96"
+                             style="object-fit:cover;border-radius:4px;"
+                             loading="lazy" decoding="async">
+                    {% else %}
+                        <div style="width:96px;height:96px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--border-color, #ccc);border-radius:4px;">
+                            <span class="help">{% translate "нет превью" %}</span>
+                        </div>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url opts|admin_urlname:'change' item.photo.pk %}">
+                        {{ item.photo }}
+                    </a>
+                </td>
+                <td>
+                    {% if item.photo.year %}
+                        {{ item.photo.year }}
+                    {% else %}
+                        <span class="help">{% translate "не указан" %}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if item.photo.team %}
+                        {{ item.photo.team.name }}
+                    {% else %}
+                        <span class="help">—</span>
+                    {% endif %}
+                </td>
+                <td>{{ item.photo.upload_state_label }}</td>
+                <td>
+                    {{ item.distance }}
+                    {% if item.label %}
+                        <br><span class="help">{{ item.label }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>{% translate "Похожих не найдено" %}</p>
+{% endif %}
+
+{% comment %}
+Здесь появится кнопка «Слить в это фото» в подэтапе 3.6: `Photo` ещё
+не `MergeableModel`, и слияния нет. Блок намеренно оставлен отдельным,
+чтобы добавление было одной вставкой, а не переделкой страницы.
+{% endcomment %}
+
+<div class="submit-row">
+    <a href="{% url opts|admin_urlname:'change' original.pk %}" class="button cancel-link">
+        {% translate "Вернуться к фото" %}
+    </a>
+</div>
+{% endblock %}

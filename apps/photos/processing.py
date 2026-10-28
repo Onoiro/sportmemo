@@ -45,9 +45,12 @@ MIN_CROP_SIDE = 100
 # Единственная версия формата `crop_data`, которую понимает сервер.
 CROP_VERSION = 1
 
-# Размер матрицы DCT для перцептивного хеша и размер итоговой сетки.
-_PHASH_SIZE = 32
-_PHASH_GRID = 8
+# Размер матрицы DCT для перцептивного хеша и размер итоговой сетки:
+# 16 × 16 бит = 256 бит = 64 hex-символа. Формат хеша знают снаружи
+# (поиск похожих, валидация в админке), поэтому длина вынесена в константу.
+_PHASH_DCT_SIZE = 64
+_PHASH_GRID = 16
+PHASH_HEX_LENGTH = _PHASH_GRID * _PHASH_GRID // 4
 
 
 def fit_max_side(image: Image.Image, max_side: int) -> Image.Image:
@@ -283,19 +286,31 @@ def _dct_matrix(size: int) -> np.ndarray:
     return matrix
 
 
-_DCT = _dct_matrix(_PHASH_SIZE)
+_DCT = _dct_matrix(_PHASH_DCT_SIZE)
 
 
 def perceptual_hash(image: Image.Image) -> str:
-    """Перцептивный хеш 64 бита в hex (16 символов).
+    """Перцептивный хеш 256 бит в hex (64 символа).
 
     Считается от `display`, а не от оригинала: дубликаты ищутся по тому,
-    что видит человек. Схема классическая (pHash): уменьшить до 32×32,
+    что видит человек. Схема классическая (pHash): уменьшить до 64×64,
     перевести в оттенки серого, взять DCT, оставить левый верхний блок
-    8×8 (низкие частоты), сравнить каждое значение с медианой блока.
+    16×16 (низкие частоты), сравнить каждое значение с медианой блока.
+
+    Битность поднята с 64 до 256 по замерам на демо-архиве: медиана
+    расстояния между разными фото выросла с 37 % до 41 %, а однотонное
+    красное и однотонное синее стали ближе по доле бит (9 % → 6 %).
+
+    **Известное ограничение:** монотонные цветовые заливки алгоритм
+    не различает. У такой картинки энергия DCT есть только в нулевой
+    частоте, остальные биты получаются из шума округления, и красное
+    с синим дают 16 из 256 — меньше порога «вероятный дубликат».
+    Порог снижать нельзя: пережатый JPEG-дубликат того же снимка даёт
+    до 40 из 256 и перестал бы находиться. Для архива ограничение
+    не важно — заливок в нём нет, а решение всё равно принимает человек.
     """
     small = image.convert("L").resize(
-        (_PHASH_SIZE, _PHASH_SIZE), Image.Resampling.LANCZOS
+        (_PHASH_DCT_SIZE, _PHASH_DCT_SIZE), Image.Resampling.LANCZOS
     )
     pixels = np.asarray(small, dtype=np.float64)
     dct = _DCT @ pixels @ _DCT.T
@@ -305,7 +320,7 @@ def perceptual_hash(image: Image.Image) -> str:
     value = 0
     for bit in bits:
         value = (value << 1) | int(bit)
-    return f"{value:016x}"
+    return f"{value:0{PHASH_HEX_LENGTH}x}"
 
 
 def hamming_distance(first: str, second: str) -> int:
@@ -313,11 +328,29 @@ def hamming_distance(first: str, second: str) -> int:
 
     Нечитаемый хеш считается «бесконечно далёким»: пустая строка не должна
     выглядеть как идеальное совпадение с другим пустым хешем.
+
+    Хеши разной длины несравнимы: 16-символьный хеш старого алгоритма
+    и 64-символьный новый дают случайное число бит, а не «сколько бит
+    из 256». Поэтому такой пары считаем максимально далёкой — длину
+    большего хеша в битах. Без этого правила страница похожих показала бы
+    мусор, и заметить это было бы нечем.
     """
+    try:
+        first_length = len(first)
+        second_length = len(second)
+    except TypeError:
+        return PHASH_HEX_LENGTH * 4
+    if first_length != second_length:
+        logger.warning(
+            "Хеши разной длины (%s и %s), сравнение невозможно",
+            first_length,
+            second_length,
+        )
+        return max(first_length, second_length) * 4
     try:
         return (int(first, 16) ^ int(second, 16)).bit_count()
     except (TypeError, ValueError):
-        return 64
+        return PHASH_HEX_LENGTH * 4
 
 
 def image_info(image: Image.Image) -> dict:

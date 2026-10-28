@@ -1,6 +1,10 @@
 """Админка фотографий."""
 
 from django.contrib import admin, messages
+from django.core.exceptions import PermissionDenied
+from django.http import Http404
+from django.template.response import TemplateResponse
+from django.urls import path, reverse
 from django.utils.html import format_html, format_html_join
 from django.utils.translation import gettext_lazy as _
 
@@ -9,8 +13,9 @@ from apps.core.admin_mixins import (
     BaseHistoryAdmin,
     ModerationActionsMixin,
 )
+from apps.photos import similar
 from apps.photos.models import Photo, PhotoPerson, Source
-from apps.photos.processing import normalize_crop_data
+from apps.photos.processing import PHASH_HEX_LENGTH, normalize_crop_data
 from apps.photos.tasks import enqueue_photo_processing
 
 # Ориентации EXIF, при которых кадр зеркалится. Браузер отражает картинку
@@ -133,6 +138,7 @@ class PhotoAdmin(ModerationActionsMixin, BaseHistoryAdmin):
         "views_count",
         "width",
         "height",
+        "similar_photos",
         "phash",
         "crop_overlay",
         "crop_data",
@@ -153,6 +159,7 @@ class PhotoAdmin(ModerationActionsMixin, BaseHistoryAdmin):
                     "crop_data",
                     "width",
                     "height",
+                    "similar_photos",
                     "phash",
                     "duplicate_of",
                 )
@@ -184,6 +191,54 @@ class PhotoAdmin(ModerationActionsMixin, BaseHistoryAdmin):
             },
         ),
     )
+
+    @admin.display(description=_("Похожие фото"))
+    def similar_photos(self, obj):
+        """Ссылка на страницу поиска дубликатов.
+
+        Счётчика «найдено N» здесь нет осознанно: он стоил бы прохода
+        по пулу кандидатов при каждом открытии карточки, а карточку
+        модератор открывает часто. Хочет узнать — нажимает ссылку.
+
+        Кнопки слияния на странице пока нет: `Photo` ещё не `MergeableModel`,
+        слияние — подэтап 3.6. Разметка страницы готова принять кнопку
+        одним блоком.
+        """
+        if obj is None or obj.pk is None:
+            # Страница добавления: у несуществующего фото ссылки нет.
+            return ""
+        url = reverse("admin:photos_photo_similar", args=[obj.pk])
+        return format_html('<a href="{}">{}</a>', url, _("Показать похожие фото"))
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path(
+                "similar/<int:photo_id>/",
+                self.admin_site.admin_view(self.similar_view),
+                name="photos_photo_similar",
+            ),
+        ]
+        # Свои адреса идут первыми: иначе `similar/` перехватил бы
+        # стандартный маршрут карточки `<path:object_id>/change/`.
+        return custom + urls
+
+    def similar_view(self, request, photo_id):
+        """Страница «Похожие фото»: только показывает, ничего не меняет."""
+        if not self.has_view_permission(request):
+            raise PermissionDenied
+        photo = self.get_object(request, photo_id)
+        if photo is None:
+            raise Http404
+        context = {
+            **self.admin_site.each_context(request),
+            "title": _("Похожие фото"),
+            "opts": self.model._meta,
+            "original": photo,
+            "similar": similar.similar_photos(photo),
+            "hash_missing": len(photo.phash or "") != PHASH_HEX_LENGTH,
+        }
+        return TemplateResponse(request, "admin/photos/photo/similar.html", context)
 
     @admin.display(description=_("Рамка кропа"))
     def crop_overlay(self, obj):

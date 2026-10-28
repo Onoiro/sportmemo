@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 17:43+0300\n"
+"POT-Creation-Date: 2026-10-28 17:16+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -27,7 +27,7 @@ msgstr "Profile"
 msgid "Согласия"
 msgstr "Consents"
 
-#: apps/accounts/admin.py:47 apps/photos/admin.py:166
+#: apps/accounts/admin.py:47 apps/photos/admin.py:173
 msgid "Права"
 msgstr "Rights"
 
@@ -135,12 +135,12 @@ msgid "Содержание"
 msgstr "Content"
 
 #: apps/catalog/admin.py:71 apps/catalog/admin.py:131 apps/catalog/admin.py:181
-#: apps/comments/admin.py:42 apps/photos/admin.py:170
+#: apps/comments/admin.py:42 apps/photos/admin.py:177
 msgid "Публикация"
 msgstr "Publication"
 
 #: apps/catalog/admin.py:75 apps/catalog/admin.py:135 apps/catalog/admin.py:185
-#: apps/comments/admin.py:45 apps/photos/admin.py:174
+#: apps/comments/admin.py:45 apps/photos/admin.py:181
 msgid "Служебное"
 msgstr "Service"
 
@@ -212,7 +212,7 @@ msgid "Все десятилетия"
 msgstr "All decades"
 
 #: apps/catalog/filters.py:320 apps/catalog/forms.py:207
-#: apps/photos/forms.py:273
+#: apps/photos/forms.py:273 templates/admin/photos/photo/similar.html:31
 #: templates/catalog/email/new_event_notification.txt:5
 #: templates/catalog/partials/roster_form.html:11
 #: templates/photos/photo_detail.html:44
@@ -1139,57 +1139,67 @@ msgstr "A report about this object has already been sent."
 msgid "Сообщить об ошибке"
 msgstr "Report an error"
 
-#: apps/photos/admin.py:145
+#: apps/photos/admin.py:151
 msgid "Привязка"
 msgstr "Links"
 
-#: apps/photos/admin.py:147
+#: apps/photos/admin.py:153
 msgid "Производные"
 msgstr "Derivatives"
 
-#: apps/photos/admin.py:162
+#: apps/photos/admin.py:169
 msgid "Обработка"
 msgstr "Processing"
 
-#: apps/photos/admin.py:188
+#: apps/photos/admin.py:195 apps/photos/admin.py:235
+#: templates/admin/photos/photo/similar.html:10
+#: templates/admin/photos/photo/similar.html:15
+msgid "Похожие фото"
+msgstr "Similar photos"
+
+#: apps/photos/admin.py:211
+msgid "Показать похожие фото"
+msgstr "Show similar photos"
+
+#: apps/photos/admin.py:243
 msgid "Рамка кропа"
 msgstr "Crop frame"
 
-#: apps/photos/admin.py:207
+#: apps/photos/admin.py:262
 msgid "Оригинал не загружен"
 msgstr "The original is not uploaded"
 
-#: apps/photos/admin.py:212
+#: apps/photos/admin.py:267
 msgid "Без кропа: показывается весь кадр"
 msgstr "No crop: the whole frame is shown"
 
-#: apps/photos/admin.py:218
+#: apps/photos/admin.py:273
 msgid "Рамка недоступна: в данных кропа нет размера кадра"
 msgstr "No frame: the crop data has no frame size"
 
-#: apps/photos/admin.py:232
+#: apps/photos/admin.py:287
 msgid "Затемнено то, что осталось за кадром."
 msgstr "The part left out of the picture is dimmed."
 
-#: apps/photos/admin.py:235
+#: apps/photos/admin.py:290
 #, python-format
 msgid "Кадр повёрнут на %(degrees)s°."
 msgstr "The frame is turned by %(degrees)s°."
 
-#: apps/photos/admin.py:238
+#: apps/photos/admin.py:293
 msgid "Зеркальная ориентация: рамка может быть неточной."
 msgstr "Mirrored orientation: the frame may be imprecise."
 
-#: apps/photos/admin.py:252
+#: apps/photos/admin.py:307
 msgid "Обработать заново"
 msgstr "Process again"
 
-#: apps/photos/admin.py:271
+#: apps/photos/admin.py:326
 #, python-format
 msgid "Поставлено в обработку: %(count)d."
 msgstr "Queued for processing: %(count)d."
 
-#: apps/photos/forms.py:57
+#: apps/photos/forms.py:57 templates/admin/photos/photo/similar.html:30
 msgid "Фото"
 msgstr "Photo"
 
@@ -1241,6 +1251,7 @@ msgstr ""
 "You can upload no more than %(limit)s photos per day. Please try again later."
 
 #: apps/photos/forms.py:248 apps/search/services.py:153
+#: templates/admin/photos/photo/similar.html:32
 #: templates/photos/photo_detail.html:59
 msgid "Команда"
 msgstr "Team"
@@ -1564,6 +1575,14 @@ msgstr "person in photo"
 #: apps/photos/models.py:435
 msgid "люди на фото"
 msgstr "people in photos"
+
+#: apps/photos/similar.py:78
+msgid "вероятный дубликат"
+msgstr "likely duplicate"
+
+#: apps/photos/similar.py:80
+msgid "похоже"
+msgstr "similar"
 
 #: apps/photos/tasks.py:54
 msgid "Хранилище недоступно, попробуйте позже"
@@ -1966,6 +1985,7 @@ msgid "Изменить адрес почты"
 msgstr "Change email address"
 
 #: templates/admin/core/merge_form.html:6
+#: templates/admin/photos/photo/similar.html:6
 msgid "Home"
 msgstr "Home"
 
@@ -1999,6 +2019,45 @@ msgstr "— select —"
 #: templates/admin/core/merge_form.html:45
 msgid "Слить"
 msgstr "Merge"
+
+#: templates/admin/photos/photo/similar.html:18
+msgid "Сравнение по перцептивному хешу. Совпадение — подсказка, решать вам."
+msgstr ""
+"Comparison by perceptual hash. A match is a hint; the decision is yours."
+
+#: templates/admin/photos/photo/similar.html:23
+msgid "Хеш ещё не посчитан: фото ещё обрабатывается или обработка упала."
+msgstr ""
+"The hash is not ready yet: the photo is still being processed, or "
+"processing failed."
+
+#: templates/admin/photos/photo/similar.html:29
+msgid "Миниатюра"
+msgstr "Thumbnail"
+
+#: templates/admin/photos/photo/similar.html:33
+msgid "Статус"
+msgstr "Status"
+
+#: templates/admin/photos/photo/similar.html:34
+msgid "Расстояние"
+msgstr "Distance"
+
+#: templates/admin/photos/photo/similar.html:48
+msgid "нет превью"
+msgstr "no preview"
+
+#: templates/admin/photos/photo/similar.html:61
+msgid "не указан"
+msgstr "not set"
+
+#: templates/admin/photos/photo/similar.html:83
+msgid "Похожих не найдено"
+msgstr "No similar photos found"
+
+#: templates/admin/photos/photo/similar.html:94
+msgid "Вернуться к фото"
+msgstr "Back to the photo"
 
 #: templates/catalog/email/new_event_notification.txt:1
 #, python-format
@@ -2786,8 +2845,8 @@ msgstr "Photo upload is not available yet"
 msgid ""
 "Предпросмотр и обрезка недоступны в этом браузере. Файл загрузится целиком."
 msgstr ""
-"This browser cannot show the preview or crop the frame. The whole file "
-"will be uploaded."
+"This browser cannot show the preview or crop the frame. The whole file will "
+"be uploaded."
 
 #: templates/photos/photo_form.html:67
 msgid "Повернуть влево"
@@ -2810,8 +2869,8 @@ msgid ""
 "Обрезать и поворачивать кадр можно только с включённым JavaScript. Файл "
 "загрузится целиком."
 msgstr ""
-"To crop and turn the frame, JavaScript must be on. The whole file will "
-"be uploaded."
+"To crop and turn the frame, JavaScript must be on. The whole file will be "
+"uploaded."
 
 #: templates/photos/photo_form.html:128
 msgid "Продолжить"

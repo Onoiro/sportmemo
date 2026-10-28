@@ -293,6 +293,55 @@ class TestPhotosBackfill:
 
         assert "Обработано: 0" in out.getvalue()
 
+    def test_photo_with_hash_is_kept_without_rehash(self, baseball, user, monkeypatch):
+        from django.core.management import call_command
+
+        photo = _photo(baseball, user)
+        process_photo(photo)
+        old_hash = photo.phash
+
+        monkeypatch.setattr(
+            "apps.photos.services.perceptual_hash", lambda image: "новый-хеш"
+        )
+        call_command("photos_backfill", stdout=io.StringIO())
+
+        photo.refresh_from_db()
+        assert photo.phash == old_hash
+
+    def test_rehash_recalculates_hash(self, baseball, user, monkeypatch):
+        from django.core.management import call_command
+
+        photo = _photo(baseball, user)
+        process_photo(photo)
+        old_hash = photo.phash
+        new_hash = "f" * 64
+
+        monkeypatch.setattr(
+            "apps.photos.services.perceptual_hash", lambda image: new_hash
+        )
+        call_command("photos_backfill", "--rehash", stdout=io.StringIO())
+
+        photo.refresh_from_db()
+        assert photo.phash == new_hash
+        assert photo.phash != old_hash
+
+    def test_rehash_dry_run_changes_nothing(self, baseball, user, monkeypatch):
+        from django.core.management import call_command
+
+        photo = _photo(baseball, user)
+        process_photo(photo)
+        old_hash = photo.phash
+
+        monkeypatch.setattr(
+            "apps.photos.services.perceptual_hash", lambda image: "f" * 64
+        )
+        out = io.StringIO()
+        call_command("photos_backfill", "--rehash", "--dry-run", stdout=out)
+
+        photo.refresh_from_db()
+        assert photo.phash == old_hash
+        assert "будет обработано" in out.getvalue()
+
     def test_storage_unavailable_does_not_stop_the_pass(
         self, baseball, user, monkeypatch
     ):

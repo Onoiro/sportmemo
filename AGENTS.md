@@ -61,7 +61,7 @@ stays tidy.
 | `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public query helpers (`shortcuts.py`), public views (home page, years, `robots.txt`), the `uslug` URL converter (`converters.py`), the pagination tag, `core/urls.py`, shared form helpers (`forms.py`: `BootstrapFormMixin`), SEO meta tags (`seo.py`), sitemap (`sitemaps.py`), Schema.org markup (`schema.py`) |
 | `apps/accounts` | custom `User` (email as `USERNAME_FIELD`), consents, roles, link to `Person` |
 | `apps/catalog` | `Team`, `TeamMembership` (with `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (roster filter by year), `forms.py` (`TeamForm`), `emails.py` (moderator notification), list views and team, event and person detail pages, team create and edit views |
-| `apps/photos` | `Source`, `Photo`, `PhotoPerson`, public views (`photo_detail`, the `grid` fragment), `photos/urls.py` |
+| `apps/photos` | `Source`, `Photo`, `PhotoPerson`, EXIF parsing (`exif.py`), pure processing functions (`processing.py`), the pipeline (`services.py`), similar photo search by hash (`similar.py`), the Celery task (`tasks.py`), public views (`photo_detail`, the `grid` fragment), `photos/urls.py` |
 | `apps/search` | search: the `pg_trgm` extension, search text and query building (`indexing.py`), results and suggestions (`services.py`), the results page (`views.py`, `urls.py`), signals, the `search_reindex` command; it has no models of its own — the index fields live in `catalog` and `photos` |
 | `apps/comments` | `Comment` (generic FK, replies, statuses), `CommentSettings` (premoderation), target allow-list (`targets.py`), form, add view, visible query (`services.py`) |
 | `apps/moderation` | `Report`, `ModerationAction` (moderator decision log), report form and page |
@@ -188,7 +188,7 @@ constructor". Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.21.0; development branch `master`; 1284 tests passing on Python 3.12 and 3.13
+- Version: 0.22.0; development branch `master`; 1322 tests passing on Python 3.12 and 3.13
   (`make test`); linter clean (`make lint`).
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is in progress: sub-stage 3.1
@@ -202,8 +202,11 @@ constructor". Legal pages and SMTP are stage 4.
   `enqueue_photo_processing` is the only place that queues the task, the admin action
   "Process again", and EXIF is read on the server. Sub-stage 3.4 (frame correction in the
   browser) is complete: Cropper.js on step 1, `crop_data` in the "as a person sees it" system
-  scaled to the working copy, and the crop frame in the admin. The next one is 3.5
-  (perceptual hash and similar photo search).
+  scaled to the working copy, and the crop frame in the admin. Sub-stage 3.5 (perceptual hash
+  and similar photo search) is complete: the hash moved to 256 bits, the "Similar photos"
+  page in the admin lists candidates with a distance, the thresholds are 32/48, and old
+  hashes are recomputed with `photos_backfill --rehash`. The next one is 3.6
+  (duplicate merge).
 
 ### Public UI
 
@@ -537,6 +540,24 @@ filled by actions, not by hand.
 - **A typed team or event name is resolved by the service** (`resolve_by_name()`), not by the
   form: one rule for the upload form and for the future photo edit. An ambiguous name is not
   guessed — the user gets an error and clarifies the city.
+- **Similar photo search lives in `apps/photos/similar.py`**: candidate selection, thresholds,
+  ranking and labels are in one place, and the template gets a ready list without comparing
+  numbers. `similar_photos()` is the only entry point: the admin page and the future upload
+  check use it, and there must be no second implementation of the selection.
+- **Distance is a hint, not a verdict.** A person decides "duplicate or not" (invariant 5):
+  the similar page only shows the distance and the candidate status, changes nothing and
+  **writes nothing to `ModerationAction`** — viewing is not a moderator decision. The merge
+  button arrives in 3.6.
+- **`hamming_distance()` returns "infinitely far" for hashes of different length** (the bit
+  length of the longer hash), not a random number: XOR over a 16-character and a 64-character
+  hash gives garbage. That is why a change of the hash algorithm or its bit length requires
+  `manage.py photos_backfill --rehash`; otherwise no older photo finds a duplicate. Candidates
+  with a hash of a foreign length are dropped from the queryset before the calculation.
+- **Candidate selection is narrowed before the calculation** (same sport, not deleted, not the
+  photo itself, hash of the right length, year ±5 plus photos without a year) and capped by
+  `CANDIDATE_POOL_LIMIT`: the Hamming distance cannot be expressed in SQL, and pulling the
+  whole archive into memory is not an option. `Photo.public` is not used here: a draft is a
+  valid candidate, visibility belongs to public output, not to moderation.
 - List filters live in `apps/catalog/filters.py`, not in templates and not in views: option
   lookups, parameter parsing and the `canonical` address live in one place, and the template
   gets a ready panel. An invalid parameter value counts as "filter not applied".

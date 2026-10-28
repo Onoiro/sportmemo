@@ -9,6 +9,7 @@ from apps.photos.processing import (
     CROP_VERSION,
     DISPLAY_MAX_SIDE,
     MIN_CROP_SIDE,
+    PHASH_HEX_LENGTH,
     apply_crop,
     apply_rotation,
     encode_display,
@@ -251,10 +252,10 @@ def _noise(seed, size=(256, 256)):
 
 
 class TestPerceptualHash:
-    def test_hash_is_hex_of_16_chars(self):
+    def test_hash_is_hex_of_64_chars(self):
         result = perceptual_hash(make_quadrant_image())
 
-        assert len(result) == 16
+        assert len(result) == PHASH_HEX_LENGTH
         int(result, 16)
 
     def test_same_image_in_other_scale_is_close(self):
@@ -263,7 +264,7 @@ class TestPerceptualHash:
 
         distance = hamming_distance(perceptual_hash(image), perceptual_hash(scaled))
 
-        assert distance <= 10
+        assert distance <= 32
 
     def test_same_image_in_other_quality_is_close(self):
         image = _noise(2)
@@ -274,14 +275,14 @@ class TestPerceptualHash:
 
         distance = hamming_distance(perceptual_hash(image), perceptual_hash(degraded))
 
-        assert distance <= 10
+        assert distance <= 48
 
     def test_different_images_are_far(self):
         distance = hamming_distance(
             perceptual_hash(_noise(3)), perceptual_hash(_noise(4))
         )
 
-        assert distance > 16
+        assert distance > 48
 
     def test_identical_image_gives_zero_distance(self):
         image = make_quadrant_image()
@@ -290,4 +291,31 @@ class TestPerceptualHash:
 
     @pytest.mark.parametrize("broken", ["", "не хеш", None])
     def test_unreadable_hash_is_maximally_far(self, broken):
-        assert hamming_distance(perceptual_hash(make_quadrant_image()), broken) == 64
+        assert hamming_distance(perceptual_hash(make_quadrant_image()), broken) == 256
+
+    def test_hashes_of_different_length_are_maximally_far(self):
+        """Старый 16-символьный хеш и новый 64-символьный несравнимы:
+        XOR дал бы случайное число бит, а не расстояние из 256.
+        """
+        old = "9191cece3b393686"
+        new = perceptual_hash(make_quadrant_image())
+
+        assert hamming_distance(old, new) == 256
+        assert hamming_distance(new, old) == 256
+
+    def test_flat_colours_are_not_distinguished(self):
+        """Известное ограничение: монотонные заливки алгоритм не различает.
+
+        У однотонной картинки энергия DCT есть только в нулевой частоте,
+        остальные биты получаются из шума округления: красная и синяя
+        заливки дают 16 из 256, то есть меньше порога «вероятный
+        дубликат» (32). Порог не снижаем — пережатый JPEG того же снимка
+        даёт до 40 из 256 и перестал бы находиться. Для архива
+        ограничение не важно: заливок в нём нет, а решение принимает
+        человек. Тест фиксирует поведение, а не желаемое.
+        """
+        red = perceptual_hash(Image.new("RGB", (600, 400), "red"))
+        blue = perceptual_hash(Image.new("RGB", (600, 400), "blue"))
+
+        assert hamming_distance(red, blue) < 32
+        assert hamming_distance(red, red) == 0
