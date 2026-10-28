@@ -616,6 +616,9 @@ SportMemo — UGC-площадка и информационный посред�
 **Цель.** Дубликат не исчезает и не ломает ссылки: он сливается в канон, а старая
 ссылка ведёт на канон.
 
+**Детальный план:** [`photo-processing-3.6-photo-merge.md`](photo-processing-3.6-photo-merge.md)
+(утверждён 2026-10-28, ветка `feature/photo-merge-duplicates`).
+
 **Объём.**
 
 - `Photo` наследует `MergeableModel`; миграция `duplicate_of` → `merged_into`
