@@ -1,9 +1,13 @@
 """Абстрактные базовые модели и общие сущности SportMemo."""
 
+import logging
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+
+logger = logging.getLogger(__name__)
 
 
 class TimeStampedModel(models.Model):
@@ -209,10 +213,41 @@ class MergeableModel(models.Model):
     def is_merged(self) -> bool:
         return self.merged_into_id is not None
 
+    def get_canonical(self, max_depth=10):
+        """Вернуть конечный объект цепочки слияний.
+
+        Цепочки запрещены (мастер-план 2.4, п. 10): слияние всегда идёт
+        в канон, иначе старая ссылка вела бы через несколько переходов,
+        а связи копились бы в поглощённых объектах. `None` означает битую
+        цепочку — цикл или превышение глубины; сливать в неё нельзя.
+        """
+        seen = {self.pk}
+        current = self
+        for _depth in range(max_depth):
+            if current.merged_into_id is None:
+                return current
+            if current.merged_into_id in seen:
+                logger.warning("Цикл слияний у %s #%s", type(self).__name__, self.pk)
+                return None
+            seen.add(current.merged_into_id)
+            current = current.merged_into
+        logger.warning(
+            "Слишком длинная цепочка слияний у %s #%s",
+            type(self).__name__,
+            self.pk,
+        )
+        return None
+
     def merge_into(self, target, reason=""):
         """Перенести связи в `target` и пометить текущий объект
         как поглощённый.
+
+        Цель резолвится до канона до всех проверок: слияние в уже слитый
+        объект перенесло бы связи туда, откуда их никто не достанет.
         """
+        target = target.get_canonical()
+        if target is None:
+            raise ValueError("Цель слияния входит в битую цепочку слияний")
         if self.pk == target.pk:
             raise ValueError("Нельзя слить объект с самим собой")
         if self.merged_into_id == target.pk:

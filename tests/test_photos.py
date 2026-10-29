@@ -75,23 +75,36 @@ class TestPhotoVisibility:
 
 
 class TestPhotoDuplicate:
-    def test_duplicate_of_cannot_reference_self(self, photo):
-        photo.duplicate_of = photo
+    def test_merged_into_cannot_reference_self(self, photo):
+        photo.merged_into = photo
 
         with pytest.raises(ValidationError):
             photo.full_clean()
 
-    def test_duplicate_of_can_reference_other_photo(self, photo, baseball, user):
+    def test_database_rejects_self_merge(self, photo):
+        """Constraint из миграции, а не только `full_clean`: админка и
+        скрипты сохраняют в обход валидации.
+        """
+        from django.db import IntegrityError, transaction
+
+        with pytest.raises(IntegrityError), transaction.atomic():
+            Photo.objects.filter(pk=photo.pk).update(merged_into_id=photo.pk)
+
+    def test_merged_into_can_reference_other_photo(self, photo, baseball, user):
         other = Photo.objects.create(
             sport=baseball,
             title="Дубль",
             original=make_image_file("dup.jpg"),
             uploaded_by=user,
-            duplicate_of=photo,
+            merged_into=photo,
         )
 
-        assert other.duplicate_of == photo
-        assert photo.duplicates.count() == 1
+        assert other.merged_into == photo
+        assert other.is_merged
+        assert photo.merged_from.count() == 1
+
+    def test_mergeable_canonical_is_itself(self, photo):
+        assert photo.get_canonical() == photo
 
 
 class TestPhotoYear:

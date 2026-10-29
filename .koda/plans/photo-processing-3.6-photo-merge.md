@@ -208,14 +208,14 @@ def get_canonical(self, max_depth=10):
 
 ## 3. Шаги
 
-### 1. [ ] Ветка
+### 1. [x] Ветка
 
 - Навыки: koda-coder.
 - Файлы: —
 - Содержание: `git switch -c feature/photo-merge-duplicates` от `master` (0.22.0).
 - Критерий: ветка создана, `git status` чист.
 
-### 2. [ ] Модель `Photo`: `MergeableModel` вместо `duplicate_of`
+### 2. [x] Модель `Photo`: `MergeableModel` вместо `duplicate_of`
 
 - Навыки: koda-coder.
 - Файлы: `apps/photos/models.py`, `apps/photos/migrations/0004_*.py`,
@@ -240,7 +240,7 @@ def get_canonical(self, max_depth=10):
 а не на уровне модуля: `photos` не должен зависеть от `moderation` при загрузке
 приложений. `Comment` — так же (или через `apps.get_model`), чтобы не создать цикл.
 
-### 3. [ ] Ядро: `get_canonical()` и резолв цели в `merge_into`
+### 3. [x] Ядро: `get_canonical()` и резолв цели в `merge_into`
 
 - Навыки: koda-coder.
 - Файлы: `apps/core/models.py`, `tests/test_core.py`.
@@ -256,7 +256,7 @@ def get_canonical(self, max_depth=10):
   выставленные `merged_into`) даёт `None` и не зависает»; «`merge_into` в самого
   себя по-прежнему `ValueError`»; старые тесты `test_core.py` зелёные.
 
-### 4. [ ] 301 на канон: `RedirectToCanonical` и `follow_merged`
+### 4. [x] 301 на канон: `RedirectToCanonical` и `follow_merged`
 
 - Навыки: koda-coder.
 - Файлы: `apps/core/shortcuts.py`, `apps/photos/views.py`,
@@ -278,7 +278,7 @@ def get_canonical(self, max_depth=10):
 `RedirectToCanonical` поднимается до перечитывания объекта и до `F("views_count") + 1`.
 Просмотр засчитывается канону — это правильно: человек увидел именно его.
 
-### 5. [ ] Админка фото: действие слияния и кандидаты
+### 5. [x] Админка фото: действие слияния и кандидаты
 
 - Навыки: koda-coder.
 - Файлы: `apps/photos/admin.py`, `apps/core/admin_mixins.py`,
@@ -301,7 +301,7 @@ def get_canonical(self, max_depth=10):
   отклоняется и связи не переносятся»; «слияние через админку пишет
   `ModerationAction(MERGE)`»; «старые тесты слияния команд, людей и событий зелёные».
 
-### 6. [ ] Страница «Похожие фото»: кнопка «Слить в это фото»
+### 6. [x] Страница «Похожие фото»: кнопка «Слить в это фото»
 
 - Навыки: koda-coder.
 - Файлы: `templates/admin/photos/photo/similar.html`,
@@ -325,7 +325,7 @@ def get_canonical(self, max_depth=10):
   на карточку канона»; «`original` по-прежнему не выводится»; `fuzzy`-блоков нет,
   пустых `msgstr` в английском каталоге нет.
 
-### 7. [ ] Тесты подэтапа
+### 7. [x] Тесты подэтапа
 
 - Навыки: koda-coder.
 - Файлы: `tests/test_photo_dedup.py`, `tests/test_visible_or_404.py`,
@@ -343,7 +343,17 @@ def get_canonical(self, max_depth=10):
 - Критерий: `make test` зелёный; новые тесты падают на коде до правок
   (проверить выборочно — слияние, 301, кандидаты).
 
-### 8. [ ] Проверка
+**Итог шага (2026-10-29).** Добавлено 27 тестов: `TestPhotoMergeRelations`
+(перенос `PhotoPerson` с дублем человека, `Comment`, `Report`, `views_count`,
+`Person.avatar`, заполнение пустых полей без перетирания, сохранение `title`/`caption`,
+неперенос производных полей, резолв слитой цели), `TestMergedPhotoDisappears`
+(галерея, карта сайта, `photos_count()`, поиск, кабинет автора),
+`TestPhotoMergeThroughAdmin`, тесты кандидатов и отклонения подделанной цели
+(в том числе «отклонённая цель ничего не переносит»), constraint «не на себя»
+на уровне базы, цикл слияний в `follow_merged`. Регресс слияния каталога зелёный:
+`make test` — 1373 passed (7:32), `make lint` — чисто.
+
+### 8. [x] Проверка
 
 - Навыки: koda-coder.
 - Содержание:
@@ -358,7 +368,20 @@ def get_canonical(self, max_depth=10):
   - `git diff --stat` перед коммитом: только ожидаемые файлы.
 - Критерий: критерии готовности мастер-плана (раздел 3.6) выполнены полностью.
 
-### 9. [ ] Документация и версия
+**Итог шага (2026-10-29).** `make lint` — чисто (ruff check + format),
+`make test` — 1373 passed (7:29), `manage.py check` — без замечаний,
+`makemigrations --check --dry-run` — «No changes detected». Миграции 0004 и 0005
+применены к dev-базе: `duplicate_of_id` удалён, `merged_into_id` и constraint
+`photo_merged_into_not_self` на месте, перенос данных не понадобился (фото
+с `duplicate_of` в базе не было). Ручной прогон шёл на одноразовой базе
+`sportmemo_step8_check` с демо-архивом (`seed_demo`), чтобы не менять dev-данные:
+слияние через действие админки редиректит на карточку канона, связи, просмотры
+и `ModerationAction(MERGE)` на месте, старая ссылка отдаёт 301 на канон, канон
+открывается с историей, дубликат исчез из галереи года, кабинет автора показывает
+«Удалено», канон-черновик даёт 404, сам источник в списке целей отсутствует,
+на странице похожих стоит POST-форма «Слить в это фото» с целью текущего фото.
+
+### 9. [x] Документация и версия
 
 - Навыки: semver-checker, koda-coder.
 - Файлы: `KODA.md`, `AGENTS.md`, `.koda/backlog.md`,
@@ -378,6 +401,17 @@ def get_canonical(self, max_depth=10):
     и удаление ветки (`git branch -D`, см. KODA.md).
 - Критерий: документация совпадает с кодом, версия синхронизирована в `uv.lock`,
   `make lint && make test` зелёные на `master` после merge.
+
+**Итог шага (2026-10-29).** Версия поднята 0.22.0 → 0.23.0 (minor), `uv lock`
+обновлён. В `KODA.md` и `AGENTS.md` добавлены правила слияния (перенос связей,
+а не картинки; `Report` да, `ModerationAction` нет; производные поля не переносятся;
+кандидаты — в `merge_candidates()`), поправлено правило про просмотр похожих
+(кнопка появилась, `ModerationAction(MERGE)` пишет действие админки), обновлены
+«Текущее состояние» и счётчик тестов (1373). В мастер-плане 3.6 отмечен выполненным
+и получил абзац итогов, в бэклоге P3-6 закрыта, в README появился раздел «Слияние
+дубликатов» и обновлены описание интерфейса похожих фото, версия и счётчик тестов.
+Squash-merge в `master` и удаление ветки выполняет владелец: в этой сессии
+разрешён только коммит в `feature/photo-merge-duplicates`.
 
 ---
 
@@ -401,12 +435,12 @@ def get_canonical(self, max_depth=10):
 
 | # | Шаг | Статус |
 |---|---|---|
-| 1 | Ветка | [ ] |
-| 2 | Модель `Photo`: `MergeableModel` вместо `duplicate_of` | [ ] |
-| 3 | Ядро: `get_canonical()` и резолв цели | [ ] |
-| 4 | 301 на канон: `RedirectToCanonical` и `follow_merged` | [ ] |
-| 5 | Админка фото: действие слияния и кандидаты | [ ] |
-| 6 | Страница «Похожие фото»: кнопка слияния | [ ] |
-| 7 | Тесты подэтапа | [ ] |
-| 8 | Проверка | [ ] |
-| 9 | Документация и версия | [ ] |
+| 1 | Ветка | [x] |
+| 2 | Модель `Photo`: `MergeableModel` вместо `duplicate_of` | [x] |
+| 3 | Ядро: `get_canonical()` и резолв цели | [x] |
+| 4 | 301 на канон: `RedirectToCanonical` и `follow_merged` | [x] |
+| 5 | Админка фото: действие слияния и кандидаты | [x] |
+| 6 | Страница «Похожие фото»: кнопка слияния | [x] |
+| 7 | Тесты подэтапа | [x] |
+| 8 | Проверка | [x] |
+| 9 | Документация и версия | [x] |

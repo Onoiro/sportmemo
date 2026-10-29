@@ -91,6 +91,9 @@ def candidate_pool(photo):
     """
     pool = (
         Photo.objects.filter(sport_id=photo.sport_id, deleted_at__isnull=True)
+        # Слитое фото уже поглощено каноном: предлагать его к слиянию
+        # повторно значит тянуть модератора по кругу.
+        .filter(merged_into__isnull=True)
         .exclude(pk=photo.pk)
         .exclude(phash="")
         # Хеш старого формата с новым несравним: `hamming_distance()`

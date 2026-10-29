@@ -150,6 +150,17 @@ class MergeActionsMixin:
         ids = ",".join(str(pk) for pk in queryset.values_list("pk", flat=True))
         return redirect(f"{url}?ids={ids}")
 
+    def merge_candidates(self, queryset, sources):
+        """Цели слияния: не слитые и не удалённые объекты.
+
+        Слитый объект каноном быть не может: цепочки запрещены, и связи
+        уехали бы в запись, которой нет в публичной выдаче. Удалённый
+        канон дал бы ссылку в никуда. Хук, а не фильтр в `merge_view`:
+        наследник сужает список своими признаками, а POST обязан
+        проверяться тем же queryset, что увидел человек.
+        """
+        return queryset.filter(merged_into__isnull=True, deleted_at__isnull=True)
+
     def get_urls(self):
         from django.urls import path
 
@@ -179,15 +190,18 @@ class MergeActionsMixin:
         ]
         sources = list(model.objects.filter(pk__in=ids))
         source_pks = [s.pk for s in sources]
+        candidates = self.merge_candidates(
+            model.objects.exclude(pk__in=source_pks), sources
+        )
 
         if request.method == "POST":
             target_id = request.POST.get("target", "")
+            # Цель ищется в том же queryset, что увидел человек: иначе
+            # подделанный POST выбрал бы слитое или чужое фото каноном.
             target = (
-                model.objects.filter(pk=target_id).first()
-                if target_id.isdigit()
-                else None
+                candidates.filter(pk=target_id).first() if target_id.isdigit() else None
             )
-            if not target or target.pk in source_pks:
+            if target is None:
                 self.message_user(
                     request, _("Выберите целевой объект из списка"), messages.ERROR
                 )
@@ -225,7 +239,7 @@ class MergeActionsMixin:
             "title": _("Слияние дубликатов"),
             "opts": model._meta,
             "sources": sources,
-            "candidates": model.objects.exclude(pk__in=source_pks),
+            "candidates": candidates,
             "ids": ",".join(str(pk) for pk in source_pks),
         }
         return render(request, "admin/core/merge_form.html", context)

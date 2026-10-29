@@ -14,7 +14,7 @@
 <h1>{% translate "Слияние дубликатов" %}</h1>
 
 <p>
-    {% blocktranslate with count=sources|length %}Будет слито объектов: {{ count }}. Связи (фото, состав, события) будут перенесены в целевой объект, а источники помечены как удалённые. Операция обратима через историю изменений.{% endblocktranslate %}
+    {% blocktranslate with count=sources|length %}Будет слито объектов: {{ count }}. Связи будут перенесены в целевой объект, а источники помечены как удалённые. Операция обратима через историю изменений.{% endblocktranslate %}
 </p>
 
 <h2>{% translate "Объекты к слиянию" %}</h2>
@@ -32,6 +32,7 @@
     <input type="hidden" name="ids" value="{{ ids }}">
 
     <h2>{% translate "Целевой объект" %}</h2>
+    {% if candidates %}
     <p>
         <select name="target" required>
             <option value="">{% translate "— выберите —" %}</option>
@@ -45,6 +46,10 @@
         <input type="submit" value="{% translate 'Слить' %}" class="default">
         <a href="../" class="button cancel-link">{% translate "Отмена" %}</a>
     </div>
+    {% else %}
+    {# Пустой список целей — не пустой <select>: модератору нужно сказать, почему сливать некуда. #}
+    <p class="help">{% translate "Нет подходящих объектов" %}</p>
+    {% endif %}
 </form>
 {% endif %}
 {% endblock %}

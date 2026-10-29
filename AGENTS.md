@@ -174,7 +174,16 @@ is created as a separate file when work on it starts
   `display` preparation. Breaking the order shifts the frame on phone photos.
 - **A merged photo returns 301 to the canonical one** if the canonical is public, otherwise
   404. Merge chains are forbidden: the merge target is always canonical
-  (`merged_into__isnull=True`).
+  (`merged_into__isnull=True`), resolved by `get_canonical()`; a broken chain gives 404
+  and never hangs.
+- **A merge moves relations, not the image.** `PhotoPerson` (one by one, or the
+  `UniqueConstraint` breaks a bulk `update()`), comments, reports, views and
+  `Person.avatar` move; empty `source`/`year`/`team`/`event`/`taken_date` of the canonical
+  are filled in. `Report` moves, `ModerationAction` does not: a report is an open case
+  about a photo, while the log is a decision already made about an object. Derived fields
+  (`display`, `phash`, sizes, `crop_data`, `exif`) never move: they describe their own
+  original, and a canonical without `display` is fixed by the moderator with "Process
+  again".
 - **EXIF is stored by allow-list**, GPS is never stored. `Artist` and `Copyright` stay as
   hints for the moderator. A year from `DateTimeOriginal` only pre-fills the form, it is not
   written to the database.
@@ -188,7 +197,7 @@ constructor". Legal pages and SMTP are stage 4.
 
 ## Current state
 
-- Version: 0.22.0; development branch `master`; 1322 tests passing on Python 3.12 and 3.13
+- Version: 0.23.0; development branch `master`; 1373 tests passing on Python 3.12 and 3.13
   (`make test`); linter clean (`make lint`).
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is in progress: sub-stage 3.1
@@ -205,8 +214,11 @@ constructor". Legal pages and SMTP are stage 4.
   scaled to the working copy, and the crop frame in the admin. Sub-stage 3.5 (perceptual hash
   and similar photo search) is complete: the hash moved to 256 bits, the "Similar photos"
   page in the admin lists candidates with a distance, the thresholds are 32/48, and old
-  hashes are recomputed with `photos_backfill --rehash`. The next one is 3.6
-  (duplicate merge).
+  hashes are recomputed with `photos_backfill --rehash`. Sub-stage 3.6 (duplicate merge) is
+  complete: `Photo` inherits `MergeableModel`, `duplicate_of` became `merged_into` through
+  two migrations, a merge moves relations and views, an old link returns 301 to the
+  canonical photo, and the "Merge into this photo" button sits in the candidate row. The
+  next one is 3.7 (batch upload), deferred and taken by a separate decision.
 
 ### Public UI
 
@@ -545,9 +557,13 @@ filled by actions, not by hand.
   numbers. `similar_photos()` is the only entry point: the admin page and the future upload
   check use it, and there must be no second implementation of the selection.
 - **Distance is a hint, not a verdict.** A person decides "duplicate or not" (invariant 5):
-  the similar page only shows the distance and the candidate status, changes nothing and
-  **writes nothing to `ModerationAction`** — viewing is not a moderator decision. The merge
-  button arrives in 3.6.
+  the similar page shows the distance and the candidate status and changes nothing by
+  itself. The merge is started by the "Merge into this photo" button in the candidate row —
+  a plain POST form — and `ModerationAction(MERGE)` records the admin action, not the view.
+- **Merge candidates live in `merge_candidates(queryset, sources)`**
+  (`MergeActionsMixin`): by default not merged and not deleted, and `PhotoAdmin` narrows
+  them to the sport of the sources. The same queryset validates the POST — otherwise a
+  forged request would bypass the filter.
 - **`hamming_distance()` returns "infinitely far" for hashes of different length** (the bit
   length of the longer hash), not a random number: XOR over a 16-character and a 64-character
   hash gives garbage. That is why a change of the hash algorithm or its bit length requires

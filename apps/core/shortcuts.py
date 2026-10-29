@@ -111,17 +111,61 @@ def _is_owner(obj, user):
     return False
 
 
-def get_visible_or_404(model, *, request=None, **lookup):
+class RedirectToCanonical(Exception):
+    """Объект слит с дубликатом: страница должна отдать 301 на канон.
+
+    Исключение, а не пара «объект и адрес»: страниц, которые умеют
+    редиректить слитое, пока одна, и остальные про этот исход знать
+    не должны.
+    """
+
+    def __init__(self, url):
+        super().__init__(url)
+        self.url = url
+
+
+def _canonical_or_404(model, **lookup):
+    """Канон слитого объекта или `Http404`.
+
+    Поиск идёт через `objects`, а не `public`: `merge_into()` помечает
+    источник удалённым, и в `public` его уже нет. Канон проверяется тем же
+    правилом, что публичная выдача, — иначе 301 вёл бы на 404. Объект без
+    слияния и битая цепочка тоже дают 404: редиректить некуда.
+    """
+    try:
+        obj = model.objects.get(**lookup)
+    except model.DoesNotExist as exc:
+        raise Http404("Объект не найден") from exc
+
+    canonical = obj.get_canonical()
+    if canonical is None or canonical.pk == obj.pk:
+        raise Http404("Объект не найден")
+
+    if not _is_publicly_visible(canonical) or getattr(canonical, "is_deleted", False):
+        raise Http404("Объект не найден")
+
+    return canonical
+
+
+def get_visible_or_404(model, *, request=None, follow_merged=False, **lookup):
     """Отдать объект из `public` или поднять `Http404`.
 
     Неопубликованный объект показывается только автору и модератору: остальным
     он отдаёт 404, чтобы черновик не утекал по прямой ссылке. Модель приходит
     параметром — так `shortcuts` не импортирует модели приложений и не создаёт
     циклов между `core` и `catalog`/`photos`.
+
+    `follow_merged=True` — для страниц, ссылку на которые могли разослать:
+    слитый дубликат не исчезает, а отдаёт `RedirectToCanonical`. Флаг выключен
+    по умолчанию: команда и событие по-прежнему отдают 404.
     """
     try:
         obj = model.public.get(**lookup)
     except model.DoesNotExist as exc:
+        if follow_merged:
+            raise RedirectToCanonical(
+                _canonical_or_404(model, **lookup).get_absolute_url()
+            ) from exc
         raise Http404("Объект не найден") from exc
 
     if _is_publicly_visible(obj):

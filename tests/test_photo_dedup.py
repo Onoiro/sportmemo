@@ -1,12 +1,19 @@
-"""Тесты поиска похожих фото: отбор кандидатов, ранжирование, страница."""
+"""Тесты дубликатов: похожие фото, слияние, выдача, админка."""
+
+from datetime import date
 
 import pytest
+from django.contrib.contenttypes.models import ContentType
+from django.db import connection
 from django.urls import reverse
 from PIL import Image
 
+from apps.catalog.models import Team
 from apps.core.models import Sport, Status
+from apps.core.shortcuts import photos_count
+from apps.moderation.models import ModerationAction, ModerationActionType
 from apps.photos import similar
-from apps.photos.models import Photo
+from apps.photos.models import Photo, PhotoPerson
 from apps.photos.processing import PHASH_HEX_LENGTH, hamming_distance
 from apps.photos.processing import perceptual_hash as image_hash
 from apps.photos.similar import (
@@ -18,7 +25,17 @@ from apps.photos.similar import (
     similar_photos,
     similarity_label,
 )
-from tests.factories import PhotoFactory, TeamFactory
+from tests.factories import (
+    CommentFactory,
+    EventFactory,
+    ModerationActionFactory,
+    PersonFactory,
+    PhotoFactory,
+    PhotoPersonFactory,
+    ReportFactory,
+    SourceFactory,
+    TeamFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -91,6 +108,17 @@ class TestSimilarPhotos:
         )
 
         assert similar_photos(source_photo) == []
+
+    def test_merged_photo_is_not_a_candidate(self, baseball, source_photo):
+        """Слитое фото поглощено: предлагать его снова — тянуть по кругу."""
+        canon = _photo(baseball, source_photo.phash, year=1994)
+        merged = _photo(baseball, source_photo.phash, year=1994)
+        merged.merged_into = canon
+        merged.save()
+
+        pool = candidate_pool(source_photo)
+
+        assert [item.pk for item in pool] == [canon.pk]
 
     def test_source_photo_is_excluded(self, baseball, source_photo):
         pool = candidate_pool(source_photo)
@@ -322,3 +350,320 @@ class TestSimilarPhotoAdminPage:
 
         assert candidate.thumbnail.url in content
         assert candidate.original.url not in content
+
+
+def _photo_content_type():
+    return ContentType.objects.get_for_model(Photo)
+
+
+class TestPhotoMergeRelations:
+    """Что переезжает в канон, а что остаётся у слитого фото (решение 2.1)."""
+
+    def test_photo_persons_move_to_canonical(self, baseball):
+        canon = PhotoFactory(sport=baseball)
+        source = PhotoFactory(sport=baseball)
+        first = PhotoPersonFactory(photo=source)
+        second = PhotoPersonFactory(photo=source)
+
+        source.merge_into(canon)
+
+        first.refresh_from_db()
+        second.refresh_from_db()
+        assert first.photo == canon
+        assert second.photo == canon
+
+    def test_person_already_on_canonical_is_not_duplicated(self, baseball):
+        """`UniqueConstraint` иначе уронил бы перенос целиком."""
+        person = PersonFactory()
+        canon = PhotoFactory(sport=baseball)
+        source = PhotoFactory(sport=baseball)
+        PhotoPersonFactory(photo=canon, person=person, note="канон")
+        PhotoPersonFactory(photo=source, person=person, note="дубликат")
+
+        source.merge_into(canon)
+
+        links = PhotoPerson.objects.filter(photo=canon, person=person)
+        assert links.count() == 1
+        assert links.get().note == "канон"
+
+    def test_comments_move_to_canonical(self, baseball):
+        canon = PhotoFactory(sport=baseball)
+        source = PhotoFactory(sport=baseball)
+        comment = CommentFactory(
+            content_type=_photo_content_type(), object_id=source.pk
+        )
+
+        source.merge_into(canon)
+
+        comment.refresh_from_db()
+        assert comment.object_id == canon.pk
+
+    def test_reports_move_to_canonical(self, baseball):
+        """Жалоба «это я» должна остаться в карточке канона."""
+        canon = PhotoFactory(sport=baseball)
+        source = PhotoFactory(sport=baseball)
+        report = ReportFactory(content_type=_photo_content_type(), object_id=source.pk)
+
+        source.merge_into(canon)
+
+        report.refresh_from_db()
+        assert report.object_id == canon.pk
+
+    def test_moderation_journal_stays_with_merged_photo(self, baseball):
+        """Журнал отвечает «что сделали с #N», его не переписываем."""
+        canon = PhotoFactory(sport=baseball)
+        source = PhotoFactory(sport=baseball)
+        action = ModerationActionFactory(
+            content_type=_photo_content_type(), object_id=source.pk
+        )
+
+        source.merge_into(canon)
+
+        action.refresh_from_db()
+        assert action.object_id == source.pk
+
+    def test_views_count_is_summed(self, baseball):
+        canon = PhotoFactory(sport=baseball, views_count=7)
+        source = PhotoFactory(sport=baseball, views_count=5)
+
+        source.merge_into(canon)
+
+        canon.refresh_from_db()
+        assert canon.views_count == 12
+
+    def test_person_avatar_moves_to_canonical(self, baseball):
+        """Иначе главное фото человека стало бы битой ссылкой."""
+        canon = PhotoFactory(sport=baseball)
+        source = PhotoFactory(sport=baseball)
+        person = PersonFactory(avatar=source)
+
+        source.merge_into(canon)
+
+        person.refresh_from_db()
+        assert person.avatar == canon
+
+    def test_empty_canonical_fields_are_filled(self, baseball, user):
+        canon = PhotoFactory(sport=baseball)
+        source = PhotoFactory(sport=baseball)
+        source.source = SourceFactory()
+        source.year = 1994
+        source.taken_date = date(1994, 5, 1)
+        source.team = TeamFactory(sport=baseball)
+        source.event = EventFactory(sport=baseball)
+        source.save()
+
+        source.merge_into(canon)
+
+        canon.refresh_from_db()
+        assert canon.source == source.source
+        assert canon.year == 1994
+        assert canon.taken_date == date(1994, 5, 1)
+        assert canon.team == source.team
+        assert canon.event == source.event
+
+    def test_filled_canonical_fields_are_not_overwritten(self, baseball):
+        canon_team = TeamFactory(sport=baseball)
+        canon = PhotoFactory(sport=baseball, year=1980, team=canon_team)
+        source = PhotoFactory(
+            sport=baseball, year=1994, team=TeamFactory(sport=baseball)
+        )
+
+        source.merge_into(canon)
+
+        canon.refresh_from_db()
+        assert canon.year == 1980
+        assert canon.team == canon_team
+
+    def test_canonical_text_is_kept(self, baseball):
+        canon = PhotoFactory(sport=baseball, title="Канон", caption="Подпись канона")
+        source = PhotoFactory(sport=baseball, title="Дубль", caption="Подпись дубля")
+
+        source.merge_into(canon)
+
+        canon.refresh_from_db()
+        assert canon.title == "Канон"
+        assert canon.caption == "Подпись канона"
+
+    def test_derived_fields_are_not_moved(self, baseball):
+        """`display` и хеш описывают свой оригинал, подменять их нельзя."""
+        canon = PhotoFactory(sport=baseball, phash="", crop_data={})
+        source = PhotoFactory(sport=baseball, phash="f" * PHASH_HEX_LENGTH)
+        source.crop_data = {"version": 1, "x": 0, "y": 0, "width": 100, "height": 100}
+        source.save()
+
+        source.merge_into(canon)
+
+        canon.refresh_from_db()
+        assert canon.phash == ""
+        assert canon.crop_data == {}
+
+    def test_merged_photo_is_marked_as_duplicate(self, baseball):
+        canon = PhotoFactory(sport=baseball)
+        source = PhotoFactory(sport=baseball)
+
+        source.merge_into(canon)
+
+        source.refresh_from_db()
+        assert source.merged_into == canon
+        assert source.is_deleted
+        assert source.deleted_reason == "слито с дубликатом"
+
+    def test_merge_into_merged_target_lands_on_canonical(self, baseball):
+        canon = PhotoFactory(sport=baseball)
+        middle = PhotoFactory(sport=baseball)
+        source = PhotoFactory(sport=baseball)
+        middle.merge_into(canon)
+        comment = CommentFactory(
+            content_type=_photo_content_type(), object_id=source.pk
+        )
+
+        source.merge_into(middle)
+
+        source.refresh_from_db()
+        comment.refresh_from_db()
+        assert source.merged_into == canon
+        assert comment.object_id == canon.pk
+
+
+class TestMergedPhotoDisappears:
+    """Слитое фото уходит из всех публичных выборок сразу и целиком."""
+
+    def test_not_in_gallery(self, client, baseball):
+        canon = PhotoFactory(sport=baseball, title="Канон")
+        source = PhotoFactory(sport=baseball, title="Дубликат")
+        source.merge_into(canon)
+
+        html = client.get(reverse("photos:grid")).content.decode()
+
+        assert "Канон" in html
+        assert "Дубликат" not in html
+
+    def test_not_in_sitemap(self, client, baseball):
+        canon = PhotoFactory(sport=baseball)
+        source = PhotoFactory(sport=baseball)
+        source.merge_into(canon)
+
+        content = client.get("/sitemap-photos.xml").content.decode()
+
+        assert canon.get_absolute_url() in content
+        assert source.get_absolute_url() not in content
+
+    def test_not_counted_in_photos_count(self, baseball):
+        team = TeamFactory(sport=baseball)
+        canon = PhotoFactory(sport=baseball, team=team)
+        source = PhotoFactory(sport=baseball, team=team)
+        source.merge_into(canon)
+
+        counted = (
+            Team.objects.filter(pk=team.pk)
+            .annotate(photos_total=photos_count())
+            .get()
+            .photos_total
+        )
+
+        assert counted == 1
+
+    @pytest.mark.skipif(
+        connection.vendor != "postgresql",
+        reason="Поиск работает только на PostgreSQL (tsvector, pg_trgm)",
+    )
+    def test_not_in_search(self, client, baseball):
+        canon = PhotoFactory(sport=baseball, title="Громовский финал")
+        source = PhotoFactory(sport=baseball, title="Громовский финал (дубль)")
+        source.merge_into(canon)
+
+        response = client.get(reverse("search:index"), {"q": "громовский"})
+
+        photos = next(
+            item for item in response.context["result"].groups if item.key == "photos"
+        )
+        assert [item.pk for item in photos.items] == [canon.pk]
+
+    def test_cabinet_shows_it_as_deleted_with_reason(self, client, user, baseball):
+        """Слитое фото не исчезает из кабинета молча: автор видит причину."""
+        canon = PhotoFactory(sport=baseball, uploaded_by=user)
+        source = PhotoFactory(sport=baseball, uploaded_by=user, title="Дубликат")
+        source.merge_into(canon)
+        client.force_login(user)
+
+        html = client.get(reverse("photos:my_photos")).content.decode()
+
+        assert "Дубликат" in html
+        assert "Удалено" in html
+        assert "слито с дубликатом" in html
+
+
+class TestSimilarPhotoMergeButton:
+    """Кнопка «Слить в это фото»: кандидат уходит в открытое фото."""
+
+    def test_each_candidate_has_merge_form(self, admin_logged_in, baseball):
+        source = PhotoFactory(sport=baseball, phash="f" * PHASH_HEX_LENGTH, year=1994)
+        first = PhotoFactory(sport=baseball, phash=_flipped(source.phash, 5), year=1994)
+        second = PhotoFactory(
+            sport=baseball, phash=_flipped(source.phash, 10), year=1994
+        )
+
+        content = admin_logged_in.get(_similar_url(source)).content.decode()
+
+        merge_url = reverse("admin:photos_photo_merge")
+        assert content.count(f'action="{merge_url}"') == 2
+        for candidate in (first, second):
+            assert f'name="ids" value="{candidate.pk}"' in content
+        assert content.count(f'name="target" value="{source.pk}"') == 2
+        assert "Слить в это фото" in content
+
+    def test_merge_form_is_post_with_csrf(self, admin_logged_in, baseball):
+        source = PhotoFactory(sport=baseball, phash="f" * PHASH_HEX_LENGTH, year=1994)
+        PhotoFactory(sport=baseball, phash=source.phash, year=1994)
+
+        content = admin_logged_in.get(_similar_url(source)).content.decode()
+
+        assert 'method="post"' in content
+        assert "csrfmiddlewaretoken" in content
+
+    def test_post_merges_candidate_into_current_photo(self, admin_logged_in, baseball):
+        source = PhotoFactory(sport=baseball, phash="f" * PHASH_HEX_LENGTH, year=1994)
+        candidate = PhotoFactory(sport=baseball, phash=source.phash, year=1994)
+
+        response = admin_logged_in.post(
+            reverse("admin:photos_photo_merge"),
+            {"ids": str(candidate.pk), "target": str(source.pk)},
+        )
+
+        candidate.refresh_from_db()
+        assert candidate.merged_into == source
+        assert candidate.is_deleted
+        assert response.status_code == 302
+        # Админка отдаёт относительный адрес (`../<pk>/change/`):
+        # важно, что он ведёт на карточку канона, а не на слитое фото.
+        assert response.url.endswith(f"{source.pk}/change/")
+
+
+class TestPhotoMergeThroughAdmin:
+    """Слияние из админки: то же, что кнопкой, но с проверками формы."""
+
+    def test_merge_moves_relations_and_logs(
+        self, admin_logged_in, admin_user, baseball
+    ):
+        canon = PhotoFactory(sport=baseball)
+        source = PhotoFactory(sport=baseball)
+        link = PhotoPersonFactory(photo=source)
+        comment = CommentFactory(
+            content_type=_photo_content_type(), object_id=source.pk
+        )
+
+        admin_logged_in.post(
+            reverse("admin:photos_photo_merge"),
+            {"ids": str(source.pk), "target": str(canon.pk)},
+            follow=True,
+        )
+
+        link.refresh_from_db()
+        comment.refresh_from_db()
+        assert link.photo == canon
+        assert comment.object_id == canon.pk
+        assert ModerationAction.objects.filter(
+            object_id=source.pk,
+            action=ModerationActionType.MERGE,
+            moderator=admin_user,
+        ).exists()

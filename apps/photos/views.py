@@ -20,6 +20,7 @@ from apps.core.seo import page_meta
 from apps.core.shortcuts import (
     PHOTO_ORDERING,
     PHOTO_PAGE_SIZE,
+    RedirectToCanonical,
     default_sport,
     get_visible_or_404,
     paginate,
@@ -256,8 +257,16 @@ def photo_detail(request, pk):
 
     Фото без подтверждённых прав и черновик видны только автору и модератору:
     отсев делает `get_visible_or_404`, страница об этом не думает.
+
+    Слитый дубликат отдаёт 301 на канон, а не 404: фотографиями делятся
+    в мессенджерах, и старая ссылка не должна вести на мёртвую страницу.
+    Редирект поднимается до счётчика просмотров — просмотр засчитывается
+    канону, человек увидел именно его.
     """
-    photo = get_visible_or_404(Photo, request=request, pk=pk)
+    try:
+        photo = get_visible_or_404(Photo, request=request, follow_merged=True, pk=pk)
+    except RedirectToCanonical as exc:
+        return redirect(exc.url, permanent=True)
 
     # Хелпер отдаёт объект без предвыборки связей — перечитываем один раз
     # с `select_related`, чтобы шаблон не делал запрос на каждый источник.

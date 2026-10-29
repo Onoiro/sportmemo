@@ -9,8 +9,10 @@ from django.utils.html import format_html, format_html_join
 from django.utils.translation import gettext_lazy as _
 
 from apps.core.admin_mixins import (
+    MERGE_ACTIONS,
     MODERATION_ACTIONS,
     BaseHistoryAdmin,
+    MergeActionsMixin,
     ModerationActionsMixin,
 )
 from apps.photos import similar
@@ -101,7 +103,7 @@ class SourceAdmin(BaseHistoryAdmin):
 
 
 @admin.register(Photo)
-class PhotoAdmin(ModerationActionsMixin, BaseHistoryAdmin):
+class PhotoAdmin(MergeActionsMixin, ModerationActionsMixin, BaseHistoryAdmin):
     list_display = (
         "title",
         "year",
@@ -126,7 +128,7 @@ class PhotoAdmin(ModerationActionsMixin, BaseHistoryAdmin):
         "source",
         "event",
         "team",
-        "duplicate_of",
+        "merged_into",
         "uploaded_by",
     )
     readonly_fields = (
@@ -142,9 +144,10 @@ class PhotoAdmin(ModerationActionsMixin, BaseHistoryAdmin):
         "phash",
         "crop_overlay",
         "crop_data",
+        "merged_into",
     )
     inlines = (PhotoPersonInline,)
-    actions = (*MODERATION_ACTIONS, "action_reprocess")
+    actions = (*MERGE_ACTIONS, *MODERATION_ACTIONS, "action_reprocess")
     date_hierarchy = "created_at"
     fieldsets = (
         (None, {"fields": ("sport", "title", "caption", "original")}),
@@ -161,7 +164,6 @@ class PhotoAdmin(ModerationActionsMixin, BaseHistoryAdmin):
                     "height",
                     "similar_photos",
                     "phash",
-                    "duplicate_of",
                 )
             },
         ),
@@ -184,6 +186,7 @@ class PhotoAdmin(ModerationActionsMixin, BaseHistoryAdmin):
                     "exif",
                     "original_filename",
                     "views_count",
+                    "merged_into",
                     "deleted_at",
                     "created_at",
                     "updated_at",
@@ -192,6 +195,19 @@ class PhotoAdmin(ModerationActionsMixin, BaseHistoryAdmin):
         ),
     )
 
+    def merge_candidates(self, queryset, sources):
+        """Цели слияния — только фото того же вида спорта.
+
+        Слияние фото разных видов спорта сделало бы канон чужим для
+        команды и события: вид спорта в схеме мультиспортный, а карточка
+        показывает связи своего вида. Хук вызывается и при отрисовке
+        страницы, и при проверке POST.
+        """
+        sport_ids = {source.sport_id for source in sources}
+        return (
+            super().merge_candidates(queryset, sources).filter(sport_id__in=sport_ids)
+        )
+
     @admin.display(description=_("Похожие фото"))
     def similar_photos(self, obj):
         """Ссылка на страницу поиска дубликатов.
@@ -199,10 +215,6 @@ class PhotoAdmin(ModerationActionsMixin, BaseHistoryAdmin):
         Счётчика «найдено N» здесь нет осознанно: он стоил бы прохода
         по пулу кандидатов при каждом открытии карточки, а карточку
         модератор открывает часто. Хочет узнать — нажимает ссылку.
-
-        Кнопки слияния на странице пока нет: `Photo` ещё не `MergeableModel`,
-        слияние — подэтап 3.6. Разметка страницы готова принять кнопку
-        одним блоком.
         """
         if obj is None or obj.pk is None:
             # Страница добавления: у несуществующего фото ссылки нет.

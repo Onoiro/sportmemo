@@ -4,10 +4,12 @@ import pytest
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.catalog.models import Team
 from apps.core.models import Status
 from apps.moderation.models import ModerationAction, ModerationActionType
+from tests.factories import PhotoFactory, PhotoPersonFactory, SportFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -281,3 +283,127 @@ class TestReportAdminActions:
         report.refresh_from_db()
         assert report.status == "resolved"
         assert report.resolved_by == admin_user
+
+
+class TestPhotoMergeAction:
+    """Слияние фото из админки: кандидаты сужены, решение пишется в журнал."""
+
+    def test_photo_admin_has_merge_action(self):
+        from apps.photos.models import Photo
+
+        model_admin = admin.site._registry[Photo]
+
+        assert "action_merge" in model_admin.actions
+
+    def test_merge_action_redirects_to_merge_page(self, admin_client_logged_in, photo):
+        url = reverse("admin:photos_photo_changelist")
+
+        response = admin_client_logged_in.post(
+            url,
+            {"action": "action_merge", "_selected_action": [str(photo.pk)]},
+        )
+
+        assert response.status_code == 302
+        assert f"ids={photo.pk}" in response.url
+
+    def test_merge_page_lists_sources_and_candidates(
+        self, admin_client_logged_in, photo
+    ):
+        candidate = PhotoFactory(sport=photo.sport)
+        url = reverse("admin:photos_photo_merge")
+
+        response = admin_client_logged_in.get(url, {"ids": str(photo.pk)})
+
+        assert response.status_code == 200
+        assert list(response.context["sources"]) == [photo]
+        assert list(response.context["candidates"]) == [candidate]
+        content = response.content.decode()
+        assert str(photo) in content
+        assert str(candidate) in content
+
+    def test_candidates_exclude_merged_deleted_and_other_sport(
+        self, admin_client_logged_in, photo
+    ):
+        allowed = PhotoFactory(sport=photo.sport)
+        PhotoFactory(sport=photo.sport, merged_into=allowed)
+        PhotoFactory(sport=photo.sport, deleted_at=timezone.now())
+        other_sport = SportFactory(slug="hockey", name="Хоккей")
+        PhotoFactory(sport=other_sport)
+        url = reverse("admin:photos_photo_merge")
+
+        response = admin_client_logged_in.get(url, {"ids": str(photo.pk)})
+
+        assert list(response.context["candidates"]) == [allowed]
+
+    def test_target_from_other_sport_is_rejected(self, admin_client_logged_in, photo):
+        other_sport = SportFactory(slug="hockey", name="Хоккей")
+        stranger = PhotoFactory(sport=other_sport)
+        link = PhotoPersonFactory(photo=photo)
+        url = reverse("admin:photos_photo_merge")
+
+        admin_client_logged_in.post(
+            url,
+            {"ids": str(photo.pk), "target": str(stranger.pk)},
+            follow=True,
+        )
+
+        photo.refresh_from_db()
+        link.refresh_from_db()
+        assert photo.merged_into is None
+        assert not photo.is_deleted
+        # Отклонённая цель не должна ничего переносить: иначе фото осталось
+        # бы на месте без части связей.
+        assert link.photo == photo
+
+    def test_deleted_target_is_rejected(self, admin_client_logged_in, photo):
+        """Удалённое фото каноном быть не может: ссылка вела бы в никуда."""
+        deleted = PhotoFactory(sport=photo.sport, deleted_at=timezone.now())
+        url = reverse("admin:photos_photo_merge")
+
+        admin_client_logged_in.post(
+            url,
+            {"ids": str(photo.pk), "target": str(deleted.pk)},
+            follow=True,
+        )
+
+        photo.refresh_from_db()
+        assert photo.merged_into is None
+
+    def test_merged_target_is_rejected(self, admin_client_logged_in, photo):
+        canonical = PhotoFactory(sport=photo.sport)
+        merged = PhotoFactory(sport=photo.sport, merged_into=canonical)
+        url = reverse("admin:photos_photo_merge")
+
+        admin_client_logged_in.post(
+            url,
+            {"ids": str(photo.pk), "target": str(merged.pk)},
+            follow=True,
+        )
+
+        photo.refresh_from_db()
+        assert photo.merged_into is None
+
+    def test_merge_moves_photo_and_logs(self, admin_client_logged_in, photo):
+        target = PhotoFactory(sport=photo.sport)
+        url = reverse("admin:photos_photo_merge")
+
+        admin_client_logged_in.post(
+            url,
+            {"ids": str(photo.pk), "target": str(target.pk)},
+            follow=True,
+        )
+
+        photo.refresh_from_db()
+        assert photo.merged_into == target
+        assert photo.is_deleted
+        assert ModerationAction.objects.filter(
+            object_id=photo.pk, action=ModerationActionType.MERGE
+        ).exists()
+
+    def test_merge_page_without_candidates_says_so(self, admin_client_logged_in, photo):
+        url = reverse("admin:photos_photo_merge")
+
+        response = admin_client_logged_in.get(url, {"ids": str(photo.pk)})
+
+        assert response.status_code == 200
+        assert "Нет подходящих объектов" in response.content.decode()

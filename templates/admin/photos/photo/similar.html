@@ -32,6 +32,7 @@
                 <th>{% translate "Команда" %}</th>
                 <th>{% translate "Статус" %}</th>
                 <th>{% translate "Расстояние" %}</th>
+                <th>{% translate "Слияние" %}</th>
             </tr>
         </thead>
         <tbody>
@@ -75,6 +76,22 @@
                         <br><span class="help">{{ item.label }}</span>
                     {% endif %}
                 </td>
+                <td>
+                    {% comment %}
+                    Форма без JavaScript: `confirm` в onclick отключил бы
+                    слияние у модератора с выключенными скриптами.
+                    {% endcomment %}
+                    <form method="post"
+                          action="{% url 'admin:photos_photo_merge' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="ids" value="{{ item.photo.pk }}">
+                        <input type="hidden" name="target" value="{{ original.pk }}">
+                        <input type="submit" value="{% translate 'Слить в это фото' %}">
+                    </form>
+                    <span class="help">
+                        {% translate "кандидат станет дубликатом этого фото" %}
+                    </span>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -82,12 +99,6 @@
 {% else %}
     <p>{% translate "Похожих не найдено" %}</p>
 {% endif %}
-
-{% comment %}
-Здесь появится кнопка «Слить в это фото» в подэтапе 3.6: `Photo` ещё
-не `MergeableModel`, и слияния нет. Блок намеренно оставлен отдельным,
-чтобы добавление было одной вставкой, а не переделкой страницы.
-{% endcomment %}
 
 <div class="submit-row">
     <a href="{% url opts|admin_urlname:'change' original.pk %}" class="button cancel-link">

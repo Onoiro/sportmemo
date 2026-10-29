@@ -114,6 +114,76 @@ class TestMergeable:
         assert Team.public.filter(pk=target.pk).exists()
 
 
+class TestCanonical:
+    def test_get_canonical_follows_chain(self, team, baseball, user):
+        from apps.catalog.models import Team
+
+        middle = Team.objects.create(sport=baseball, name="Середина", created_by=user)
+        canon = Team.objects.create(sport=baseball, name="Канон", created_by=user)
+        team.merge_into(middle)
+        middle.merge_into(canon)
+
+        team.refresh_from_db()
+
+        assert team.get_canonical() == canon
+        assert canon.get_canonical() == canon
+
+    def test_merge_into_resolves_target_to_canonical(
+        self, team, baseball, user, person
+    ):
+        from apps.catalog.models import Team, TeamMembership
+
+        middle = Team.objects.create(sport=baseball, name="Середина", created_by=user)
+        canon = Team.objects.create(sport=baseball, name="Канон", created_by=user)
+        middle.merge_into(canon)
+        membership = TeamMembership.objects.create(
+            team=team, person=person, year_from=1994
+        )
+
+        team.merge_into(middle)
+
+        membership.refresh_from_db()
+        team.refresh_from_db()
+        assert membership.team == canon
+        assert team.merged_into == canon
+
+    def test_get_canonical_returns_none_on_cycle(self, team, baseball, user):
+        from apps.catalog.models import Team
+
+        other = Team.objects.create(sport=baseball, name="Второй", created_by=user)
+        Team.objects.filter(pk=team.pk).update(merged_into_id=other.pk)
+        Team.objects.filter(pk=other.pk).update(merged_into_id=team.pk)
+        team.refresh_from_db()
+
+        assert team.get_canonical() is None
+
+    def test_get_canonical_stops_at_max_depth(self, team, baseball, user):
+        from apps.catalog.models import Team
+
+        current = team
+        for index in range(12):
+            nxt = Team.objects.create(
+                sport=baseball, name=f"Звено {index}", created_by=user
+            )
+            current.merge_into(nxt)
+            current = nxt
+
+        team.refresh_from_db()
+
+        assert team.get_canonical() is None
+
+    def test_merge_into_rejects_broken_chain(self, team, baseball, user):
+        from apps.catalog.models import Team
+
+        other = Team.objects.create(sport=baseball, name="Второй", created_by=user)
+        Team.objects.filter(pk=team.pk).update(merged_into_id=other.pk)
+        Team.objects.filter(pk=other.pk).update(merged_into_id=team.pk)
+        other.refresh_from_db()
+
+        with pytest.raises(ValueError, match="битую"):
+            team.merge_into(other)
+
+
 class TestHealthz:
     def test_returns_ok(self, client):
         response = client.get(reverse("healthz"))

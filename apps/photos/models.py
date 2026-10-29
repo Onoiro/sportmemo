@@ -15,6 +15,7 @@ from imagekit.processors import ResizeToFit
 from simple_history.models import HistoricalRecords
 
 from apps.core.models import (
+    MergeableModel,
     SoftDeleteModel,
     Status,
     StatusModel,
@@ -135,11 +136,13 @@ UPLOAD_STATE_LABELS = {
 }
 
 
-class Photo(TimeStampedModel, StatusModel, SoftDeleteModel):
+class Photo(TimeStampedModel, StatusModel, SoftDeleteModel, MergeableModel):
     """Фотография.
 
     Оригинал никогда не перезаписывается: обработанная версия — производная
-    в отдельном поле. Дубликаты не удаляются, а помечаются `duplicate_of`.
+    в отдельном поле. Дубликаты не удаляются, а сливаются: поглощённое фото
+    остаётся с `merged_into` и отдаёт 301 на канон, поэтому ссылки на него
+    не ломаются.
     """
 
     sport = models.ForeignKey(
@@ -222,15 +225,6 @@ class Photo(TimeStampedModel, StatusModel, SoftDeleteModel):
         ),
     )
 
-    duplicate_of = models.ForeignKey(
-        "self",
-        verbose_name=_("дубликат фото"),
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="duplicates",
-    )
-
     processing_status = models.CharField(
         _("статус обработки"),
         max_length=20,
@@ -303,9 +297,9 @@ class Photo(TimeStampedModel, StatusModel, SoftDeleteModel):
         ]
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(duplicate_of__isnull=True)
-                | ~models.Q(pk=models.F("duplicate_of")),
-                name="photo_duplicate_of_not_self",
+                condition=models.Q(merged_into__isnull=True)
+                | ~models.Q(pk=models.F("merged_into")),
+                name="photo_merged_into_not_self",
             ),
         ]
 
@@ -373,6 +367,60 @@ class Photo(TimeStampedModel, StatusModel, SoftDeleteModel):
             if taken_date:
                 self.year = taken_date.year
         super().save(*args, **kwargs)
+
+    def _merge_relations(self, target):
+        """Перенести связи и заполнить пустые поля канона.
+
+        Производные поля (`display`, `phash`, размеры, `crop_data`, `exif`)
+        не переносятся: они описывают свой оригинал, и подстановка чужого
+        `display` под свой `original` соврала бы и в админке, и в карточке.
+        Нет `display` у канона — модератор жмёт «Обработать заново».
+        """
+        from django.contrib.contenttypes.models import ContentType
+
+        # Импорты внутри метода: `photos` не должен зависеть от `comments`
+        # и `moderation` при загрузке приложений.
+        from apps.catalog.models import Person
+        from apps.comments.models import Comment
+        from apps.moderation.models import Report
+
+        for link in self.photo_persons.select_related("person"):
+            # `UniqueConstraint(photo, person)`: массовый `update()` упал бы
+            # на одном дубле человека и потерял бы остальные связи.
+            exists = PhotoPerson.objects.filter(
+                photo=target, person_id=link.person_id
+            ).exists()
+            if exists:
+                link.delete()
+            else:
+                link.photo = target
+                link.save(update_fields=["photo", "updated_at"])
+
+        content_type = ContentType.objects.get_for_model(Photo)
+        for model in (Comment, Report):
+            model.objects.filter(content_type=content_type, object_id=self.pk).update(
+                object_id=target.pk
+            )
+
+        if self.views_count:
+            # `update()`, а не `save()`: слияние не должно плодить записи
+            # истории и сдвигать `updated_at` канона на каждый счётчик.
+            Photo.objects.filter(pk=target.pk).update(
+                views_count=models.F("views_count") + self.views_count
+            )
+
+        # Аватар человека переводим на канон: иначе главное фото осталось бы
+        # ссылкой на снимок, которого нет в публичной выдаче.
+        Person.objects.filter(avatar_id=self.pk).update(avatar_id=target.pk)
+
+        filled = []
+        for field in ("source_id", "year", "team_id", "event_id", "taken_date"):
+            value = getattr(self, field)
+            if value and not getattr(target, field):
+                setattr(target, field, value)
+                filled.append(field)
+        if filled:
+            target.save(update_fields=[*filled, "updated_at"])
 
 
 class PhotoPersonRole(models.TextChoices):

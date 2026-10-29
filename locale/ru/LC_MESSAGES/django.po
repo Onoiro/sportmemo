@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-28 17:16+0300\n"
+"POT-Creation-Date: 2026-10-29 08:00+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,7 +29,7 @@ msgstr "Профиль"
 msgid "Согласия"
 msgstr "Согласия"
 
-#: apps/accounts/admin.py:47 apps/photos/admin.py:173
+#: apps/accounts/admin.py:47 apps/photos/admin.py:175
 msgid "Права"
 msgstr "Права"
 
@@ -57,7 +57,7 @@ msgstr "Я согласен на обработку персональных д�
 msgid "пользователь"
 msgstr "пользователь"
 
-#: apps/accounts/models.py:13 apps/core/models.py:60
+#: apps/accounts/models.py:13 apps/core/models.py:64
 #: apps/moderation/models.py:113
 msgid "модератор"
 msgstr "модератор"
@@ -75,7 +75,7 @@ msgid "как обращаться"
 msgstr "как обращаться"
 
 #: apps/accounts/models.py:27 apps/catalog/models.py:191
-#: apps/photos/models.py:409
+#: apps/photos/models.py:457
 msgid "роль"
 msgstr "роль"
 
@@ -99,7 +99,7 @@ msgstr "согласие на обработку ПД"
 msgid "версия согласия на ПД"
 msgstr "версия согласия на ПД"
 
-#: apps/accounts/models.py:59 apps/core/models.py:249
+#: apps/accounts/models.py:59 apps/core/models.py:284
 msgid "активен"
 msgstr "активен"
 
@@ -126,8 +126,8 @@ msgstr "Профиль обновлён"
 #: apps/catalog/views.py:590 apps/catalog/views.py:649
 #: apps/catalog/views.py:691 apps/catalog/views.py:718 apps/core/views.py:114
 #: apps/core/views.py:144 apps/core/views.py:192 apps/moderation/views.py:111
-#: apps/photos/views.py:156 apps/photos/views.py:211 apps/photos/views.py:246
-#: apps/photos/views.py:276 apps/search/views.py:40
+#: apps/photos/views.py:157 apps/photos/views.py:212 apps/photos/views.py:247
+#: apps/photos/views.py:285 apps/search/views.py:40
 #: templates/partials/footer.html:20
 msgid "Главная"
 msgstr "Главная"
@@ -137,12 +137,12 @@ msgid "Содержание"
 msgstr "Содержание"
 
 #: apps/catalog/admin.py:71 apps/catalog/admin.py:131 apps/catalog/admin.py:181
-#: apps/comments/admin.py:42 apps/photos/admin.py:177
+#: apps/comments/admin.py:42 apps/photos/admin.py:179
 msgid "Публикация"
 msgstr "Публикация"
 
 #: apps/catalog/admin.py:75 apps/catalog/admin.py:135 apps/catalog/admin.py:185
-#: apps/comments/admin.py:45 apps/photos/admin.py:181
+#: apps/comments/admin.py:45 apps/photos/admin.py:183
 msgid "Служебное"
 msgstr "Служебное"
 
@@ -326,11 +326,11 @@ msgid ""
 msgstr ""
 "Событие с таким названием и годом уже есть в архиве. Проверьте список выше."
 
-#: apps/catalog/models.py:75 apps/photos/models.py:381
+#: apps/catalog/models.py:75 apps/photos/models.py:429
 msgid "игрок"
 msgstr "игрок"
 
-#: apps/catalog/models.py:76 apps/photos/models.py:382
+#: apps/catalog/models.py:76 apps/photos/models.py:430
 msgid "тренер"
 msgstr "тренер"
 
@@ -342,13 +342,13 @@ msgstr "руководитель"
 msgid "персонал"
 msgstr "персонал"
 
-#: apps/catalog/models.py:91 apps/catalog/models.py:452 apps/core/models.py:252
-#: apps/photos/models.py:147
+#: apps/catalog/models.py:91 apps/catalog/models.py:452 apps/core/models.py:287
+#: apps/photos/models.py:150
 msgid "вид спорта"
 msgstr "вид спорта"
 
-#: apps/catalog/models.py:95 apps/catalog/models.py:456 apps/core/models.py:246
-#: apps/photos/models.py:83
+#: apps/catalog/models.py:95 apps/catalog/models.py:456 apps/core/models.py:281
+#: apps/photos/models.py:84
 msgid "название"
 msgstr "название"
 
@@ -380,12 +380,12 @@ msgid "дополнительные атрибуты"
 msgstr "дополнительные атрибуты"
 
 #: apps/catalog/models.py:116 apps/catalog/models.py:299
-#: apps/catalog/models.py:474 apps/photos/models.py:257
+#: apps/catalog/models.py:474 apps/photos/models.py:251
 msgid "поисковый индекс"
 msgstr "поисковый индекс"
 
 #: apps/catalog/models.py:121 apps/catalog/models.py:178
-#: apps/catalog/models.py:584 apps/photos/models.py:169
+#: apps/catalog/models.py:584 apps/photos/models.py:172
 msgid "команда"
 msgstr "команда"
 
@@ -394,7 +394,7 @@ msgid "команды"
 msgstr "команды"
 
 #: apps/catalog/models.py:184 apps/catalog/models.py:304
-#: apps/catalog/models.py:392 apps/photos/models.py:404
+#: apps/catalog/models.py:392 apps/photos/models.py:452
 msgid "человек"
 msgstr "человек"
 
@@ -415,7 +415,7 @@ msgid "амплуа"
 msgstr "амплуа"
 
 #: apps/catalog/models.py:195 apps/catalog/models.py:403
-#: apps/photos/models.py:420
+#: apps/photos/models.py:468
 msgid "примечание"
 msgstr "примечание"
 
@@ -449,7 +449,7 @@ msgstr "полное имя"
 msgid "только имя"
 msgstr "только имя"
 
-#: apps/catalog/models.py:249 apps/core/models.py:44
+#: apps/catalog/models.py:249 apps/core/models.py:48
 msgid "скрыто"
 msgstr "скрыто"
 
@@ -554,7 +554,7 @@ msgid "церемония"
 msgstr "церемония"
 
 #: apps/catalog/models.py:438 apps/moderation/models.py:21
-#: apps/photos/models.py:66 apps/photos/models.py:386
+#: apps/photos/models.py:67 apps/photos/models.py:434
 msgid "другое"
 msgstr "другое"
 
@@ -570,7 +570,7 @@ msgstr "дата начала"
 msgid "дата окончания"
 msgstr "дата окончания"
 
-#: apps/catalog/models.py:466 apps/photos/models.py:175
+#: apps/catalog/models.py:466 apps/photos/models.py:178
 msgid "год"
 msgstr "год"
 
@@ -579,7 +579,7 @@ msgid "страна"
 msgstr "страна"
 
 #: apps/catalog/models.py:487 apps/catalog/models.py:578
-#: apps/photos/models.py:161
+#: apps/photos/models.py:164
 msgid "событие"
 msgstr "событие"
 
@@ -679,7 +679,7 @@ msgstr "Новая команда"
 msgid "Создать"
 msgstr "Создать"
 
-#: apps/catalog/views.py:540 apps/catalog/views.py:672 apps/photos/views.py:189
+#: apps/catalog/views.py:540 apps/catalog/views.py:672 apps/photos/views.py:190
 msgid "Изменения сохранены."
 msgstr "Изменения сохранены."
 
@@ -864,20 +864,20 @@ msgstr[3] "%(count)d объектов обновлено."
 msgid "Слить дубликаты в один объект"
 msgstr "Слить дубликаты в один объект"
 
-#: apps/core/admin_mixins.py:192
+#: apps/core/admin_mixins.py:206
 msgid "Выберите целевой объект из списка"
 msgstr "Выберите целевой объект из списка"
 
-#: apps/core/admin_mixins.py:201
+#: apps/core/admin_mixins.py:215
 msgid "слито модератором"
 msgstr "слито модератором"
 
-#: apps/core/admin_mixins.py:207
+#: apps/core/admin_mixins.py:221
 #, python-format
 msgid "Слито в объект #%(target)d"
 msgstr "Слито в объект #%(target)d"
 
-#: apps/core/admin_mixins.py:214
+#: apps/core/admin_mixins.py:228
 #, python-format
 msgid "%(count)d объект слит в «%(target)s»."
 msgid_plural "%(count)d объектов слито в «%(target)s»."
@@ -886,72 +886,72 @@ msgstr[1] "%(count)d объекта слито в «%(target)s»."
 msgstr[2] "%(count)d объектов слито в «%(target)s»."
 msgstr[3] "%(count)d объектов слито в «%(target)s»."
 
-#: apps/core/admin_mixins.py:225 templates/admin/core/merge_form.html:9
+#: apps/core/admin_mixins.py:239 templates/admin/core/merge_form.html:9
 #: templates/admin/core/merge_form.html:14
 msgid "Слияние дубликатов"
 msgstr "Слияние дубликатов"
 
-#: apps/core/models.py:12
+#: apps/core/models.py:16
 msgid "создано"
 msgstr "создано"
 
-#: apps/core/models.py:13
+#: apps/core/models.py:17
 msgid "изменено"
 msgstr "изменено"
 
-#: apps/core/models.py:25 apps/core/models.py:247
+#: apps/core/models.py:29 apps/core/models.py:282
 msgid "slug"
 msgstr "slug"
 
-#: apps/core/models.py:42
+#: apps/core/models.py:46
 msgid "черновик"
 msgstr "черновик"
 
-#: apps/core/models.py:43
+#: apps/core/models.py:47
 msgid "опубликовано"
 msgstr "опубликовано"
 
-#: apps/core/models.py:45
+#: apps/core/models.py:49
 msgid "отклонено"
 msgstr "отклонено"
 
-#: apps/core/models.py:52 apps/moderation/models.py:61
+#: apps/core/models.py:56 apps/moderation/models.py:61
 msgid "статус"
 msgstr "статус"
 
-#: apps/core/models.py:66
+#: apps/core/models.py:70
 msgid "дата модерации"
 msgstr "дата модерации"
 
-#: apps/core/models.py:67
+#: apps/core/models.py:71
 msgid "причина решения"
 msgstr "причина решения"
 
-#: apps/core/models.py:163
+#: apps/core/models.py:167
 msgid "удалено"
 msgstr "удалено"
 
-#: apps/core/models.py:165
+#: apps/core/models.py:169
 msgid "причина удаления"
 msgstr "причина удаления"
 
-#: apps/core/models.py:198
+#: apps/core/models.py:202
 msgid "слит в"
 msgstr "слит в"
 
-#: apps/core/models.py:229
+#: apps/core/models.py:264
 msgid "слито с дубликатом"
 msgstr "слито с дубликатом"
 
-#: apps/core/models.py:248
+#: apps/core/models.py:283
 msgid "порядок сортировки"
 msgstr "порядок сортировки"
 
-#: apps/core/models.py:253
+#: apps/core/models.py:288
 msgid "виды спорта"
 msgstr "виды спорта"
 
-#: apps/core/schema.py:150 apps/photos/views.py:285 apps/photos/views.py:289
+#: apps/core/schema.py:150 apps/photos/views.py:294 apps/photos/views.py:298
 #: templates/photos/my_photos.html:58 templates/photos/photo_detail.html:37
 msgid "Фотография"
 msgstr "Фотография"
@@ -978,7 +978,7 @@ msgstr ""
 "нарушении прав."
 
 #: apps/core/views.py:138 apps/core/views.py:145 apps/core/views.py:193
-#: apps/photos/views.py:279 templates/core/home.html:61
+#: apps/photos/views.py:288 templates/core/home.html:61
 #: templates/core/year_list.html:11 templates/partials/footer.html:14
 #: templates/partials/navbar.html:20
 msgid "Годы"
@@ -988,7 +988,7 @@ msgstr "Годы"
 msgid "Хронология архива SportMemo: годы и фотографии каждого года."
 msgstr "Хронология архива SportMemo: годы и фотографии каждого года."
 
-#: apps/core/views.py:187 apps/core/views.py:194 apps/photos/views.py:282
+#: apps/core/views.py:187 apps/core/views.py:194 apps/photos/views.py:291
 #: templates/core/year_detail.html:12
 #, python-format
 msgid "%(year)s год"
@@ -1149,62 +1149,62 @@ msgstr "Жалоба на этот объект уже отправлена."
 msgid "Сообщить об ошибке"
 msgstr "Сообщить об ошибке"
 
-#: apps/photos/admin.py:151
+#: apps/photos/admin.py:154
 msgid "Привязка"
 msgstr "Привязка"
 
-#: apps/photos/admin.py:153
+#: apps/photos/admin.py:156
 msgid "Производные"
 msgstr "Производные"
 
-#: apps/photos/admin.py:169
+#: apps/photos/admin.py:171
 msgid "Обработка"
 msgstr "Обработка"
 
-#: apps/photos/admin.py:195 apps/photos/admin.py:235
+#: apps/photos/admin.py:211 apps/photos/admin.py:247
 #: templates/admin/photos/photo/similar.html:10
 #: templates/admin/photos/photo/similar.html:15
 msgid "Похожие фото"
 msgstr "Похожие фото"
 
-#: apps/photos/admin.py:211
+#: apps/photos/admin.py:223
 msgid "Показать похожие фото"
 msgstr "Показать похожие фото"
 
-#: apps/photos/admin.py:243
+#: apps/photos/admin.py:255
 msgid "Рамка кропа"
 msgstr "Рамка кропа"
 
-#: apps/photos/admin.py:262
+#: apps/photos/admin.py:274
 msgid "Оригинал не загружен"
 msgstr "Оригинал не загружен"
 
-#: apps/photos/admin.py:267
+#: apps/photos/admin.py:279
 msgid "Без кропа: показывается весь кадр"
 msgstr "Без кропа: показывается весь кадр"
 
-#: apps/photos/admin.py:273
+#: apps/photos/admin.py:285
 msgid "Рамка недоступна: в данных кропа нет размера кадра"
 msgstr "Рамка недоступна: в данных кропа нет размера кадра"
 
-#: apps/photos/admin.py:287
+#: apps/photos/admin.py:299
 msgid "Затемнено то, что осталось за кадром."
 msgstr "Затемнено то, что осталось за кадром."
 
-#: apps/photos/admin.py:290
+#: apps/photos/admin.py:302
 #, python-format
 msgid "Кадр повёрнут на %(degrees)s°."
 msgstr "Кадр повёрнут на %(degrees)s°."
 
-#: apps/photos/admin.py:293
+#: apps/photos/admin.py:305
 msgid "Зеркальная ориентация: рамка может быть неточной."
 msgstr "Зеркальная ориентация: рамка может быть неточной."
 
-#: apps/photos/admin.py:307
+#: apps/photos/admin.py:319
 msgid "Обработать заново"
 msgstr "Обработать заново"
 
-#: apps/photos/admin.py:326
+#: apps/photos/admin.py:338
 #, python-format
 msgid "Поставлено в обработку: %(count)d."
 msgstr "Поставлено в обработку: %(count)d."
@@ -1323,151 +1323,151 @@ msgstr "Дата съёмки не совпадает с годом %(year)s."
 msgid "Изображение слишком большое: больше %(mpix)s Мпикс."
 msgstr "Изображение слишком большое: больше %(mpix)s Мпикс."
 
-#: apps/photos/models.py:58
+#: apps/photos/models.py:59
 msgid "бумажное фото"
 msgstr "бумажное фото"
 
-#: apps/photos/models.py:59
+#: apps/photos/models.py:60
 msgid "негатив"
 msgstr "негатив"
 
-#: apps/photos/models.py:60
+#: apps/photos/models.py:61
 msgid "скан"
 msgstr "скан"
 
-#: apps/photos/models.py:61
+#: apps/photos/models.py:62
 msgid "цифровое фото"
 msgstr "цифровое фото"
 
-#: apps/photos/models.py:62
+#: apps/photos/models.py:63
 msgid "газета"
 msgstr "газета"
 
-#: apps/photos/models.py:63
+#: apps/photos/models.py:64
 msgid "журнал"
 msgstr "журнал"
 
-#: apps/photos/models.py:64
+#: apps/photos/models.py:65
 msgid "программа"
 msgstr "программа"
 
-#: apps/photos/models.py:65
+#: apps/photos/models.py:66
 msgid "билет"
 msgstr "билет"
 
-#: apps/photos/models.py:77
+#: apps/photos/models.py:78
 msgid "тип источника"
 msgstr "тип источника"
 
-#: apps/photos/models.py:84
+#: apps/photos/models.py:85
 msgid "издание"
 msgstr "издание"
 
-#: apps/photos/models.py:85
+#: apps/photos/models.py:86
 msgid "дата"
 msgstr "дата"
 
-#: apps/photos/models.py:86
+#: apps/photos/models.py:87
 msgid "страница"
 msgstr "страница"
 
-#: apps/photos/models.py:87
+#: apps/photos/models.py:88
 msgid "ссылка"
 msgstr "ссылка"
 
-#: apps/photos/models.py:89
+#: apps/photos/models.py:90
 msgid "владелец оригинала"
 msgstr "владелец оригинала"
 
-#: apps/photos/models.py:92
+#: apps/photos/models.py:93
 msgid "Например: «семейный архив Ивановых»"
 msgstr "Например: «семейный архив Ивановых»"
 
-#: apps/photos/models.py:96
+#: apps/photos/models.py:97
 msgid "владелец записи"
 msgstr "владелец записи"
 
-#: apps/photos/models.py:102
+#: apps/photos/models.py:103
 msgid "примечания"
 msgstr "примечания"
 
-#: apps/photos/models.py:107 apps/photos/models.py:153
+#: apps/photos/models.py:108 apps/photos/models.py:156
 msgid "источник"
 msgstr "источник"
 
-#: apps/photos/models.py:108
+#: apps/photos/models.py:109
 msgid "источники"
 msgstr "источники"
 
-#: apps/photos/models.py:118
+#: apps/photos/models.py:119
 msgid "загружено"
 msgstr "загружено"
 
-#: apps/photos/models.py:119
+#: apps/photos/models.py:120
 msgid "в обработке"
 msgstr "в обработке"
 
-#: apps/photos/models.py:120
+#: apps/photos/models.py:121
 msgid "обработано"
 msgstr "обработано"
 
-#: apps/photos/models.py:121 apps/photos/models.py:241
+#: apps/photos/models.py:122 apps/photos/models.py:235
 msgid "ошибка обработки"
 msgstr "ошибка обработки"
 
-#: apps/photos/models.py:128
+#: apps/photos/models.py:129
 msgid "Удалено"
 msgstr "Удалено"
 
-#: apps/photos/models.py:129
+#: apps/photos/models.py:130
 msgid "Ошибка обработки"
 msgstr "Ошибка обработки"
 
-#: apps/photos/models.py:130
+#: apps/photos/models.py:131
 msgid "Обрабатывается"
 msgstr "Обрабатывается"
 
-#: apps/photos/models.py:131
+#: apps/photos/models.py:132
 msgid "Опубликовано"
 msgstr "Опубликовано"
 
-#: apps/photos/models.py:132
+#: apps/photos/models.py:133
 msgid "Скрыто модератором"
 msgstr "Скрыто модератором"
 
-#: apps/photos/models.py:133
+#: apps/photos/models.py:134
 msgid "Отклонено"
 msgstr "Отклонено"
 
-#: apps/photos/models.py:134
+#: apps/photos/models.py:135
 msgid "На проверке"
 msgstr "На проверке"
 
-#: apps/photos/models.py:176
+#: apps/photos/models.py:179
 msgid "дата съёмки"
 msgstr "дата съёмки"
 
-#: apps/photos/models.py:177
+#: apps/photos/models.py:180
 msgid "заголовок"
 msgstr "заголовок"
 
-#: apps/photos/models.py:178
+#: apps/photos/models.py:181
 msgid "подпись"
 msgstr "подпись"
 
-#: apps/photos/models.py:181
+#: apps/photos/models.py:184
 msgid "оригинал"
 msgstr "оригинал"
 
-#: apps/photos/models.py:184
+#: apps/photos/models.py:187
 msgid "обработанная версия"
 msgstr "обработанная версия"
 
-#: apps/photos/models.py:191
+#: apps/photos/models.py:194
 msgid "версия для показа"
 msgstr "версия для показа"
 
-#: apps/photos/models.py:197
+#: apps/photos/models.py:200
 msgid ""
 "Нормализованный оригинал или кроп без EXIF, JPEG до 1280 px. Единственный "
 "источник превью: без него фото показывается заглушкой."
@@ -1475,31 +1475,31 @@ msgstr ""
 "Нормализованный оригинал или кроп без EXIF, JPEG до 1280 px. Единственный "
 "источник превью: без него фото показывается заглушкой."
 
-#: apps/photos/models.py:203
+#: apps/photos/models.py:206
 msgid "исходное имя файла"
 msgstr "исходное имя файла"
 
-#: apps/photos/models.py:206
+#: apps/photos/models.py:209
 msgid "Как файл назывался у автора. Хранится для поиска в админке."
 msgstr "Как файл назывался у автора. Хранится для поиска в админке."
 
-#: apps/photos/models.py:209
+#: apps/photos/models.py:212
 msgid "ширина"
 msgstr "ширина"
 
-#: apps/photos/models.py:210
+#: apps/photos/models.py:213
 msgid "высота"
 msgstr "высота"
 
-#: apps/photos/models.py:212
+#: apps/photos/models.py:215
 msgid "перцептивный хеш"
 msgstr "перцептивный хеш"
 
-#: apps/photos/models.py:215
+#: apps/photos/models.py:218
 msgid "данные кропа"
 msgstr "данные кропа"
 
-#: apps/photos/models.py:219
+#: apps/photos/models.py:222
 msgid ""
 "Инструкция обработки, а не новый оригинал: {\"version\": 1, \"x\", \"y\", "
 "\"width\", \"height\", \"rotate\"}. Пустой словарь — без кропа."
@@ -1507,19 +1507,15 @@ msgstr ""
 "Инструкция обработки, а не новый оригинал: {\"version\": 1, \"x\", \"y\", "
 "\"width\", \"height\", \"rotate\"}. Пустой словарь — без кропа."
 
-#: apps/photos/models.py:227
-msgid "дубликат фото"
-msgstr "дубликат фото"
-
-#: apps/photos/models.py:235
+#: apps/photos/models.py:229
 msgid "статус обработки"
 msgstr "статус обработки"
 
-#: apps/photos/models.py:244
+#: apps/photos/models.py:238
 msgid "права подтверждены"
 msgstr "права подтверждены"
 
-#: apps/photos/models.py:247
+#: apps/photos/models.py:241
 msgid ""
 "Исторический флаг для админки: на видимость фото не влияет. Ответственность "
 "за контент несёт автор (Правила сервиса)."
@@ -1527,63 +1523,63 @@ msgstr ""
 "Исторический флаг для админки: на видимость фото не влияет. Ответственность "
 "за контент несёт автор (Правила сервиса)."
 
-#: apps/photos/models.py:252
+#: apps/photos/models.py:246
 msgid "дата подтверждения прав"
 msgstr "дата подтверждения прав"
 
-#: apps/photos/models.py:258
+#: apps/photos/models.py:252
 msgid "EXIF"
 msgstr "EXIF"
 
-#: apps/photos/models.py:259
+#: apps/photos/models.py:253
 msgid "просмотров"
 msgstr "просмотров"
 
-#: apps/photos/models.py:262
+#: apps/photos/models.py:256
 msgid "загрузил"
 msgstr "загрузил"
 
-#: apps/photos/models.py:289 apps/photos/models.py:398
+#: apps/photos/models.py:283 apps/photos/models.py:446
 msgid "фотография"
 msgstr "фотография"
 
-#: apps/photos/models.py:290
+#: apps/photos/models.py:284
 msgid "фотографии"
 msgstr "фотографии"
 
-#: apps/photos/models.py:383
+#: apps/photos/models.py:431
 msgid "судья"
 msgstr "судья"
 
-#: apps/photos/models.py:384
+#: apps/photos/models.py:432
 msgid "зритель"
 msgstr "зритель"
 
-#: apps/photos/models.py:385
+#: apps/photos/models.py:433
 msgid "фотограф"
 msgstr "фотограф"
 
-#: apps/photos/models.py:415
+#: apps/photos/models.py:463
 msgid "позиция в кадре"
 msgstr "позиция в кадре"
 
-#: apps/photos/models.py:418
+#: apps/photos/models.py:466
 msgid "Например: «слева второй»"
 msgstr "Например: «слева второй»"
 
-#: apps/photos/models.py:423
+#: apps/photos/models.py:471
 msgid "добавил"
 msgstr "добавил"
 
-#: apps/photos/models.py:429
+#: apps/photos/models.py:477
 msgid "дата добавления"
 msgstr "дата добавления"
 
-#: apps/photos/models.py:434
+#: apps/photos/models.py:482
 msgid "человек на фото"
 msgstr "человек на фото"
 
-#: apps/photos/models.py:435
+#: apps/photos/models.py:483
 msgid "люди на фото"
 msgstr "люди на фото"
 
@@ -1604,7 +1600,7 @@ msgstr "Хранилище недоступно, попробуйте позже
 msgid "Ошибка обработки: %(error)s"
 msgstr "Ошибка обработки: %(error)s"
 
-#: apps/photos/views.py:138
+#: apps/photos/views.py:139
 msgid ""
 "Файл сохранён, фотография обрабатывается. Заполните данные о снимке — их "
 "можно изменить позже."
@@ -1612,27 +1608,27 @@ msgstr ""
 "Файл сохранён, фотография обрабатывается. Заполните данные о снимке — их "
 "можно изменить позже."
 
-#: apps/photos/views.py:151 apps/photos/views.py:157
+#: apps/photos/views.py:152 apps/photos/views.py:158
 #: templates/photos/photo_form.html:11
 msgid "Загрузка фото"
 msgstr "Загрузка фото"
 
-#: apps/photos/views.py:186
+#: apps/photos/views.py:187
 msgid "Изменения сохранены. Фото остаётся в архиве."
 msgstr "Изменения сохранены. Фото остаётся в архиве."
 
-#: apps/photos/views.py:206 apps/photos/views.py:213
+#: apps/photos/views.py:207 apps/photos/views.py:214
 #: templates/photos/photo_details.html:11
 msgid "Данные фотографии"
 msgstr "Данные фотографии"
 
-#: apps/photos/views.py:212 apps/photos/views.py:241 apps/photos/views.py:247
+#: apps/photos/views.py:213 apps/photos/views.py:242 apps/photos/views.py:248
 #: templates/partials/navbar.html:71 templates/photos/my_photos.html:13
 #: templates/photos/photo_details.html:131 templates/photos/photo_form.html:130
 msgid "Мои фото"
 msgstr "Мои фото"
 
-#: apps/photos/views.py:298
+#: apps/photos/views.py:307
 msgid "Фотография из архива SportMemo"
 msgstr "Фотография из архива SportMemo"
 
@@ -1878,7 +1874,7 @@ msgid "Сохранить пароль"
 msgstr "Сохранить пароль"
 
 #: templates/account/password_reset_from_key.html:34
-#: templates/admin/core/merge_form.html:46
+#: templates/admin/core/merge_form.html:47
 #: templates/catalog/event_form.html:101 templates/catalog/team_form.html:102
 #: templates/moderation/report_form.html:58
 msgid "Отмена"
@@ -2003,13 +1999,11 @@ msgstr "Home"
 #: templates/admin/core/merge_form.html:17
 #, python-format
 msgid ""
-"Будет слито объектов: %(count)s. Связи (фото, состав, события) будут "
-"перенесены в целевой объект, а источники помечены как удалённые. Операция "
-"обратима через историю изменений."
+"Будет слито объектов: %(count)s. Связи будут перенесены в целевой объект, а "
+"источники помечены как удалённые. Операция обратима через историю изменений."
 msgstr ""
-"Будет слито объектов: %(count)s. Связи (фото, состав, события) будут "
-"перенесены в целевой объект, а источники помечены как удалённые. Операция "
-"обратима через историю изменений."
+"Будет слито объектов: %(count)s. Связи будут перенесены в целевой объект, а "
+"источники помечены как удалённые. Операция обратима через историю изменений."
 
 #: templates/admin/core/merge_form.html:20
 msgid "Объекты к слиянию"
@@ -2023,13 +2017,17 @@ msgstr "Ничего не выбрано"
 msgid "Целевой объект"
 msgstr "Целевой объект"
 
-#: templates/admin/core/merge_form.html:37
+#: templates/admin/core/merge_form.html:38
 msgid "— выберите —"
 msgstr "— выберите —"
 
-#: templates/admin/core/merge_form.html:45
+#: templates/admin/core/merge_form.html:46
 msgid "Слить"
 msgstr "Слить"
+
+#: templates/admin/core/merge_form.html:51
+msgid "Нет подходящих объектов"
+msgstr "Нет подходящих объектов"
 
 #: templates/admin/photos/photo/similar.html:18
 msgid "Сравнение по перцептивному хешу. Совпадение — подсказка, решать вам."
@@ -2051,19 +2049,31 @@ msgstr "Статус"
 msgid "Расстояние"
 msgstr "Расстояние"
 
-#: templates/admin/photos/photo/similar.html:48
+#: templates/admin/photos/photo/similar.html:35
+msgid "Слияние"
+msgstr "Слияние"
+
+#: templates/admin/photos/photo/similar.html:49
 msgid "нет превью"
 msgstr "нет превью"
 
-#: templates/admin/photos/photo/similar.html:61
+#: templates/admin/photos/photo/similar.html:62
 msgid "не указан"
 msgstr "не указан"
 
-#: templates/admin/photos/photo/similar.html:83
+#: templates/admin/photos/photo/similar.html:90
+msgid "Слить в это фото"
+msgstr "Слить в это фото"
+
+#: templates/admin/photos/photo/similar.html:93
+msgid "кандидат станет дубликатом этого фото"
+msgstr "кандидат станет дубликатом этого фото"
+
+#: templates/admin/photos/photo/similar.html:101
 msgid "Похожих не найдено"
 msgstr "Похожих не найдено"
 
-#: templates/admin/photos/photo/similar.html:94
+#: templates/admin/photos/photo/similar.html:106
 msgid "Вернуться к фото"
 msgstr "Вернуться к фото"
 
@@ -2940,3 +2950,6 @@ msgstr "Показаны первые %(shown)s из %(total)s"
 #: templates/search/partials/suggestions.html:12
 msgid "Возможно, вы искали"
 msgstr "Возможно, вы искали"
+
+#~ msgid "дубликат фото"
+#~ msgstr "дубликат фото"
