@@ -43,7 +43,8 @@ Violating any of these is a defect, not a stylistic difference.
 ## Stack
 
 Python 3.12, Django 5.2 LTS, Django templates + Bootstrap 5 + htmx + Alpine.js, PostgreSQL 17,
-MinIO via `django-storages`, `django-imagekit` (thumbnails), `django-simple-history` (audit),
+S3-compatible storage via `django-storages` (MinIO in development, Russian S3 in production),
+`django-imagekit` (thumbnails), `django-simple-history` (audit),
 `django-allauth` (email + password with mandatory email confirmation), Celery + Redis, `uv`
 (packages), `ruff` (linter), `pytest` + `pytest-django` + `factory_boy` (tests), Docker Compose +
 Nginx (infrastructure).
@@ -133,9 +134,9 @@ match), then delete with `git branch -D`.
 | Stage | Content | Status |
 |---|---|---|
 | 1 | Foundation: data schema, admin, tests, CI | complete |
-| 2 | Public archive: layout, pages, galleries, search, comments, sign-up UI | in progress |
-| 3 | Photo processing: user upload, frame correction, server pipeline, Celery, perceptual hash, duplicate merge | in progress |
-| 4 | Mobile PWA, legal layer, deployment, backups, monitoring | planned |
+| 2 | Public archive: layout, pages, galleries, search, comments, sign-up UI | complete |
+| 3 | Photo processing: user upload, frame correction, server pipeline, Celery, perceptual hash, duplicate merge | complete (0.23.0) |
+| 4 | Mobile PWA, legal layer, deployment, backups, monitoring | planning |
 
 Details in `.koda/plans/foundation-and-data-model.md` (stage 1),
 `.koda/plans/public-archive.md` (stage 2 master plan),
@@ -157,7 +158,12 @@ are complete. Stage 2 (public archive) is closed.
 agreed before work started. Order: 3.1 processing foundation → 3.2 photo upload → 3.3 Celery
 pipeline → 3.4 in-browser crop → 3.5 perceptual hash → 3.6 duplicate merge. A sub-stage plan
 is created as a separate file when work on it starts
-(`plans/photo-processing-3.N-<name>.md`).
+(`plans/photo-processing-3.N-<name>.md`). Sub-stages 3.1–3.6 are complete and stage 3 is
+closed; 3.7 (batch upload) is deferred and taken by a separate decision.
+
+**Stage 4 (mobile PWA, legal layer, operations) is in planning.** There is no master plan yet:
+it is the first step of the stage (`plans/mobile-legal-deploy.md`) and must be approved by the
+owner. The task list is in the backlog, section "Stage 4".
 
 **Stage 3 decisions that must not be broken:**
 
@@ -200,25 +206,27 @@ constructor". Legal pages and SMTP are stage 4.
 - Version: 0.23.0; development branch `master`; 1373 tests passing on Python 3.12 and 3.13
   (`make test`); linter clean (`make lint`).
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
-  sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is in progress: sub-stage 3.1
-  (processing foundation) is complete — EXIF by allow-list, orientation, rotation, crop,
-  `display`, perceptual hash, backfill; previews come from `display`; `rights_confirmed` is
-  out of the visibility rule. Sub-stage 3.2 (user photo upload) is complete: the
-  `/photos/upload/` form, the `/photos/mine/` cabinet with seven badges, the `/rules/` page,
-  the EXIF year hint. Sub-stage 3.3 (Celery pipeline and two-step upload) is complete:
-  step 1 saves the file, step 2 `/photos/<pk>/edit/` holds the photo details and the edit
-  page (author and moderator), `process_photo_task` retries only on `StorageUnavailable`,
-  `enqueue_photo_processing` is the only place that queues the task, the admin action
-  "Process again", and EXIF is read on the server. Sub-stage 3.4 (frame correction in the
-  browser) is complete: Cropper.js on step 1, `crop_data` in the "as a person sees it" system
-  scaled to the working copy, and the crop frame in the admin. Sub-stage 3.5 (perceptual hash
-  and similar photo search) is complete: the hash moved to 256 bits, the "Similar photos"
+  sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is complete: sub-stages 3.1–3.6
+  are done, 3.7 (batch upload) is deferred. Sub-stage 3.1 (processing foundation) — EXIF by
+  allow-list, orientation, rotation, crop, `display`, perceptual hash, backfill; previews
+  come from `display`; `rights_confirmed` is out of the visibility rule. Sub-stage 3.2
+  (user photo upload) — the `/photos/upload/` form, the `/photos/mine/` cabinet with seven
+  badges, the `/rules/` page, the EXIF year hint. Sub-stage 3.3 (Celery pipeline and
+  two-step upload) — step 1 saves the file, step 2 `/photos/<pk>/edit/` holds the photo
+  details and the edit page (author and moderator), `process_photo_task` retries only on
+  `StorageUnavailable`, `enqueue_photo_processing` is the only place that queues the task,
+  the admin action "Process again", and EXIF is read on the server. Sub-stage 3.4 (frame
+  correction in the browser) — Cropper.js on step 1, `crop_data` in the "as a person sees
+  it" system scaled to the working copy, and the crop frame in the admin. Sub-stage 3.5
+  (perceptual hash and similar photo search) — the hash is 256 bits, the "Similar photos"
   page in the admin lists candidates with a distance, the thresholds are 32/48, and old
-  hashes are recomputed with `photos_backfill --rehash`. Sub-stage 3.6 (duplicate merge) is
-  complete: `Photo` inherits `MergeableModel`, `duplicate_of` became `merged_into` through
-  two migrations, a merge moves relations and views, an old link returns 301 to the
-  canonical photo, and the "Merge into this photo" button sits in the candidate row. The
-  next one is 3.7 (batch upload), deferred and taken by a separate decision.
+  hashes are recomputed with `photos_backfill --rehash`. Sub-stage 3.6 (duplicate merge) —
+  `Photo` inherits `MergeableModel`, `duplicate_of` became `merged_into` through two
+  migrations, a merge moves relations and views, an old link returns 301 to the canonical
+  photo, and the "Merge into this photo" button sits in the candidate row.
+- Stage 4 is in planning: there is no master plan, the first step is to write and approve it.
+  Known leftovers that move into stage 4: the account deletion policy (P3-13), the S3 storage
+  decision (R-1, Russian S3 chosen), and re-cropping an uploaded photo (P3-18).
 
 ### Public UI
 
