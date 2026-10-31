@@ -66,6 +66,19 @@ def baseball(db):
 
 
 @pytest.fixture
+def softball(db):
+    """Второй вид спорта — только для проверки изоляции области.
+
+    В продукте он не появляется (инвариант № 1), а в тестах нужен, чтобы
+    модератор одного вида спорта не видел черновик другого.
+    """
+    sport, _ = Sport.objects.get_or_create(
+        slug="softball", defaults={"name": "Софтбол", "sort_order": 10}
+    )
+    return sport
+
+
+@pytest.fixture
 def user(db):
     """Обычный зарегистрированный пользователь:
     согласия заполнены при регистрации.
@@ -92,11 +105,19 @@ def other_user(db):
 
 @pytest.fixture
 def moderator(db):
-    return User.objects.create_user(
+    """Модератор всех существующих видов спорта.
+
+    Область назначается сразу: до подэтапа 4.1 модератор видел всё, и тесты
+    «модератор видит черновик» не должны падать на пустой области. То же
+    поведение даёт бэкфилл миграции на проде.
+    """
+    user = User.objects.create_user(
         email="moderator@example.com",
         password="test-pass-12345",
         role=UserRole.MODERATOR,
     )
+    user.moderated_sports.set(Sport.objects.all())
+    return user
 
 
 @pytest.fixture

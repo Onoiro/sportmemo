@@ -163,7 +163,7 @@ def can_moderate(self, obj=None) -> bool:
 
 ### 3.1 Тестовая база
 
-- [ ] **Фикстуры: второй вид спорта и область у модератора**
+- [x] **Фикстуры: второй вид спорта и область у модератора**
 
   `tests/conftest.py`:
 
@@ -194,7 +194,7 @@ def can_moderate(self, obj=None) -> bool:
 
 ### 3.2 Модель `User`
 
-- [ ] **`is_trusted`, `moderated_sports`, `can_moderate`**
+- [x] **`is_trusted`, `moderated_sports`, `can_moderate`**
 
   `apps/accounts/models.py`:
 
@@ -216,7 +216,7 @@ def can_moderate(self, obj=None) -> bool:
 
 ### 3.3 Миграции `accounts/0003` и `accounts/0004`
 
-- [ ] **M2M отдельной миграцией, `is_trusted` + бэкфилл — второй**
+- [x] **M2M отдельной миграцией, `is_trusted` + бэкфилл — второй**
 
   1. Сгенерировать `make migrations` и разнести результат на две миграции:
      - `apps/accounts/migrations/0003_moderator_sports.py` — только `AddField`
@@ -249,7 +249,7 @@ def can_moderate(self, obj=None) -> bool:
 
 ### 3.4 Проверка прав: три точки
 
-- [ ] **Перевести `get_visible_or_404`, `can_edit`, `can_edit_photo` на `can_moderate`**
+- [x] **Перевести `get_visible_or_404`, `can_edit`, `can_edit_photo` на `can_moderate`**
 
   1. `apps/core/shortcuts.py`: локальная обёртка
 
@@ -280,7 +280,7 @@ def can_moderate(self, obj=None) -> bool:
 
 ### 3.5 `Report.sport`
 
-- [ ] **Поле, заполнение, бэкфилл, админка**
+- [x] **Поле, заполнение, бэкфилл, админка**
 
   1. `apps/moderation/models.py`: `Report.sport = models.ForeignKey("core.Sport", verbose_name=_("вид спорта"), null=True, blank=True, on_delete=models.PROTECT, related_name="reports")`;
      `indexes` дополняется `models.Index(fields=["sport", "status"])`; docstring —
@@ -304,7 +304,7 @@ def can_moderate(self, obj=None) -> bool:
 
 ### 3.6 Письма по области
 
-- [ ] **`moderator_emails(sport=None)` и `notify_moderators(..., sport=None)`**
+- [x] **`moderator_emails(sport=None)` и `notify_moderators(..., sport=None)`**
 
   1. `apps/core/emails.py`: `moderator_emails(sport=None)` — ветка «все» и ветка
      «по виду спорта» (2.5), `distinct()`; docstring объясняет, почему админы и
@@ -322,7 +322,7 @@ def can_moderate(self, obj=None) -> bool:
 
 ### 3.7 `UserAdmin`
 
-- [ ] **Блок «Модерация» и права только суперадмину**
+- [x] **Блок «Модерация» и права только суперадмину**
 
   1. `apps/accounts/admin.py`:
      - fieldset «Модерация» после «Профиля»: `role`, `is_trusted`, `moderated_sports`
@@ -348,7 +348,7 @@ def can_moderate(self, obj=None) -> bool:
 
 ### 3.8 Тесты
 
-- [ ] **`tests/test_moderator_scope.py`**
+- [x] **`tests/test_moderator_scope.py`**
 
   Сценарии (по мастер-плану, плюс бэкфилл и админка):
 
@@ -386,7 +386,7 @@ def can_moderate(self, obj=None) -> bool:
 
 ### 3.9 Локализация
 
-- [ ] **`make i18n`, снять `fuzzy`, заполнить английский каталог**
+- [x] **`make i18n`, снять `fuzzy`, заполнить английский каталог**
 
   Новые строки: `verbose_name` полей (`доверенный автор`, `виды спорта модератора`),
   `help_text` области, `@admin.display` колонки, docstring-строки не переводятся.
@@ -403,7 +403,7 @@ def can_moderate(self, obj=None) -> bool:
 
 ### 3.10 Документация
 
-- [ ] **Правила проекта: область модератора**
+- [x] **Правила проекта: область модератора**
 
   `KODA.md` и `AGENTS.md` (синхронно, по правилу проекта):
 
@@ -426,7 +426,7 @@ def can_moderate(self, obj=None) -> bool:
 
 ### 3.11 Проверка и коммит
 
-- [ ] **Линтер, тесты, миграции, версия**
+- [x] **Линтер, тесты, миграции, версия**
 
   ```bash
   make lint

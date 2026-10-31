@@ -26,4 +26,7 @@ def notify_moderators_new_report(report):
             "target": report.content_object,
             "admin_url": reverse("admin:moderation_report_change", args=[report.pk]),
         },
+        # Вид спорта у жалобы может быть пустым: тогда письмо уходит всем,
+        # и это правильный исход — жалоба не должна потеряться.
+        sport=report.sport,
     )

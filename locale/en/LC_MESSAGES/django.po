@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-29 08:00+0300\n"
+"POT-Creation-Date: 2026-10-31 22:54+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,23 +17,35 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: apps/accounts/admin.py:34 apps/accounts/views.py:36
+#: apps/accounts/admin.py:37 apps/accounts/views.py:36
 #: apps/accounts/views.py:39 templates/accounts/profile.html:11
 #: templates/partials/navbar.html:74
 msgid "Профиль"
 msgstr "Profile"
 
-#: apps/accounts/admin.py:36 templates/accounts/profile.html:108
+#: apps/accounts/admin.py:39
+msgid "Модерация"
+msgstr "Moderation"
+
+#: apps/accounts/admin.py:43 templates/accounts/profile.html:108
 msgid "Согласия"
 msgstr "Consents"
 
-#: apps/accounts/admin.py:47 apps/photos/admin.py:175
+#: apps/accounts/admin.py:54 apps/photos/admin.py:175
 msgid "Права"
 msgstr "Rights"
 
-#: apps/accounts/admin.py:58
+#: apps/accounts/admin.py:65
 msgid "Даты"
 msgstr "Dates"
+
+#: apps/accounts/admin.py:78 apps/core/models.py:288
+msgid "виды спорта"
+msgstr "sports"
+
+#: apps/accounts/admin.py:87
+msgid "все"
+msgstr "all"
 
 #: apps/accounts/forms.py:22 apps/accounts/forms.py:63
 msgid "Как к вам обращаться"
@@ -51,12 +63,12 @@ msgstr "I accept the privacy policy"
 msgid "Я согласен на обработку персональных данных"
 msgstr "I agree to personal data processing"
 
-#: apps/accounts/models.py:12 apps/accounts/models.py:69
+#: apps/accounts/models.py:12 apps/accounts/models.py:87
 msgid "пользователь"
 msgstr "user"
 
 #: apps/accounts/models.py:13 apps/core/models.py:64
-#: apps/moderation/models.py:113
+#: apps/moderation/models.py:130
 msgid "модератор"
 msgstr "moderator"
 
@@ -77,39 +89,55 @@ msgstr "display name"
 msgid "роль"
 msgstr "role"
 
-#: apps/accounts/models.py:38
+#: apps/accounts/models.py:37
+msgid "доверенный автор"
+msgstr "trusted author"
+
+#: apps/accounts/models.py:43
+msgid "виды спорта модератора"
+msgstr "moderator sports"
+
+#: apps/accounts/models.py:47
+msgid ""
+"Пустой список — модератор не видит чужих объектов. Администраторы и "
+"суперадмины видят все виды спорта."
+msgstr ""
+"An empty list means the moderator sees no objects of other authors. "
+"Administrators and superusers see all sports."
+
+#: apps/accounts/models.py:56
 msgid "профиль человека"
 msgstr "person profile"
 
-#: apps/accounts/models.py:47
+#: apps/accounts/models.py:65
 msgid "согласие с соглашением"
 msgstr "terms consent"
 
-#: apps/accounts/models.py:50
+#: apps/accounts/models.py:68
 msgid "согласие с политикой"
 msgstr "privacy policy consent"
 
-#: apps/accounts/models.py:53
+#: apps/accounts/models.py:71
 msgid "согласие на обработку ПД"
 msgstr "personal data consent"
 
-#: apps/accounts/models.py:56
+#: apps/accounts/models.py:74
 msgid "версия согласия на ПД"
 msgstr "personal data consent version"
 
-#: apps/accounts/models.py:59 apps/core/models.py:284
+#: apps/accounts/models.py:77 apps/core/models.py:284
 msgid "активен"
 msgstr "active"
 
-#: apps/accounts/models.py:60
+#: apps/accounts/models.py:78
 msgid "доступ в админку"
 msgstr "admin access"
 
-#: apps/accounts/models.py:61
+#: apps/accounts/models.py:79
 msgid "дата регистрации"
 msgstr "date joined"
 
-#: apps/accounts/models.py:70
+#: apps/accounts/models.py:88
 msgid "пользователи"
 msgstr "users"
 
@@ -123,7 +151,7 @@ msgstr "Profile updated"
 #: apps/catalog/views.py:517 apps/catalog/views.py:559
 #: apps/catalog/views.py:590 apps/catalog/views.py:649
 #: apps/catalog/views.py:691 apps/catalog/views.py:718 apps/core/views.py:114
-#: apps/core/views.py:144 apps/core/views.py:192 apps/moderation/views.py:111
+#: apps/core/views.py:144 apps/core/views.py:192 apps/moderation/views.py:114
 #: apps/photos/views.py:157 apps/photos/views.py:212 apps/photos/views.py:247
 #: apps/photos/views.py:285 apps/search/views.py:40
 #: templates/partials/footer.html:20
@@ -161,7 +189,7 @@ msgstr "Dates and place"
 msgid "Новая команда: %(name)s"
 msgstr "New team: %(name)s"
 
-#: apps/catalog/emails.py:38
+#: apps/catalog/emails.py:39
 #, python-format
 msgid "Новое событие: %(name)s"
 msgstr "New event: %(name)s"
@@ -341,7 +369,7 @@ msgid "персонал"
 msgstr "staff"
 
 #: apps/catalog/models.py:91 apps/catalog/models.py:452 apps/core/models.py:287
-#: apps/photos/models.py:150
+#: apps/moderation/models.py:61 apps/photos/models.py:150
 msgid "вид спорта"
 msgstr "sport"
 
@@ -773,17 +801,17 @@ msgstr "text"
 msgid "ответ на"
 msgstr "reply to"
 
-#: apps/comments/models.py:87 apps/moderation/models.py:46
-#: apps/moderation/models.py:125
+#: apps/comments/models.py:87 apps/moderation/models.py:53
+#: apps/moderation/models.py:142
 msgid "тип объекта"
 msgstr "object type"
 
-#: apps/comments/models.py:90 apps/moderation/models.py:49
-#: apps/moderation/models.py:128
+#: apps/comments/models.py:90 apps/moderation/models.py:56
+#: apps/moderation/models.py:145
 msgid "id объекта"
 msgstr "object id"
 
-#: apps/comments/models.py:96 apps/moderation/models.py:59
+#: apps/comments/models.py:96 apps/moderation/models.py:75
 msgid "комментарий"
 msgstr "comment"
 
@@ -905,7 +933,7 @@ msgstr "published"
 msgid "отклонено"
 msgstr "rejected"
 
-#: apps/core/models.py:56 apps/moderation/models.py:61
+#: apps/core/models.py:56 apps/moderation/models.py:77
 msgid "статус"
 msgstr "status"
 
@@ -936,10 +964,6 @@ msgstr "merged with a duplicate"
 #: apps/core/models.py:283
 msgid "порядок сортировки"
 msgstr "sort order"
-
-#: apps/core/models.py:288
-msgid "виды спорта"
-msgstr "sports"
 
 #: apps/core/schema.py:150 apps/photos/views.py:294 apps/photos/views.py:298
 #: templates/photos/my_photos.html:58 templates/photos/photo_detail.html:37
@@ -989,20 +1013,20 @@ msgstr "%(year)s"
 msgid "Фотографии %(year)s года в архиве SportMemo."
 msgstr "Photos from %(year)s in the SportMemo archive."
 
-#: apps/moderation/admin.py:35
+#: apps/moderation/admin.py:38
 msgid "Отметить решёнными"
 msgstr "Mark as resolved"
 
-#: apps/moderation/admin.py:42
+#: apps/moderation/admin.py:45
 #, python-format
 msgid "Решено жалоб: %(count)d"
 msgstr "Reports resolved: %(count)d"
 
-#: apps/moderation/admin.py:44
+#: apps/moderation/admin.py:47
 msgid "Отклонить жалобы"
 msgstr "Reject reports"
 
-#: apps/moderation/admin.py:51
+#: apps/moderation/admin.py:54
 #, python-format
 msgid "Отклонено жалоб: %(count)d"
 msgstr "Reports rejected: %(count)d"
@@ -1061,71 +1085,71 @@ msgstr "resolved"
 msgid "отклонена"
 msgstr "rejected"
 
-#: apps/moderation/models.py:38
+#: apps/moderation/models.py:45
 msgid "заявитель"
 msgstr "reporter"
 
-#: apps/moderation/models.py:53 apps/moderation/models.py:130
+#: apps/moderation/models.py:69 apps/moderation/models.py:147
 msgid "причина"
 msgstr "reason"
 
-#: apps/moderation/models.py:67
+#: apps/moderation/models.py:83
 msgid "решение"
 msgstr "decision"
 
-#: apps/moderation/models.py:70
+#: apps/moderation/models.py:86
 msgid "решил"
 msgstr "resolved by"
 
-#: apps/moderation/models.py:76
+#: apps/moderation/models.py:92
 msgid "дата решения"
 msgstr "decision date"
 
-#: apps/moderation/models.py:81
+#: apps/moderation/models.py:97
 msgid "жалоба"
 msgstr "report"
 
-#: apps/moderation/models.py:82
+#: apps/moderation/models.py:98
 msgid "жалобы"
 msgstr "reports"
 
-#: apps/moderation/models.py:96
+#: apps/moderation/models.py:113
 msgid "скрыть"
 msgstr "hide"
 
-#: apps/moderation/models.py:97
+#: apps/moderation/models.py:114
 msgid "опубликовать"
 msgstr "publish"
 
-#: apps/moderation/models.py:98
+#: apps/moderation/models.py:115
 msgid "отклонить"
 msgstr "reject"
 
-#: apps/moderation/models.py:99
+#: apps/moderation/models.py:116
 msgid "слить"
 msgstr "merge"
 
-#: apps/moderation/models.py:100
+#: apps/moderation/models.py:117
 msgid "удалить"
 msgstr "delete"
 
-#: apps/moderation/models.py:101
+#: apps/moderation/models.py:118
 msgid "восстановить"
 msgstr "restore"
 
-#: apps/moderation/models.py:118
+#: apps/moderation/models.py:135
 msgid "действие"
 msgstr "action"
 
-#: apps/moderation/models.py:135
+#: apps/moderation/models.py:152
 msgid "решение модератора"
 msgstr "moderator decision"
 
-#: apps/moderation/models.py:136
+#: apps/moderation/models.py:153
 msgid "решения модераторов"
 msgstr "moderator decisions"
 
-#: apps/moderation/views.py:72 apps/moderation/views.py:88
+#: apps/moderation/views.py:72 apps/moderation/views.py:91
 msgid "Спасибо! Модератор проверит."
 msgstr "Thank you! A moderator will check it."
 
@@ -1133,7 +1157,7 @@ msgstr "Thank you! A moderator will check it."
 msgid "Жалоба на этот объект уже отправлена."
 msgstr "A report about this object has already been sent."
 
-#: apps/moderation/views.py:106 apps/moderation/views.py:113
+#: apps/moderation/views.py:109 apps/moderation/views.py:116
 #: templates/moderation/report_form.html:11
 #: templates/partials/report_link.html:15
 msgid "Сообщить об ошибке"

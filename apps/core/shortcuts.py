@@ -111,6 +111,16 @@ def _is_owner(obj, user):
     return False
 
 
+def _can_moderate(user, obj):
+    """Может ли пользователь решать по объекту (с учётом вида спорта).
+
+    Обёртка через `getattr`: хелпер вызывают и с заглушкой запроса в тестах,
+    а `shortcuts` не должен требовать полноценного `User`.
+    """
+    checker = getattr(user, "can_moderate", None)
+    return bool(checker(obj)) if checker else False
+
+
 class RedirectToCanonical(Exception):
     """Объект слит с дубликатом: страница должна отдать 301 на канон.
 
@@ -175,7 +185,7 @@ def get_visible_or_404(model, *, request=None, follow_merged=False, **lookup):
     if (
         user is not None
         and user.is_authenticated
-        and (getattr(user, "is_moderator", False) or _is_owner(obj, user))
+        and (_is_owner(obj, user) or _can_moderate(user, obj))
     ):
         return obj
 

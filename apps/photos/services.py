@@ -71,15 +71,14 @@ class StorageUnavailable(Exception):
 def can_edit_photo(user, photo) -> bool:
     """Может ли пользователь править метаданные фотографии.
 
-    Правит автор и модератор. Посторонним — 404, а не 403: не раскрываем
-    существование чужого черновика (то же правило, что `can_edit`
-    в каталоге). Удалённое фото не правит никто, включая автора, поэтому
-    объект для проверки берётся из `Photo.public`.
+    Правит автор и модератор своего вида спорта. Посторонним — 404, а не 403:
+    не раскрываем существование чужого черновика (то же правило, что
+    `can_edit` в каталоге). Удалённое фото не правит никто, включая автора,
+    поэтому объект для проверки берётся из `Photo.public`.
     """
     if user is None or not user.is_authenticated:
         return False
-    is_moderator = bool(getattr(user, "is_moderator", False))
-    return is_moderator or photo.uploaded_by_id == user.pk
+    return user.can_moderate(photo) or photo.uploaded_by_id == user.pk
 
 
 def initial_status_for(user) -> Status:

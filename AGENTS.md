@@ -136,11 +136,13 @@ match), then delete with `git branch -D`.
 | 1 | Foundation: data schema, admin, tests, CI | complete |
 | 2 | Public archive: layout, pages, galleries, search, comments, sign-up UI | complete |
 | 3 | Photo processing: user upload, frame correction, server pipeline, Celery, perceptual hash, duplicate merge | complete (0.23.0) |
-| 4 | Mobile PWA, legal layer, deployment, backups, monitoring | planning |
+| 4 | Moderation in the public UI and trusted authors: moderator scope by sport, draft queue, reports | in progress |
+| 5 | Mobile PWA, legal layer, deployment, backups, monitoring | planning |
 
 Details in `.koda/plans/foundation-and-data-model.md` (stage 1),
 `.koda/plans/public-archive.md` (stage 2 master plan),
-`.koda/plans/photo-processing.md` (stage 3 master plan) and `.koda/backlog.md`.
+`.koda/plans/photo-processing.md` (stage 3 master plan),
+`.koda/plans/moderation-ui.md` (stage 4 master plan) and `.koda/backlog.md`.
 
 **Stage 2 is split into 16 sub-stages**, one session each (sub-stage 2.8 is split in two parts:
 2.8a — sign-up, login and password; 2.8b — user profile and menu). A sub-stage plan is created
@@ -161,9 +163,19 @@ is created as a separate file when work on it starts
 (`plans/photo-processing-3.N-<name>.md`). Sub-stages 3.1–3.6 are complete and stage 3 is
 closed; 3.7 (batch upload) is deferred and taken by a separate decision.
 
-**Stage 4 (mobile PWA, legal layer, operations) is in planning.** There is no master plan yet:
-it is the first step of the stage (`plans/mobile-legal-deploy.md`) and must be approved by the
-owner. The task list is in the backlog, section "Stage 4".
+**Stage 4 (moderation in the public UI and trusted authors) is in progress.** The master plan
+is [`plans/moderation-ui.md`](.koda/plans/moderation-ui.md); the decisions were agreed with
+the owner on 2026-10-31. The moderators are baseball veterans and many of them have only a
+phone, so routine decisions happen in the public site and the admin stays the superuser's
+place for hard cases. Sub-stage 4.0 (numbering shift) and 4.1 (moderator scope by sport) are
+done, then 4.2–4.6. A sub-stage plan is created as a separate file when work on it
+starts (`plans/moderation-ui-4.N-<name>.md`).
+
+**Stage 5 (mobile PWA, legal layer, operations) is in planning.** The stage moved from
+number 4 to number 5 by the owner's decision on 2026-10-31: number 4 went to moderation work.
+There is no master plan yet: it is the first step of the stage
+(`plans/mobile-legal-deploy.md`) and must be approved by the owner. The task list is in the
+backlog, section "Stage 5".
 
 **Stage 3 decisions that must not be broken:**
 
@@ -199,11 +211,11 @@ owner. The task list is in the backlog, section "Stage 4".
 ## Deliberately deferred
 
 Not doing until needed: API (DRF/django-ninja), SPA, k8s, microservices, multi-sport UI, a "sport
-constructor". Legal pages and SMTP are stage 4.
+constructor". Legal pages and SMTP are stage 5.
 
 ## Current state
 
-- Version: 0.23.0; development branch `master`; 1373 tests passing on Python 3.12 and 3.13
+- Version: 0.24.0; development branch `master`; 1402 tests passing on Python 3.12 and 3.13
   (`make test`); linter clean (`make lint`).
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is complete: sub-stages 3.1–3.6
@@ -224,9 +236,12 @@ constructor". Legal pages and SMTP are stage 4.
   `Photo` inherits `MergeableModel`, `duplicate_of` became `merged_into` through two
   migrations, a merge moves relations and views, an old link returns 301 to the canonical
   photo, and the "Merge into this photo" button sits in the candidate row.
-- Stage 4 is in planning: there is no master plan, the first step is to write and approve it.
-  Known leftovers that move into stage 4: the account deletion policy (P3-13), the S3 storage
-  decision (R-1, Russian S3 chosen), and re-cropping an uploaded photo (P3-18).
+- Stage 4 is in progress: the master plan [`plans/moderation-ui.md`](.koda/plans/moderation-ui.md)
+  was approved on 2026-10-31, sub-stages 4.0 (numbering shift in the documents) and 4.1
+  (moderator scope by sport) are closed. Next is 4.2 — the status rule and post-moderation for
+  trusted authors. Known leftovers that move into stage 5: the
+  account deletion policy (P5-12) and the S3 storage decision (R-1, Russian S3 chosen) — P5-13.
+  Re-cropping an uploaded photo (P3-18) stays a stage 3 task.
 
 ### Public UI
 
@@ -454,6 +469,22 @@ decision is written to `ModerationAction`. Merging duplicates is the "Merge dupl
 object" action, which opens a separate target selection page (`admin/core/merge_form.html`)
 because the target must not be one of the sources. `ModerationAction` is read-only: the log is
 filled by actions, not by hand.
+
+**Moderator scope (4.1).** The moderators are baseball veterans, and one person must not decide
+about another sport. The scope is the `User.moderated_sports` field (M2M to `core.Sport`) and is
+checked by `User.can_moderate(obj)`; `User.is_moderator` stayed a "role without scope" and is not
+used for access. An empty list means the moderator sees nothing of other authors; their own
+objects they see as the author. An object without a sport (`Person`) is open to every moderator —
+invariant 1. `User.is_trusted` ("trusted author") is added here as a field only; its status rule
+comes in sub-stage 4.2. The `accounts/0004` backfill gives every existing moderator and
+administrator **all** sports: before this sub-stage they saw everything, and after the deploy the
+behaviour stays the same until a superuser narrows the scope on purpose; the migration depends on
+`core/0002_seed_sports`, otherwise on a fresh database it would assign an empty list.
+`Report.sport` is denormalised (a generic FK cannot be filtered by sport otherwise) and is filled
+from the target when a report is submitted. Moderator emails go by the sport of the object;
+admins and superusers always get them, and `sport=None` means everyone. The user section of the
+admin is open to superusers only (`role` and `moderated_sports` are permissions: otherwise a
+moderator with `is_staff` would grant themselves a scope).
 
 ### Code rules
 
@@ -700,4 +731,34 @@ filled by actions, not by hand.
 - Account pages are styled through the layout and elements, not by copying templates: every
   extra copied file is one more place to fix when the package updates. Write an own template
   only where the text must be ours.
+- **The moderator scope is checked by `User.can_moderate(obj)` only.** The object page
+  (`get_visible_or_404`), the team and event edit form (`can_edit`) and the photo edit form
+  (`can_edit_photo`) ask it instead of the role directly: three own copies of the rule would
+  drift apart, and one path would open a foreign draft. `can_moderate(None)` answers "is a
+  moderator at all"; `obj` is any object with `sport_id`, and its type is not checked, otherwise
+  `accounts` would pull in `catalog` and `photos`.
+- **`User.is_moderator` is a "role without scope".** It is not used for access (the profile shows
+  the "Role" row by it); the scope lives in `moderated_sports`, not in the property.
+- **An empty `moderated_sports` means the moderator sees nothing of other authors.** Their own
+  objects they see as the author (`created_by` / `uploaded_by`), and the author right is checked
+  **before** the scope: a person always sees and edits their own. An error towards "does not see"
+  is fixed by a click in the admin, an error towards "sees everything" is a leak of a foreign
+  draft.
+- **An object without a sport is open to every moderator.** `Person` has no sport in the schema
+  (invariant 1): a person can be in baseball and in softball, and inventing a scope for them
+  would break the invariant.
+- **`Report.sport` is a denormalisation.** A report is linked to its target through a generic FK,
+  so the scope cannot filter it in SQL otherwise; the field is filled from the target when the
+  report is submitted. Known limitation: if a superuser changes the sport of an object, the old
+  report stays in the previous scope. Not guarded in code — the operation is manual and rare, and
+  a signal would add a write to every object save.
+- **Moderator emails go by the sport of the object** (`moderator_emails(sport=...)`).
+  Administrators and superusers always get them: otherwise they would not learn about a problem
+  in another scope. `sport=None` means everyone, and that is the right outcome for an object
+  without a sport.
+- **The user section of the admin is open to superusers only.** `role`, `is_trusted` and
+  `moderated_sports` are permissions: otherwise a moderator with `is_staff` would grant
+  themselves a scope and see foreign drafts. The `accounts/0004` backfill depends on
+  `core/0002_seed_sports`: without that dependency a fresh database would give the moderator an
+  empty list.
 

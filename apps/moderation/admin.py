@@ -14,17 +14,20 @@ class ReportAdmin(BaseHistoryAdmin):
         "__str__",
         "reporter",
         "reason",
+        "sport",
         "status",
         "content_type",
         "object_id",
         "created_at",
     )
-    list_filter = ("status", "reason", "content_type", "created_at")
+    list_filter = ("status", "reason", "sport", "content_type", "created_at")
     search_fields = ("comment", "resolution", "reporter__email")
     autocomplete_fields = ("reporter", "resolved_by")
     readonly_fields = (
         "content_type",
         "object_id",
+        # Вид спорта производный: заполняется из цели при подаче жалобы.
+        "sport",
         "created_at",
         "updated_at",
         "resolved_at",

@@ -45,6 +45,20 @@ class UserFactory(factory.django.DjangoModelFactory):
 class ModeratorFactory(UserFactory):
     role = UserRole.MODERATOR
 
+    @factory.post_generation
+    def moderated_sports(obj, create, extracted, **kwargs):
+        """Все виды спорта по умолчанию, свои — если тест их задал.
+
+        Область назначается здесь по той же причине, что и в фикстуре
+        `moderator`: расхождение фабрики и фикстуры дало бы разные ответы
+        на один и тот же вопрос «видит ли модератор черновик».
+        """
+        if not create:
+            return
+        obj.moderated_sports.set(
+            extracted if extracted is not None else Sport.objects.all()
+        )
+
 
 class SportFactory(factory.django.DjangoModelFactory):
     class Meta:

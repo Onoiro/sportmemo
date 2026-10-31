@@ -25,6 +25,7 @@ def notify_moderators_new_team(team):
             "team_url": team.get_absolute_url(),
             "admin_url": reverse("admin:catalog_team_change", args=[team.pk]),
         },
+        sport=team.sport,
     )
 
 
@@ -42,4 +43,5 @@ def notify_moderators_new_event(event):
             "event_url": event.get_absolute_url(),
             "admin_url": reverse("admin:catalog_event_change", args=[event.pk]),
         },
+        sport=event.sport,
     )

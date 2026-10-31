@@ -81,6 +81,9 @@ def report_add(request):
                 reporter=request.user if request.user.is_authenticated else None,
                 content_type=ContentType.objects.get_for_model(target_obj),
                 object_id=target_obj.pk,
+                # Денормализация: жалоба связана generic-FK, и по области
+                # модератора её иначе не отфильтровать.
+                sport=getattr(target_obj, "sport", None),
                 reason=reason,
                 comment=form.cleaned_data["comment"],
             )

@@ -195,13 +195,13 @@ def initial_name(request):
 def can_edit(user, obj) -> bool:
     """Может ли пользователь править команду или событие.
 
-    Правит автор и модератор. Всем остальным — 404, а не 403: не раскрываем
-    существование чужого черновика. Та же проверка, что в
-    `get_visible_or_404`, — правила не должны расходиться.
+    Правит автор и модератор своего вида спорта. Всем остальным — 404,
+    а не 403: не раскрываем существование чужого черновика. Та же проверка,
+    что в `get_visible_or_404`, — правила не должны расходиться.
     """
     if user is None or not user.is_authenticated:
         return False
-    return bool(getattr(user, "is_moderator", False)) or obj.created_by_id == user.pk
+    return user.can_moderate(obj) or obj.created_by_id == user.pk
 
 
 def get_editable_or_404(request, model, slug, label):

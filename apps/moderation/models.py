@@ -31,7 +31,14 @@ class ReportStatus(models.TextChoices):
 
 
 class Report(TimeStampedModel):
-    """Жалоба на объект. Возможна анонимная."""
+    """Жалоба на объект. Возможна анонимная.
+
+    `sport` — денормализация вида спорта цели: жалоба связана generic-FK,
+    и по области модератора иначе её не отфильтровать в SQL. Известное
+    ограничение: если суперадмин сменит вид спорта у объекта, старая жалоба
+    останется в прежней области. Операция ручная и редкая, а пересчёт
+    в сигнале добавил бы запись на каждое сохранение объекта.
+    """
 
     reporter = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -48,6 +55,15 @@ class Report(TimeStampedModel):
     )
     object_id = models.PositiveBigIntegerField(_("id объекта"))
     content_object = GenericForeignKey("content_type", "object_id")
+
+    sport = models.ForeignKey(
+        "core.Sport",
+        verbose_name=_("вид спорта"),
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="reports",
+    )
 
     reason = models.CharField(
         _("причина"),
@@ -84,6 +100,7 @@ class Report(TimeStampedModel):
         indexes = [
             models.Index(fields=["content_type", "object_id"]),
             models.Index(fields=["status"]),
+            models.Index(fields=["sport", "status"]),
         ]
 
     def __str__(self):
