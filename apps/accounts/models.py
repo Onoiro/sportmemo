@@ -100,11 +100,28 @@ class User(AbstractBaseUser, PermissionsMixin):
         """
         return self.role in {UserRole.MODERATOR, UserRole.ADMIN} or self.is_superuser
 
+    def moderated_sport_ids(self) -> list[int] | None:
+        """Виды спорта области модератора или `None`, если фильтр не нужен.
+
+        `None` — «все виды спорта»: суперадмин и роль `ADMIN`. Пустой список —
+        модератор без области: он не видит чужого ничего, и фильтр
+        `sport_id__in=[]` честно отдаёт пустую выборку.
+
+        Нужен выборкам: очереди черновиков мало ответа про один объект.
+        Своя копия правила в представлении разошлась бы с `can_moderate()`,
+        и объект был бы виден в списке, но недоступен по прямой ссылке.
+        """
+        if self.is_superuser or self.role == UserRole.ADMIN:
+            return None
+        return list(self.moderated_sports.values_list("pk", flat=True))
+
     def can_moderate(self, obj=None) -> bool:
         """Может ли пользователь принимать решения по объекту.
 
         Единственная точка проверки области: страница объекта, форма правки
-        и форма фото спрашивают её, а не роль напрямую.
+        и форма фото спрашивают её, а не роль напрямую. Область берётся
+        из `moderated_sport_ids()`, поэтому правило годится и для одного
+        объекта, и для фильтра выборок.
 
         `obj=None` — проверка «модератор ли вообще» без области. Объект без
         вида спорта (`Person`) доступен всем модераторам: придумывать человеку
@@ -114,14 +131,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         ошибка в сторону «не видит» исправляется щелчком в админке, ошибка
         в сторону «видит всё» — утечкой чужого черновика.
         """
-        if self.is_superuser or self.role == UserRole.ADMIN:
-            return True
-        if self.role != UserRole.MODERATOR:
+        if not self.is_moderator:
             return False
-        sport_id = getattr(obj, "sport_id", None)
-        if sport_id is None:
+        sport_ids = self.moderated_sport_ids()
+        if sport_ids is None:
             return True
-        return self.moderated_sports.filter(pk=sport_id).exists()
+        sport_id = getattr(obj, "sport_id", None)
+        return True if sport_id is None else sport_id in sport_ids
 
     @property
     def has_consents(self) -> bool:

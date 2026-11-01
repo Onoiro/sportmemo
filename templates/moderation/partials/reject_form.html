@@ -1,0 +1,34 @@
+{% load i18n %}
+{% comment %}
+Форма отклонения внутри карточки очереди. Параметры: `card`, `reject_form`.
+
+`<details>` вместо модального окна Bootstrap: модератор на телефоне может
+оказаться с выключенным JavaScript или на медленной сети, а решение уходит
+обычным POST. Причина пишется рядом с объектом, который человек только что
+посмотрел.
+
+Поле рендерится вручную, а не через `{{ reject_form.reason }}`: экземпляр
+формы на странице один, а карточек двенадцать, и одинаковые `id` увели бы
+подпись в первое поле списка.
+{% endcomment %}
+<details class="queue-reject">
+    <summary class="queue-reject__summary">
+        <i class="bi bi-x-circle" aria-hidden="true"></i>
+        {% trans "Отклонить с причиной" %}
+    </summary>
+    <form class="queue-reject__form" method="post"
+          action="{% url 'moderation:queue_decide' card.kind card.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="reject">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <label class="form-label" for="reason-{{ card.kind }}-{{ card.pk }}">
+            {{ reject_form.reason.label }}
+        </label>
+        <textarea class="form-control queue-reject__field"
+                  id="reason-{{ card.kind }}-{{ card.pk }}"
+                  name="reason" rows="3" required></textarea>
+        <button class="btn btn-outline-danger btn-sm" type="submit">
+            {% trans "Отклонить" %}
+        </button>
+    </form>
+</details>

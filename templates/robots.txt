@@ -8,5 +8,6 @@ Disallow: /teams/mine/
 Disallow: /events/new/
 Disallow: /events/mine/
 Disallow: /reports/add/
+Disallow: /moderation/
 
 Sitemap: {{ sitemap_url }}

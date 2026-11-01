@@ -32,6 +32,15 @@ class ModerationRejectForm(forms.Form):
         return value
 
 
+class QueueRejectForm(BootstrapFormMixin, ModerationRejectForm):
+    """Та же причина отклонения, но с оформлением публичной страницы.
+
+    Правило «причина обязательна и обрезается» живёт в
+    `ModerationRejectForm.clean_reason`: второй экземпляр разошёлся бы
+    с админкой при первой же правке. Здесь добавлены только классы полей.
+    """
+
+
 class ReportForm(BootstrapFormMixin, forms.Form):
     """Жалоба на объект: причина и необязательное пояснение.
 

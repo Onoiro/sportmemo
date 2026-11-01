@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load i18n pagination %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1 class="page-header__title">{% trans "Очередь черновиков" %}</h1>
+        <p class="page-header__lead">
+            {% trans "Здесь черновики ваших видов спорта: старые сверху" %}
+        </p>
+    </header>
+
+    {% if scope_missing %}
+        {% comment %}
+        Пустая область — не «всё разобрано». Без отдельной плашки модератор
+        решил бы, что работы нет, и не обратился бы к администратору.
+        {% endcomment %}
+        <div class="alert alert-warning" role="alert">
+            <p class="mb-1"><strong>{% trans "Вам не назначены виды спорта" %}</strong></p>
+            <p class="mb-0">
+                {% trans "Обратитесь к администратору архива: он назначит вид спорта, и очередь появится." %}
+            </p>
+        </div>
+    {% elif cards %}
+        <ul class="queue-grid">
+            {% for card in cards %}
+                {% include "moderation/partials/queue_card.html" with card=card reject_form=reject_form %}
+            {% endfor %}
+        </ul>
+        {% if page_obj.has_other_pages %}
+            {% pagination page_obj %}
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-inbox empty-state__icon" aria-hidden="true"></i>
+            <p class="empty-state__title">{% trans "Очередь пуста" %}</p>
+            <p class="mb-0">{% trans "Все черновики разобраны" %}</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

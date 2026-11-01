@@ -60,6 +60,19 @@
                             <span class="account-menu__name">{{ user.display_name|default:user.email }}</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
+                            {% comment %}
+                            Очередь стоит первой: для модератора это ежедневная
+                            работа, а не отчёт о своём. Счётчика нет намеренно —
+                            он стоил бы запроса на каждой странице сайта.
+                            {% endcomment %}
+                            {% if user.is_moderator %}
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'moderation:queue' %}">
+                                        <i class="bi bi-inbox" aria-hidden="true"></i>
+                                        {% trans "Очередь" %}
+                                    </a>
+                                </li>
+                            {% endif %}
                             <li>
                                 <a class="dropdown-item" href="{% url 'catalog:my_teams' %}">{% trans "Мои команды" %}</a>
                             </li>

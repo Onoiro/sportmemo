@@ -1,0 +1,47 @@
+{% load i18n %}
+{% comment %}
+Карточка очереди. Все значения готовые: подпись типа, заголовок, автор
+и адрес превью считает `apps/moderation/queue.py`, шаблон ничего
+не сравнивает и не добирает.
+
+Действия — обычные POST-формы, а причина отклонения раскрывается
+через `<details>`: модератор на телефоне может оказаться без JavaScript,
+и решение не должно зависеть от скриптов.
+{% endcomment %}
+<li class="queue-card">
+    <a class="queue-card__media" href="{{ card.url }}">
+        {% if card.image_url %}
+            <img class="queue-card__image" src="{{ card.image_url }}"
+                 alt="" loading="lazy" decoding="async">
+        {% else %}
+            {% comment %}
+            Битый файл в хранилище или объект без картинки: заглушка честнее
+            битой картинки, а очередь не должна падать из-за одного файла.
+            {% endcomment %}
+            <span class="queue-card__placeholder">
+                <i class="bi bi-image" aria-hidden="true"></i>
+            </span>
+        {% endif %}
+    </a>
+    <div class="queue-card__body">
+        <p class="queue-card__kind">{{ card.kind_label }}</p>
+        <p class="queue-card__title">
+            <a href="{{ card.url }}">{{ card.title }}</a>
+        </p>
+        <p class="queue-card__meta">
+            {{ card.author }} · {{ card.created_at|date:"j E Y" }}
+        </p>
+    </div>
+    <div class="queue-card__actions">
+        <form method="post"
+              action="{% url 'moderation:queue_decide' card.kind card.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="publish">
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button class="btn btn-primary" type="submit">
+                {% trans "Опубликовать" %}
+            </button>
+        </form>
+        {% include "moderation/partials/reject_form.html" with card=card reject_form=reject_form %}
+    </div>
+</li>

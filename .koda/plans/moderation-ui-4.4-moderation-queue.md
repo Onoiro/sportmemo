@@ -409,7 +409,7 @@ require_https=request.is_secure())`; небезопасный или пусто�
 
 ## 3. Шаги
 
-### 1. [ ] Ветка
+### 1. [x] Ветка
 
 1. `git status` — дерево чистое.
 2. `git switch -c feature/moderation-queue` от `master`.
@@ -418,7 +418,7 @@ require_https=request.is_secure())`; небезопасный или пусто�
 
 Файлы: —
 
-### 2. [ ] `User.moderated_sport_ids()` и `can_moderate` через неё
+### 2. [x] `User.moderated_sport_ids()` и `can_moderate` через неё
 
 `apps/accounts/models.py`:
 
@@ -442,7 +442,7 @@ uv run pytest tests/test_moderator_scope.py tests/test_moderation_service.py -q
 Файлы:
 - `apps/accounts/models.py`
 
-### 3. [ ] `apps/moderation/queue.py`
+### 3. [x] `apps/moderation/queue.py`
 
 Новый модуль. Состав (по решениям 2.2–2.6):
 
@@ -480,7 +480,7 @@ grep -n "from apps.catalog\|from apps.photos" apps/moderation/queue.py   # пу�
 Файлы:
 - `apps/moderation/queue.py`
 
-### 4. [ ] Список: представление, маршрут, шаблоны
+### 4. [x] Список: представление, маршрут, шаблоны
 
 1. `apps/moderation/views.py` — `queue_list(request)`:
    `@login_required`, `@never_cache`, `@require_GET`; проверка
@@ -512,7 +512,7 @@ curl -s localhost:8000/moderation/queue/ | head   # после шага 7
 - `templates/moderation/queue.html`
 - `templates/moderation/partials/queue_card.html`
 
-### 5. [ ] Действия: форма, представление, маршрут
+### 5. [x] Действия: форма, представление, маршрут
 
 1. `apps/moderation/forms.py` — `QueueRejectForm(BootstrapFormMixin,
    ModerationRejectForm)` (2.11).
@@ -550,7 +550,7 @@ grep -rn "ModerationAction.objects.create" apps/moderation/views.py   # пуст
 - `apps/moderation/views.py`
 - `apps/moderation/urls.py`
 
-### 6. [ ] Формы в карточке без JavaScript
+### 6. [x] Формы в карточке без JavaScript
 
 1. `templates/moderation/partials/queue_card.html` — блок действий:
    - форма «Опубликовать»: `method="post"`, `action="{% url
@@ -585,7 +585,7 @@ uv run pytest tests/test_moderation_queue_actions.py -q   # после шага 
 - `templates/moderation/partials/reject_form.html`
 - `templates/moderation/queue.html`
 
-### 7. [ ] Меню, `robots.txt`, стили
+### 7. [x] Меню, `robots.txt`, стили
 
 1. `templates/partials/navbar.html` — пункт «Очередь» под
    `{% if user.is_moderator %}` перед «Мои команды», ссылка
@@ -614,7 +614,7 @@ grep -n "moderation" templates/robots.txt
 - `templates/robots.txt`
 - `static/css/sportmemo.css`
 
-### 8. [ ] Тесты очереди: `tests/test_moderation_queue.py`
+### 8. [x] Тесты очереди: `tests/test_moderation_queue.py`
 
 Сценарии (фабрики из `tests/factories.py`, фикстуры `baseball`, `softball`,
 `moderator`, `user` из `tests/conftest.py`):
@@ -646,7 +646,7 @@ grep -n "moderation" templates/robots.txt
 Файлы:
 - `tests/test_moderation_queue.py`
 
-### 9. [ ] Тесты действий: `tests/test_moderation_queue_actions.py`
+### 9. [x] Тесты действий: `tests/test_moderation_queue_actions.py`
 
 1. **Одобрение.** POST `action=publish` → 302, `status=published`,
    `moderated_by` = модератор, в журнале ровно одна запись `PUBLISH`.
@@ -682,7 +682,7 @@ grep -n "moderation" templates/robots.txt
 Файлы:
 - `tests/test_moderation_queue_actions.py`
 
-### 10. [ ] Локализация
+### 10. [x] Локализация
 
 1. `make i18n`.
 2. `locale/ru/LC_MESSAGES/django.po`: снять `fuzzy` у новых записей,
@@ -701,7 +701,7 @@ grep -n "moderation" templates/robots.txt
 - `locale/ru/LC_MESSAGES/django.po`
 - `locale/en/LC_MESSAGES/django.po`
 
-### 11. [ ] Документация
+### 11. [x] Документация
 
 1. `KODA.md` и `AGENTS.md` (синхронно):
    - «Правила для кода»: очередь строится через `apps/moderation/queue.py`
@@ -730,7 +730,7 @@ grep -n "moderation" templates/robots.txt
 - `.koda/backlog.md`
 - `.koda/plans/moderation-ui.md`
 
-### 12. [ ] Проверка и коммит
+### 12. [x] Проверка и коммит
 
 ```bash
 make lint
@@ -811,15 +811,15 @@ Bump version: 0.26.0 → 0.27.0 (minor)
 
 | # | Шаг | Статус |
 |---|---|---|
-| 1 | Ветка | [ ] |
-| 2 | `moderated_sport_ids()` | [ ] |
-| 3 | `apps/moderation/queue.py` | [ ] |
-| 4 | Список: представление, маршрут, шаблоны | [ ] |
-| 5 | Действия: форма, представление, маршрут | [ ] |
-| 6 | Формы в карточке без JavaScript | [ ] |
-| 7 | Меню, `robots.txt`, стили | [ ] |
-| 8 | Тесты очереди | [ ] |
-| 9 | Тесты действий | [ ] |
-| 10 | Локализация | [ ] |
-| 11 | Документация | [ ] |
-| 12 | Проверка и коммит | [ ] |
+| 1 | Ветка | [x] |
+| 2 | `moderated_sport_ids()` | [x] |
+| 3 | `apps/moderation/queue.py` | [x] |
+| 4 | Список: представление, маршрут, шаблоны | [x] |
+| 5 | Действия: форма, представление, маршрут | [x] |
+| 6 | Формы в карточке без JavaScript | [x] |
+| 7 | Меню, `robots.txt`, стили | [x] |
+| 8 | Тесты очереди | [x] |
+| 9 | Тесты действий | [x] |
+| 10 | Локализация | [x] |
+| 11 | Документация | [x] |
+| 12 | Проверка и коммит | [x] |

@@ -217,7 +217,7 @@ constructor". Legal pages and SMTP are stage 5.
 
 ## Current state
 
-- Version: 0.26.0; development branch `master`; 1459 tests passing on Python 3.12
+- Version: 0.27.0; development branch `master`; 1511 tests passing on Python 3.12
   and 3.13 (`make test`); linter clean (`make lint`).
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is complete: sub-stages 3.1–3.6
@@ -241,11 +241,13 @@ constructor". Legal pages and SMTP are stage 5.
 - Stage 4 is in progress: the master plan [`plans/moderation-ui.md`](.koda/plans/moderation-ui.md)
   was approved on 2026-10-31, sub-stages 4.0 (numbering shift in the documents), 4.1
   (moderator scope by sport), 4.2 (status rule and post-moderation for trusted
-  authors) and 4.3 (moderation decision service) are closed. Decisions are now made by
+  authors), 4.3 (moderation decision service), 4.4 and 4.5 (draft queue: list and
+  decisions) are closed. Decisions are now made by
   `apps/moderation/services.py`: five functions change the object state, check the right
   through `can_moderate(obj)` and write the log through `log_action()`; the admin and the
   public interface must go through them. Rejection in the admin goes through a page with a
-  reason. Next is 4.4 — the draft queue. Known leftovers
+  reason. The queue lives at `/moderation/queue/`, its rules in
+  `apps/moderation/queue.py`. Next is 4.6 — report handling in the interface. Known leftovers
   that move into stage 5: the account deletion policy (P5-12) and the S3 storage
   decision (R-1, Russian S3 chosen) — P5-13. Re-cropping an uploaded photo (P3-18)
   stays a stage 3 task.
@@ -288,6 +290,10 @@ Components and pages. The rules for visibility, privacy and their reasoning live
 - `/photos/upload/`, `/photos/<pk>/edit/`, `/photos/mine/` (3.2, 3.3) and `/rules/`
   (`core:rules`) are the two upload steps, the author cabinet and the service rules. Both
   step forms and the cabinet are `noindex`; `/rules/` is indexed.
+- `/moderation/queue/` and `/moderation/queue/<kind>/<pk>/` (4.4, 4.5) are the draft queue
+  and the decision on one object (POST only). They require a login and the moderator role,
+  they are `noindex`, and `robots.txt` has `Disallow: /moderation/`. Twelve cards per page,
+  oldest first; the link sits in the user menu for moderators only.
 - Public queries: `SoftDeleteQuerySet.published()` (filters by `status=Status.PUBLISHED`).
   The `.visible()` method was **removed** in 3.1: after decision 2.1 it filtered nothing, and
   an empty wrapper would lie to the reader. Shared entry points live in
@@ -527,11 +533,37 @@ the mixin only turns a list action into a call, because its own log write
 would become a second rule next to the first one. The service checks the
 right through `can_moderate(obj)` and the caller picks the reaction to a
 refusal: a batch admin action skips the object and reports the count, while
-the rejection page and the future 4.5 views return 403. Rejection in the
+the rejection page and the queue views return 403. Rejection in the
 admin goes through a page with a reason (`admin/.../reject/`) instead of a
 silent list action: the author sees the reason, and it is required in both
 interfaces. `seed_demo` writes no log — the demo archive holds no moderator
 decisions, and entries with a demo moderator would litter the admin.
+
+**Draft queue (4.4).** `/moderation/queue/` is the moderator's working page
+from a phone: drafts of their sports, oldest first, 12 per page, two buttons
+— "Publish" and "Reject" with a reason. The queue rules live in
+`apps/moderation/queue.py`: the model registry holds strings
+(`"catalog.Team"`), `pending_queryset()` serves the list and `is_pending()`
+serves one object — one rule for both paths, otherwise a draft is visible in
+the list but cannot be decided. "Waits for a decision" means `status=draft`,
+not deleted, not merged, and for photos also `processing_status=processed`:
+a placeholder is not enough to judge, while `failed` and stuck rows are the
+superadmin's work in the admin. **A moderator does not decide their own
+draft:** `is_own()` keeps it out of the list and returns 404 in
+`queue_decide`. A check in the list alone is not enough — the decide address
+is guessable by number, and a direct POST would bypass the hidden link.
+Someone else publishes it, exactly as for a regular author. **A decision
+locks the row** (`select_for_update` inside `transaction.atomic()`): two
+moderators may press buttons at the same time, and without the lock the
+second would override the first. "Still a draft" is checked by the view, not
+by the service: `reject_object` on a published object would return `True`
+and reject it again. A `False` answer from the service gives the same
+"Already handled" message — a very narrow race must not look like success.
+**An empty scope shows a notice,** not an empty page: "No sports are
+assigned to you" is more honest than "all handled". The forms work without
+JavaScript: "Reject" opens a `<details>` element instead of a modal. The
+queue link sits in the user menu for moderators only, without a counter
+(a count on every page is an extra query).
 
 ### Code rules
 
@@ -845,4 +877,24 @@ decisions, and entries with a demo moderator would litter the admin.
 - **`seed_demo` writes no log** and publishes objects through `obj.publish()` directly: the demo
   archive holds no moderator decisions, and entries with a demo moderator would litter the admin.
   Do not "fix" this by inertia.
+- **The queue rule lives in `apps/moderation/queue.py`**, not in a view: `pending_queryset()`
+  for the list and `is_pending()` for one object are the single point, otherwise a draft becomes
+  visible in the queue but impossible to decide. The model registry uses strings
+  (`"catalog.Team"`) and `apps.get_model()` inside a function: a module-level model import
+  would create a `moderation` → `catalog`/`photos` cycle.
+- **A moderator never decides their own draft.** `is_own()` keeps it out of the list and returns
+  404 in `queue_decide`. A check in the list is not enough: the decide address is guessable by
+  number, and a direct POST would bypass the hidden link. Someone else publishes it, exactly as
+  for a regular author.
+- **The scope for queries is `User.moderated_sport_ids()`**, for one object it is
+  `User.can_moderate(obj)`. No second way to filter by `moderated_sports` may appear in a view:
+  `None` (all sports) and `[]` (nothing) are handled in one place, and these rules cannot drift.
+- **A decision from the queue locks the row** (`select_for_update` inside `transaction.atomic()`):
+  two moderators may press buttons at the same time. "Still a draft" is checked by the view, not
+  by the service — `reject_object` on a published object would return `True` and reject it again.
+  A `False` answer from the service gives the same "Already handled" message.
+- **An empty moderator scope shows a notice, not an empty list.** "No sports are assigned to you"
+  is more honest than "all handled": otherwise the person never asks the administrator.
+- **The queue forms work without JavaScript.** "Reject" opens a `<details>` element with a reason
+  field instead of a Bootstrap modal: a moderator on a phone may be on a slow network.
 
