@@ -16,9 +16,12 @@
 #   --branch NAME     ветка для работы (создаётся от master, если нет)
 #   --model NAME      модель Koda (по умолчанию из settings.json)
 #   --timeout SEC     таймаут одного шага, по умолчанию 5400
-#   --allow-dirty     не требовать чистого рабочего дерева
-#   --rescue          правки оборванной сессии закоммитить как
-#                     незавершённые и снять отметку [x] у шага
+#   --allow-dirty     работать поверх незакоммиченных правок, не сохраняя
+#                     их отдельным коммитом
+#   --no-rescue       не сохранять правки оборванной сессии: показать их
+#                     и остановиться (по умолчанию они сохраняются сами)
+#   --rescue          сохранить правки оборванной сессии (поведение по
+#                     умолчанию; флаг оставлен для старых команд)
 #   --max-turns N     предел ходов koda на шаг (по умолчанию 200). Агент
 #                     останавливается сам и успевает закоммитить, вместо
 #                     обрыва по лимиту модели без коммита.
@@ -41,7 +44,7 @@ STEP_TIMEOUT=5400
 MAX_TURNS=200
 ALLOW_DIRTY=0
 DRY_RUN=0
-RESCUE=0
+RESCUE=1
 STEP_PID=""
 HB_PID=""
 BASE_SHA=""
@@ -164,6 +167,48 @@ step_title() {
     list_steps | awk -F'\t' -v n="$1" '$1 == n { print $3 }'
 }
 
+# Печатает тело блока шага: строки от «### N.» до следующего заголовка.
+step_block() {
+    awk -v n="$1" '
+        $0 ~ "^### " n "\\. \\[" { in_step = 1; print; next }
+        in_step && /^##/ { exit }
+        in_step { print }
+    ' "$PLAN_FILE"
+}
+
+# Печатает «1», если в блоке шага строка «Файлы:» стоит с прочерком.
+# Такой шаг организационный (создать ветку, прогнать проверки): менять
+# файлы ему нечего, и коммит с одной отметкой в плане — его законный итог.
+step_files_none() {
+    step_block "$1" | awk '
+        /^[[:space:]]*Файлы:/ {
+            value = $0
+            sub(/^[[:space:]]*Файлы:[[:space:]]*/, "", value)
+            if (value ~ /^[-—–]+[[:space:]]*$/) { found = 1 }
+            next
+        }
+        END { print found ? 1 : 0 }
+    '
+}
+
+# Печатает пути файлов из блока шага (строки «Файлы:» и список под ней).
+# По ним скрипт узнаёт, какому шагу принадлежат правки, оставшиеся
+# в дереве после оборванной сессии.
+step_files() {
+    step_block "$1" | awk '
+        /^[[:space:]]*Файлы:/ { seen = 1; next }
+        seen && /^[[:space:]]*-[[:space:]]/ {
+            line = $0
+            sub(/^[[:space:]]*-[[:space:]]*/, "", line)
+            gsub(/`/, "", line)
+            sub(/[[:space:]]+$/, "", line)
+            if (line != "") { print line }
+            next
+        }
+        seen && NF { seen = 0 }
+    '
+}
+
 print_steps() {
     local num state title mark
     while IFS=$'\t' read -r num state title; do
@@ -234,19 +279,81 @@ dangling_step() {
     done
 }
 
+# Находит шаг, чьи файлы объясняют правки в дереве. Нужен, когда сессия
+# оборвалась по лимиту запросов, не успев отметить шаг: тогда «висящей»
+# отметки нет, но правки принадлежат конкретному шагу и их надо спасти,
+# а не требовать ручного разбора.
+#
+# Шаг выбирается по числу совпавших файлов, а не по вложенности списка:
+# сессия часто трогает файл, которого в плане нет (миграция, перевод),
+# и строгое «все файлы из списка» не узнало бы свой же шаг. Ничья двух
+# шагов означает неоднозначность — тогда не угадываем.
+guess_step() {
+    local plan_rel changed num files best best_hits hits
+    plan_rel=$(realpath --relative-to="$REPO_ROOT" "$PLAN_FILE")
+    changed=$(git -C "$REPO_ROOT" status --porcelain \
+        | sed -E 's/^.. //; s/.* -> //' \
+        | grep -vxF "$plan_rel")
+    [ -n "$changed" ] || return 0
+    best=""
+    best_hits=0
+    for num in $(selected_steps); do
+        files=$(step_files "$num")
+        [ -n "$files" ] || continue
+        hits=0
+        while IFS= read -r path; do
+            [ -n "$path" ] || continue
+            printf '%s\n' "$files" | grep -qxF "$path" && hits=$((hits + 1))
+        done <<< "$changed"
+        if [ "$hits" -gt "$best_hits" ]; then
+            best="$num"
+            best_hits=$hits
+        elif [ "$hits" -eq "$best_hits" ] && [ "$hits" -gt 0 ]; then
+            best=""
+        fi
+    done
+    [ -n "$best" ] && printf '%s\n' "$best"
+}
+
 # Сохраняет правки оборванной сессии, чтобы они не пропали и чтобы дерево
 # стало чистым для следующего запуска. Шаг остаётся невыполненным.
+#
+# Коммит помечен как незавершённый, поэтому правки за пределами списка
+# файлов шага не теряются, но и не выглядят готовой работой: сессия,
+# упёршаяся в квоту, часто не успевает дописать план (миграции, переводы).
+# Список посторонних файлов печатается, чтобы человек видел, что попало
+# в коммит.
 rescue_dangling() {
     local num="$1"
     unmark_step_done "$num"
     # Отметка могла быть единственной правкой: тогда после её снятия дерево
     # снова чистое и коммитить нечего — шаг просто вернулся в работу.
-    if [ -z "$(git -C "$REPO_ROOT" status --porcelain)" ]; then
+    local dirty
+    dirty=$(git -C "$REPO_ROOT" status --porcelain)
+    if [ -z "$dirty" ]; then
         log "других правок нет — шаг $num снова в очереди"
         return 0
     fi
-    # Список печатается до коммита: git add -A заберёт всё дерево, и человек
-    # должен видеть, что именно уйдёт в коммит «незавершённый шаг».
+
+    local plan_rel allowed foreign
+    plan_rel=$(realpath --relative-to="$REPO_ROOT" "$PLAN_FILE")
+    allowed=$(step_files "$num")
+    foreign=$(git -C "$REPO_ROOT" status --porcelain \
+        | sed -E 's/^.. //; s/.* -> //' \
+        | while IFS= read -r path; do
+            [ -n "$path" ] || continue
+            [ "$path" = "$plan_rel" ] && continue
+            printf '%s\n' "$allowed" | grep -qxF "$path" && continue
+            printf '%s\n' "$path"
+        done)
+    if [ -n "$foreign" ]; then
+        warn "в дереве есть файлы вне списка шага $num — они тоже уйдут
+       в коммит «незавершённый шаг»:"
+        printf '  %s\n' "$foreign" >&2
+    fi
+
+    # Список печатается до коммита: человек должен видеть, что именно
+    # уйдёт в коммит «незавершённый шаг».
     log "  в коммит уйдёт:"
     git -C "$REPO_ROOT" status --short
     git -C "$REPO_ROOT" add -A
@@ -261,7 +368,7 @@ saves the work so the next session can finish the step." \
 }
 
 # Разбор прерванного шага: показываем правки и говорим, что делать.
-# Возвращает 0, только если правки сохранены через --rescue.
+# Правки сохраняются сами, если не передан --no-rescue или --allow-dirty.
 interrupted_step() {
     local num="$1" marked="$2" dirty="$3"
     log "  правки в рабочем дереве:"
@@ -271,13 +378,13 @@ interrupted_step() {
     else
         warn "шаг $num дал правки, но не дал коммита"
     fi
-    if [ "$RESCUE" -eq 1 ] && [ "$dirty" = "1" ]; then
+    if [ "$RESCUE" -eq 1 ] && [ "$ALLOW_DIRTY" -eq 0 ] && [ "$dirty" = "1" ]; then
         rescue_dangling "$num" && return 0
         warn "не удалось сохранить правки — разбирайтесь вручную"
         return 1
     fi
     log "  что делать:"
-    log "    --rescue            сохранить правки и повторить шаг $num"
+    log "    повторить запуск без --no-rescue  сохранить правки автоматически"
     log "    git checkout -- .   отбросить правки и повторить шаг $num"
     return 1
 }
@@ -296,6 +403,7 @@ parse_args() {
             --max-turns)   MAX_TURNS="${2:-}"; shift ;;
             --allow-dirty) ALLOW_DIRTY=1 ;;
             --rescue)      RESCUE=1 ;;
+            --no-rescue)   RESCUE=0 ;;
             -h|--help)     usage ;;
             -*)            die "неизвестный параметр: $1" ;;
             *)
@@ -351,8 +459,9 @@ require_clean_tree() {
     dirty=$(git -C "$REPO_ROOT" status --porcelain)
     [ -z "$dirty" ] && return 0
     printf '%s\n' "$dirty" >&2
-    die "рабочее дерево грязное. Закоммитьте или откатите изменения,
-       либо запустите с --allow-dirty"
+    die "рабочее дерево грязное, а правки не похожи ни на один шаг плана.
+       Закоммитьте или откатите изменения,
+       либо запустите с --allow-dirty (ALLOW_DIRTY=1 для make)"
 }
 
 ensure_branch() {
@@ -491,9 +600,11 @@ run_one_step() {
     # Коммит только с отметкой в плане — это не выполненный шаг, а забытая
     # работа: сессия отметила шаг и упала до правок. Документационные шаги
     # тоже меняют другие файлы, поэтому признак узкий: изменён ровно план.
+    # Исключение — шаг без файлов («Файлы: —»): ему менять нечего, ветку
+    # и проверки делает сам скрипт, и отметка — его законный результат.
     local touched
     touched=$(git -C "$REPO_ROOT" diff --name-only "$base_sha" HEAD)
-    if [ "$touched" = "$plan_rel" ]; then
+    if [ "$touched" = "$plan_rel" ] && [ "$(step_files_none "$num")" != "1" ]; then
         warn "шаг $num закоммитил только отметку в плане, работы в коммите нет.
        Проверьте \`git show --stat HEAD\` и выполните шаг заново"
         return 1
@@ -507,7 +618,32 @@ run_one_step() {
             >/dev/null 2>&1 || warn "не удалось закоммитить отметку шага"
     fi
 
+    commit_leftovers "$num" || return 1
+
     log "  готово: $(git -C "$REPO_ROOT" log -1 --format='%h %s')"
+    return 0
+}
+
+# После успешного шага дерево может остаться грязным: агент закоммитил
+# основную работу и забыл про хвост. Следующий шаг начался бы поверх
+# этих правок и утащил бы их в свой коммит, поэтому хвост сохраняется
+# отдельным коммитом — его видно в истории и легко откатить.
+commit_leftovers() {
+    local num="$1"
+    [ -z "$(git -C "$REPO_ROOT" status --porcelain)" ] && return 0
+    if [ "$ALLOW_DIRTY" -eq 1 ]; then
+        warn "после шага $num дерево грязное — оставляю как есть из-за --allow-dirty"
+        return 0
+    fi
+    warn "после шага $num остались незакоммиченные правки — сохраняю их
+       отдельным коммитом:"
+    git -C "$REPO_ROOT" status --short
+    git -C "$REPO_ROOT" add -A
+    git -C "$REPO_ROOT" commit -q \
+        -m "step $num: keep the work left after the step" \
+        -m "The session committed the main part and left some changes
+uncommitted. They are saved here so the next step starts from a clean tree." \
+        || { warn "не удалось закоммитить хвост шага $num"; return 1; }
     return 0
 }
 
@@ -560,12 +696,36 @@ main() {
     # git switch перенёс бы чужие правки в новую ветку, и они попали бы
     # в коммит шага. Правки оборванного шага и есть причина грязи,
     # поэтому сначала их предлагается спасти.
-    local dangle marked=0 dirty=0
+    #
+    # Правки без отметки [x] — тоже оборванная сессия: она не успела
+    # отметить шаг (лимит запросов). Такой шаг узнаём по списку файлов
+    # в плане, иначе человеку пришлось бы разбирать дерево вручную.
+    local dangle marked=0 dirty=0 guessed
     dangle=$(dangling_step)
     [ -n "$(git -C "$REPO_ROOT" status --porcelain)" ] && dirty=1
+    if [ -n "$dangle" ] && [ "$ALLOW_DIRTY" -eq 1 ]; then
+        warn "шаг $dangle отмечен [x], но коммита нет: работаю поверх правок
+       из-за --allow-dirty, план и код могут разойтись"
+        dangle=""
+    fi
+    if [ -z "$dangle" ] && [ "$dirty" = "1" ] && [ "$ALLOW_DIRTY" -eq 0 ]; then
+        guessed=$(guess_step)
+        if [ -n "$guessed" ]; then
+            log "правки в дереве похожи на шаг $guessed — сохраняю их"
+        elif [ -n "$(git -C "$REPO_ROOT" status --porcelain -- "$PLAN_FILE")" ]; then
+            # Файлы не совпали, но изменён сам план: сессия успела отметиться
+            # и трогала то, чего в списке файлов нет (миграция, перевод).
+            # Шаги идут по порядку, поэтому правки — первого невыполненного.
+            guessed=$(selected_steps | head -1)
+            [ -n "$guessed" ] && warn "файлы в дереве не совпали со списком шага —
+       правки сохраню под первым невыполненным шагом $guessed"
+        fi
+        [ -n "$guessed" ] && dangle="$guessed"
+    fi
     if [ -n "$dangle" ]; then
         [ "$(step_done "$dangle")" = "1" ] && marked=1
         interrupted_step "$dangle" "$marked" "$dirty" || return 1
+        [ "$(git -C "$REPO_ROOT" status --porcelain)" = "" ] || return 1
     fi
 
     require_clean_tree

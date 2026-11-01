@@ -87,20 +87,22 @@ i18n: messages compile ## Полный цикл локализации
 # Пошаговое выполнение плана подэтапа (каждый шаг — новая сессия Koda)
 #
 # PLAN — файл плана, BRANCH — ветка, STEP — номер шага,
-# PLAN_MODEL — модель (по умолчанию koda-pro), RESCUE=1 — сохранить правки
-# оборванной сессии и повторить её висящий шаг, MAX_TURNS — предел ходов
-# на шаг (по умолчанию 200). Примеры:
+# PLAN_MODEL — модель (по умолчанию koda-pro), MAX_TURNS — предел ходов
+# на шаг (по умолчанию 200). ALLOW_DIRTY=1 — работать поверх незакоммиченных
+# правок, NO_RESCUE=1 — не сохранять правки оборванной сессии (по умолчанию
+# они сохраняются сами). Примеры:
 #   make plan-list PLAN=.koda/plans/photo-processing-3.2-photo-upload.md
 #   make plan-step PLAN=... STEP=1
 #   make plan-all  PLAN=... BRANCH=feature/photo-upload
 #   PLAN_MODEL=koda-base make plan-all PLAN=...
-#   RESCUE=1 make plan-all PLAN=... BRANCH=feature/photo-merge
+#   NO_RESCUE=1 make plan-all PLAN=... BRANCH=feature/photo-merge
 # ======================================================================
 
 RUN_PLAN := .koda/scripts/run-plan.sh
 PLAN_MODEL ?= koda-pro
 PLAN_OPTS = $(if $(BRANCH),--branch $(BRANCH),) --model $(PLAN_MODEL) \
-            $(if $(RESCUE),--rescue,) \
+            $(if $(ALLOW_DIRTY),--allow-dirty,) \
+            $(if $(NO_RESCUE),--no-rescue,) \
             $(if $(MAX_TURNS),--max-turns $(MAX_TURNS),)
 
 plan-list: ## Показать шаги плана: PLAN=<файл>
