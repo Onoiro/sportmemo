@@ -153,6 +153,12 @@ rejected + `moderated_by`, `moderated_at`, `moderation_reason`), `SoftDeleteMode
 
 ### 4.3 Сервис решений модерации — единая точка журнала
 
+**Сделано** (0.26.0, ветка `feature/moderation-service`). Отличия от записи ниже:
+`restore_object` тоже переведён на сервис (четвёртая точка журнала, а не только
+три названные); в админке отклонение идёт через страницу `reject/` с обязательной
+причиной; `seed_demo` журнал не ведёт осознанно. Детальный план —
+[`moderation-ui-4.3-moderation-service.md`](moderation-ui-4.3-moderation-service.md).
+
 - `apps/moderation/services.py`: `publish_object(obj, user, reason="")`,
   `reject_object(obj, user, reason)`, `hide_object(obj, user, reason="")`,
   `soft_delete_object(obj, user, reason)`. Каждая меняет статус через метод модели

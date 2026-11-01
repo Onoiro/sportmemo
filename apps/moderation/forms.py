@@ -1,4 +1,4 @@
-"""Форма жалобы на ошибку в данных."""
+"""Формы модерации: жалоба на ошибку в данных и причина отклонения."""
 
 from django import forms
 from django.utils.translation import gettext_lazy as _
@@ -7,6 +7,29 @@ from apps.core.forms import BootstrapFormMixin
 from apps.moderation.models import ReportReason
 
 MAX_REPORT_COMMENT_LENGTH = 2000
+
+
+class ModerationRejectForm(forms.Form):
+    """Причина отклонения: одна на всю выборку объектов.
+
+    Одна причина, а не поле у каждого объекта: отклоняют обычно по общей
+    причине («не тот год», «дубль»), и автору нужен текст, а не отметка.
+
+    Bootstrap-классы не навешиваем: страница живёт в админке, и её поля
+    оформляет сама админка — `form-control` там смотрелся бы чужим.
+    """
+
+    reason = forms.CharField(
+        label=_("Причина отклонения"),
+        widget=forms.Textarea(attrs={"rows": 3}),
+    )
+
+    def clean_reason(self):
+        """Пробельная причина — та же пустая: автор увидел бы пустоту."""
+        value = self.cleaned_data["reason"].strip()
+        if not value:
+            raise forms.ValidationError(_("Опишите причину: автор её увидит."))
+        return value
 
 
 class ReportForm(BootstrapFormMixin, forms.Form):

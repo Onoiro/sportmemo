@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-01 11:25+0300\n"
+"POT-Creation-Date: 2026-11-01 15:07+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -841,53 +841,11 @@ msgstr "Комментарий отправлен на проверку моде
 msgid "Комментарий добавлен."
 msgstr "Комментарий добавлен."
 
-#: apps/core/admin_mixins.py:36
+#: apps/core/admin_mixins.py:44
 msgid "Опубликовать выбранные"
 msgstr "Опубликовать выбранные"
 
-#: apps/core/admin_mixins.py:42
-msgid "Скрыть выбранные"
-msgstr "Скрыть выбранные"
-
-#: apps/core/admin_mixins.py:46
-msgid "Отклонить выбранные"
-msgstr "Отклонить выбранные"
-
-#: apps/core/admin_mixins.py:52
-msgid "Мягко удалить выбранные"
-msgstr "Мягко удалить выбранные"
-
-#: apps/core/admin_mixins.py:59 apps/core/admin_mixins.py:65
-msgid "удалено модератором"
-msgstr "удалено модератором"
-
-#: apps/core/admin_mixins.py:70
-#, python-format
-msgid "%(count)d объект удалён."
-msgid_plural "%(count)d объектов удалено."
-msgstr[0] "%(count)d объект удалён."
-msgstr[1] "%(count)d объекта удалено."
-msgstr[2] "%(count)d объектов удалено."
-msgstr[3] "%(count)d объектов удалено."
-
-#: apps/core/admin_mixins.py:75
-msgid "Восстановить выбранные"
-msgstr "Восстановить выбранные"
-
-#: apps/core/admin_mixins.py:88
-msgid "восстановлено модератором"
-msgstr "восстановлено модератором"
-
-#: apps/core/admin_mixins.py:94
-#, python-format
-msgid "%(count)d объект восстановлен."
-msgid_plural "%(count)d объектов восстановлено."
-msgstr[0] "%(count)d объект восстановлен."
-msgstr[1] "%(count)d объекта восстановлено."
-msgstr[2] "%(count)d объектов восстановлено."
-msgstr[3] "%(count)d объектов восстановлено."
-
-#: apps/core/admin_mixins.py:125
+#: apps/core/admin_mixins.py:52 apps/core/admin_mixins.py:69
 #, python-format
 msgid "%(count)d объект обновлён."
 msgid_plural "%(count)d объектов обновлено."
@@ -896,24 +854,89 @@ msgstr[1] "%(count)d объекта обновлено."
 msgstr[2] "%(count)d объектов обновлено."
 msgstr[3] "%(count)d объектов обновлено."
 
-#: apps/core/admin_mixins.py:142
+#: apps/core/admin_mixins.py:61
+msgid "Скрыть выбранные"
+msgstr "Скрыть выбранные"
+
+#: apps/core/admin_mixins.py:78
+msgid "Отклонить выбранные"
+msgstr "Отклонить выбранные"
+
+#: apps/core/admin_mixins.py:93
+msgid "Мягко удалить выбранные"
+msgstr "Мягко удалить выбранные"
+
+#: apps/core/admin_mixins.py:95
+msgid "удалено модератором"
+msgstr "удалено модератором"
+
+#: apps/core/admin_mixins.py:104
+#, python-format
+msgid "%(count)d объект удалён."
+msgid_plural "%(count)d объектов удалено."
+msgstr[0] "%(count)d объект удалён."
+msgstr[1] "%(count)d объекта удалено."
+msgstr[2] "%(count)d объектов удалено."
+msgstr[3] "%(count)d объектов удалено."
+
+#: apps/core/admin_mixins.py:113
+msgid "Восстановить выбранные"
+msgstr "Восстановить выбранные"
+
+#: apps/core/admin_mixins.py:115
+msgid "восстановлено модератором"
+msgstr "восстановлено модератором"
+
+#: apps/core/admin_mixins.py:124
+#, python-format
+msgid "%(count)d объект восстановлен."
+msgid_plural "%(count)d объектов восстановлено."
+msgstr[0] "%(count)d объект восстановлен."
+msgstr[1] "%(count)d объекта восстановлено."
+msgstr[2] "%(count)d объектов восстановлено."
+msgstr[3] "%(count)d объектов восстановлено."
+
+#: apps/core/admin_mixins.py:155
+#, python-format
+msgid "%(count)d объект пропущен: нет области модерации."
+msgid_plural "%(count)d объектов пропущено: нет области модерации."
+msgstr[0] "%(count)d объект пропущен: нет области модерации."
+msgstr[1] "%(count)d объекта пропущено: нет области модерации."
+msgstr[2] "%(count)d объектов пропущено: нет области модерации."
+msgstr[3] "%(count)d объектов пропущено: нет области модерации."
+
+#: apps/core/admin_mixins.py:203
+#, python-format
+msgid "%(count)d объект отклонён."
+msgid_plural "%(count)d объектов отклонено."
+msgstr[0] "%(count)d объект отклонён."
+msgstr[1] "%(count)d объекта отклонено."
+msgstr[2] "%(count)d объектов отклонено."
+msgstr[3] "%(count)d объектов отклонено."
+
+#: apps/core/admin_mixins.py:222 templates/admin/moderation/reject_form.html:9
+#: templates/admin/moderation/reject_form.html:14
+msgid "Отклонить с причиной"
+msgstr "Отклонить с причиной"
+
+#: apps/core/admin_mixins.py:239
 msgid "Слить дубликаты в один объект"
 msgstr "Слить дубликаты в один объект"
 
-#: apps/core/admin_mixins.py:206
+#: apps/core/admin_mixins.py:295
 msgid "Выберите целевой объект из списка"
 msgstr "Выберите целевой объект из списка"
 
-#: apps/core/admin_mixins.py:215
+#: apps/core/admin_mixins.py:303
 msgid "слито модератором"
 msgstr "слито модератором"
 
-#: apps/core/admin_mixins.py:221
+#: apps/core/admin_mixins.py:310
 #, python-format
 msgid "Слито в объект #%(target)d"
 msgstr "Слито в объект #%(target)d"
 
-#: apps/core/admin_mixins.py:228
+#: apps/core/admin_mixins.py:317
 #, python-format
 msgid "%(count)d объект слит в «%(target)s»."
 msgid_plural "%(count)d объектов слито в «%(target)s»."
@@ -922,7 +945,7 @@ msgstr[1] "%(count)d объекта слито в «%(target)s»."
 msgstr[2] "%(count)d объектов слито в «%(target)s»."
 msgstr[3] "%(count)d объектов слито в «%(target)s»."
 
-#: apps/core/admin_mixins.py:239 templates/admin/core/merge_form.html:9
+#: apps/core/admin_mixins.py:328 templates/admin/core/merge_form.html:9
 #: templates/admin/core/merge_form.html:14
 msgid "Слияние дубликатов"
 msgstr "Слияние дубликатов"
@@ -1054,16 +1077,24 @@ msgstr "Отклонено жалоб: %(count)d"
 msgid "Жалоба на объект: %(reason)s"
 msgstr "Жалоба на объект: %(reason)s"
 
-#: apps/moderation/forms.py:29
+#: apps/moderation/forms.py:23
+msgid "Причина отклонения"
+msgstr "Причина отклонения"
+
+#: apps/moderation/forms.py:31
+msgid "Опишите причину: автор её увидит."
+msgstr "Опишите причину: автор её увидит."
+
+#: apps/moderation/forms.py:52
 #: templates/moderation/email/new_report_notification.txt:3
 msgid "Причина"
 msgstr "Причина"
 
-#: apps/moderation/forms.py:34
+#: apps/moderation/forms.py:57
 msgid "Что не так"
 msgstr "Что не так"
 
-#: apps/moderation/forms.py:41
+#: apps/moderation/forms.py:64
 msgid "Опишите ошибку: что указано неверно и как правильно."
 msgstr "Опишите ошибку: что указано неверно и как правильно."
 
@@ -1907,6 +1938,7 @@ msgstr "Сохранить пароль"
 
 #: templates/account/password_reset_from_key.html:34
 #: templates/admin/core/merge_form.html:47
+#: templates/admin/moderation/reject_form.html:47
 #: templates/catalog/event_form.html:101 templates/catalog/team_form.html:102
 #: templates/moderation/report_form.html:58
 msgid "Отмена"
@@ -2024,6 +2056,7 @@ msgid "Изменить адрес почты"
 msgstr "Изменить адрес почты"
 
 #: templates/admin/core/merge_form.html:6
+#: templates/admin/moderation/reject_form.html:6
 #: templates/admin/photos/photo/similar.html:6
 msgid "Home"
 msgstr "Home"
@@ -2042,6 +2075,7 @@ msgid "Объекты к слиянию"
 msgstr "Объекты к слиянию"
 
 #: templates/admin/core/merge_form.html:25
+#: templates/admin/moderation/reject_form.html:25
 msgid "Ничего не выбрано"
 msgstr "Ничего не выбрано"
 
@@ -2060,6 +2094,23 @@ msgstr "Слить"
 #: templates/admin/core/merge_form.html:51
 msgid "Нет подходящих объектов"
 msgstr "Нет подходящих объектов"
+
+#: templates/admin/moderation/reject_form.html:17
+#, python-format
+msgid ""
+"Будет отклонено объектов: %(count)s. Причину увидит автор, поэтому опишите "
+"её так, чтобы было понятно, что исправить."
+msgstr ""
+"Будет отклонено объектов: %(count)s. Причину увидит автор, поэтому опишите "
+"её так, чтобы было понятно, что исправить."
+
+#: templates/admin/moderation/reject_form.html:20
+msgid "Выбранные объекты"
+msgstr "Выбранные объекты"
+
+#: templates/admin/moderation/reject_form.html:46
+msgid "Отклонить"
+msgstr "Отклонить"
 
 #: templates/admin/photos/photo/similar.html:18
 msgid "Сравнение по перцептивному хешу. Совпадение — подсказка, решать вам."
@@ -2253,8 +2304,8 @@ msgid ""
 "модератор."
 msgstr ""
 "Событие проверяет модератор — обычно в течение дня; авторам, которым мы "
-"доверяем, оно попадает в архив сразу. До проверки событие видите только вы "
-"и модератор."
+"доверяем, оно попадает в архив сразу. До проверки событие видите только вы и "
+"модератор."
 
 #: templates/catalog/my_events.html:46
 msgid "Вы ещё не создавали событий"
@@ -2265,8 +2316,8 @@ msgid ""
 "Если вашего турнира или встречи нет в архиве — заведите событие. Оно попадёт "
 "в архив сразу или после проверки модератором."
 msgstr ""
-"Если вашего турнира или встречи нет в архиве — заведите событие. Оно "
-"попадёт в архив сразу или после проверки модератором."
+"Если вашего турнира или встречи нет в архиве — заведите событие. Оно попадёт "
+"в архив сразу или после проверки модератором."
 
 #: templates/catalog/my_teams.html:18
 msgid ""
@@ -2275,8 +2326,8 @@ msgid ""
 "модератор."
 msgstr ""
 "Команду проверяет модератор — обычно в течение дня; авторам, которым мы "
-"доверяем, она попадает в архив сразу. До проверки команду видите только вы "
-"и модератор."
+"доверяем, она попадает в архив сразу. До проверки команду видите только вы и "
+"модератор."
 
 #: templates/catalog/my_teams.html:46
 msgid "Вы ещё не создавали команд"
@@ -2287,8 +2338,8 @@ msgid ""
 "Если вашей команды нет в архиве — заведите её. Она попадёт в архив сразу или "
 "после проверки модератором."
 msgstr ""
-"Если вашей команды нет в архиве — заведите её. Она попадёт в архив сразу "
-"или после проверки модератором."
+"Если вашей команды нет в архиве — заведите её. Она попадёт в архив сразу или "
+"после проверки модератором."
 
 #: templates/catalog/my_teams.html:52 templates/catalog/team_list.html:19
 #: templates/photos/photo_details.html:66
@@ -2665,10 +2716,10 @@ msgid ""
 "которым мы доверяем, снимки публикуются сразу, а остальные ждут решения — "
 "обычно в течение дня."
 msgstr ""
-"Фото обычно проверяет модератор: он смотрит, относится ли снимок к спорту "
-"и заполнена ли подпись; за права отвечает автор. Проверка выборочная: "
-"авторам, которым мы доверяем, снимки публикуются сразу, а остальные ждут "
-"решения — обычно в течение дня."
+"Фото обычно проверяет модератор: он смотрит, относится ли снимок к спорту и "
+"заполнена ли подпись; за права отвечает автор. Проверка выборочная: авторам, "
+"которым мы доверяем, снимки публикуются сразу, а остальные ждут решения — "
+"обычно в течение дня."
 
 #: templates/core/rules.html:73
 msgid ""

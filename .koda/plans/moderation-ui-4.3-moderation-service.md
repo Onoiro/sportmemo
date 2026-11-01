@@ -180,7 +180,7 @@ def _require_rights(obj, user):
 
 ## 3. Шаги
 
-### 1. [ ] Ветка
+### 1. [x] Ветка
 
 1. `git status` — дерево чистое.
 2. `git switch -c feature/moderation-service` от `master`.
@@ -189,7 +189,7 @@ def _require_rights(obj, user):
 
 Файлы: —
 
-### 2. [ ] Сервис решений в `apps/moderation/services.py`
+### 2. [x] Сервис решений в `apps/moderation/services.py`
 
 Дописать в существующий модуль (не создавать новый: правило статуса из 4.2
 и правило решений — один домен). Docstring модуля расширяется: «правила
@@ -253,7 +253,7 @@ grep -n "^def " apps/moderation/services.py
 Файлы:
 - `apps/moderation/services.py`
 
-### 3. [ ] Админ-миксин на сервис
+### 3. [x] Админ-миксин на сервис
 
 `apps/core/admin_mixins.py`:
 
@@ -295,7 +295,7 @@ uv run pytest tests/test_admin.py -q
 Файлы:
 - `apps/core/admin_mixins.py`
 
-### 4. [ ] Страница «Отклонить с причиной»
+### 4. [x] Страница «Отклонить с причиной»
 
 1. `apps/moderation/forms.py` — форма:
 
@@ -354,7 +354,7 @@ uv run pytest tests/test_admin.py -q
 - `apps/core/admin_mixins.py`
 - `templates/admin/moderation/reject_form.html`
 
-### 5. [ ] Тесты сервиса: `tests/test_moderation_service.py`
+### 5. [x] Тесты сервиса: `tests/test_moderation_service.py`
 
 Сценарии (использовать фабрики из `tests/factories.py`):
 
@@ -385,7 +385,7 @@ uv run pytest tests/test_admin.py -q
 Файлы:
 - `tests/test_moderation_service.py`
 
-### 6. [ ] Тесты админки
+### 6. [x] Тесты админки
 
 Дописать в `tests/test_admin.py`:
 
@@ -408,7 +408,7 @@ uv run pytest tests/test_admin.py -q
 Файлы:
 - `tests/test_admin.py`
 
-### 7. [ ] Локализация
+### 7. [x] Локализация
 
 1. `make i18n`.
 2. `locale/ru/LC_MESSAGES/django.po`: снять `fuzzy` у новых записей,
@@ -424,7 +424,7 @@ uv run pytest tests/test_admin.py -q
 - `locale/ru/LC_MESSAGES/django.po`
 - `locale/en/LC_MESSAGES/django.po`
 
-### 8. [ ] Документация
+### 8. [x] Документация
 
 1. `KODA.md` и `AGENTS.md` (синхронно):
    - «Правила для кода»: запись журнала — только через
@@ -447,7 +447,7 @@ uv run pytest tests/test_admin.py -q
 - `.koda/backlog.md`
 - `.koda/plans/moderation-ui.md`
 
-### 9. [ ] Проверка и коммит
+### 9. [x] Проверка и коммит
 
 ```bash
 make lint
@@ -514,12 +514,12 @@ Bump version: 0.25.0 → 0.26.0 (minor)
 
 | # | Шаг | Статус |
 |---|---|---|
-| 1 | Ветка | [ ] |
-| 2 | Сервис решений | [ ] |
-| 3 | Админ-миксин на сервис | [ ] |
-| 4 | Страница «Отклонить с причиной» | [ ] |
-| 5 | Тесты сервиса | [ ] |
-| 6 | Тесты админки | [ ] |
-| 7 | Локализация | [ ] |
-| 8 | Документация | [ ] |
-| 9 | Проверка и коммит | [ ] |
+| 1 | Ветка | [x] |
+| 2 | Сервис решений | [x] |
+| 3 | Админ-миксин на сервис | [x] |
+| 4 | Страница «Отклонить с причиной» | [x] |
+| 5 | Тесты сервиса | [x] |
+| 6 | Тесты админки | [x] |
+| 7 | Локализация | [x] |
+| 8 | Документация | [x] |
+| 9 | Проверка и коммит | [x] |

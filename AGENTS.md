@@ -65,7 +65,7 @@ stays tidy.
 | `apps/photos` | `Source`, `Photo`, `PhotoPerson`, EXIF parsing (`exif.py`), pure processing functions (`processing.py`), the pipeline (`services.py`), similar photo search by hash (`similar.py`), the Celery task (`tasks.py`), public views (`photo_detail`, the `grid` fragment), `photos/urls.py` |
 | `apps/search` | search: the `pg_trgm` extension, search text and query building (`indexing.py`), results and suggestions (`services.py`), the results page (`views.py`, `urls.py`), signals, the `search_reindex` command; it has no models of its own — the index fields live in `catalog` and `photos` |
 | `apps/comments` | `Comment` (generic FK, replies, statuses), `CommentSettings` (premoderation), target allow-list (`targets.py`), form, add view, visible query (`services.py`) |
-| `apps/moderation` | `Report`, `ModerationAction` (moderator decision log), report form and page |
+| `apps/moderation` | `Report`, `ModerationAction` (moderator decision log), `services.py` (status rule for new objects, decision rights, `log_action()`), report form and page |
 
 ## Development conventions
 
@@ -167,8 +167,9 @@ closed; 3.7 (batch upload) is deferred and taken by a separate decision.
 is [`plans/moderation-ui.md`](.koda/plans/moderation-ui.md); the decisions were agreed with
 the owner on 2026-10-31. The moderators are baseball veterans and many of them have only a
 phone, so routine decisions happen in the public site and the admin stays the superuser's
-place for hard cases. Sub-stage 4.0 (numbering shift), 4.1 (moderator scope by sport)
-and 4.2 (status rule and post-moderation for trusted authors) are done, then 4.3–4.6.
+place for hard cases. Sub-stage 4.0 (numbering shift), 4.1 (moderator scope by sport),
+4.2 (status rule and post-moderation for trusted authors) and 4.3 (decision service,
+one place for the log) are done, then 4.4–4.6.
 A sub-stage plan is created as a separate file when work on it
 starts (`plans/moderation-ui-4.N-<name>.md`).
 
@@ -216,7 +217,7 @@ constructor". Legal pages and SMTP are stage 5.
 
 ## Current state
 
-- Version: 0.25.0; development branch `master`; 1429 tests passing on Python 3.12
+- Version: 0.26.0; development branch `master`; 1459 tests passing on Python 3.12
   and 3.13 (`make test`); linter clean (`make lint`).
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is complete: sub-stages 3.1–3.6
@@ -239,8 +240,12 @@ constructor". Legal pages and SMTP are stage 5.
   photo, and the "Merge into this photo" button sits in the candidate row.
 - Stage 4 is in progress: the master plan [`plans/moderation-ui.md`](.koda/plans/moderation-ui.md)
   was approved on 2026-10-31, sub-stages 4.0 (numbering shift in the documents), 4.1
-  (moderator scope by sport) and 4.2 (status rule and post-moderation for trusted
-  authors) are closed. Next is 4.3 — the moderation decision service. Known leftovers
+  (moderator scope by sport), 4.2 (status rule and post-moderation for trusted
+  authors) and 4.3 (moderation decision service) are closed. Decisions are now made by
+  `apps/moderation/services.py`: five functions change the object state, check the right
+  through `can_moderate(obj)` and write the log through `log_action()`; the admin and the
+  public interface must go through them. Rejection in the admin goes through a page with a
+  reason. Next is 4.4 — the draft queue. Known leftovers
   that move into stage 5: the account deletion policy (P5-12) and the S3 storage
   decision (R-1, Russian S3 chosen) — P5-13. Re-cropping an uploaded photo (P3-18)
   stays a stage 3 task.
@@ -512,6 +517,21 @@ moderator rights and the other way round:** a trusted author gets 404 on
 someone else's draft and on editing it, while a moderator or admin without the
 flag creates a draft. The two abilities are independent, and the tests keep
 them apart so that the rule is not later "simplified" into one check.
+
+**Decision service (4.3).** A moderator decision is `publish_object` /
+`hide_object` / `reject_object` / `soft_delete_object` / `restore_object` in
+`apps/moderation/services.py`, and the log is written by `log_action()` there.
+The four former write points in `apps/core/admin_mixins.py` (`_apply_status`,
+`action_soft_delete`, `action_restore`, `merge_view`) now call the service:
+the mixin only turns a list action into a call, because its own log write
+would become a second rule next to the first one. The service checks the
+right through `can_moderate(obj)` and the caller picks the reaction to a
+refusal: a batch admin action skips the object and reports the count, while
+the rejection page and the future 4.5 views return 403. Rejection in the
+admin goes through a page with a reason (`admin/.../reject/`) instead of a
+silent list action: the author sees the reason, and it is required in both
+interfaces. `seed_demo` writes no log — the demo archive holds no moderator
+decisions, and entries with a demo moderator would litter the admin.
 
 ### Code rules
 
@@ -799,4 +819,30 @@ them apart so that the rule is not later "simplified" into one check.
   themselves a scope and see foreign drafts. The `accounts/0004` backfill depends on
   `core/0002_seed_sports`: without that dependency a fresh database would give the moderator an
   empty list.
+- **Only `log_action()` writes the decision log** (`apps/moderation/services.py`), and a decision
+  is made by a service function — `publish_object`, `hide_object`, `reject_object`,
+  `soft_delete_object`, `restore_object`. No view or admin code calls
+  `ModerationAction.objects.create` itself: a second copy of the rule would drift from the first
+  one at the first new action, and invariant 6 ("everything important is logged") would rest on
+  discipline. A new moderator action is a new service function, not a write at the call site.
+- **The service checks the right to decide**, not the view: `_require_rights` asks
+  `user.can_moderate(obj)`. The view and the mixin only pick the reaction to `PermissionDenied` —
+  a batch admin action skips the object with a warning, a page and the future queue views return
+  403. A separate `is_moderator` check in a view would be a second rule and would bypass the
+  sport scope.
+- **A rejection reason is required and checked in the service.** `reject_object` without a reason
+  raises `ValueError`: the forms check the same in advance, but the admin and the site must answer
+  the same way. Other decisions accept `reason=""` — the caller passes the "deleted by a
+  moderator" text.
+- **A deleted object is not decided**, except by restoring it: `publish_object`, `hide_object`,
+  `reject_object` and `soft_delete_object` return `False` on an object with `deleted_at` and
+  leave the log alone. A decision about an invisible object would log an action that did not
+  happen.
+- **A service function returns `bool` instead of raising on "already done".** `False` means the
+  object is already in the target state: that is a race between two moderators, not an error, and
+  the caller decides what to tell the person (the admin counts by `bool`, the 4.5 queue answers
+  "Already processed").
+- **`seed_demo` writes no log** and publishes objects through `obj.publish()` directly: the demo
+  archive holds no moderator decisions, and entries with a demo moderator would litter the admin.
+  Do not "fix" this by inertia.
 

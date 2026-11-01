@@ -2,6 +2,7 @@
 
 import pytest
 from django.contrib import admin
+from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from django.utils import timezone
@@ -9,7 +10,13 @@ from django.utils import timezone
 from apps.catalog.models import Team
 from apps.core.models import Status
 from apps.moderation.models import ModerationAction, ModerationActionType
-from tests.factories import PhotoFactory, PhotoPersonFactory, SportFactory
+from tests.factories import (
+    ModeratorFactory,
+    PhotoFactory,
+    PhotoPersonFactory,
+    SportFactory,
+    TeamFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -129,6 +136,156 @@ class TestModerationActions:
         assert not ModerationAction.objects.filter(
             object_id=team.pk, action=ModerationActionType.PUBLISH
         ).exists()
+
+
+class TestRejectAction:
+    """Отклонение в админке собирает причину на отдельной странице.
+
+    Молчаливое отклонение противоречило бы правилу «причина обязательна»:
+    автор увидел бы отказ без объяснения.
+    """
+
+    def test_action_redirects_to_reject_page(self, admin_client_logged_in, team):
+        url = reverse("admin:catalog_team_changelist")
+
+        response = admin_client_logged_in.post(
+            url,
+            {"action": "action_reject", "_selected_action": [str(team.pk)]},
+        )
+
+        assert response.status_code == 302
+        assert "reject" in response.url
+        assert f"ids={team.pk}" in response.url
+
+    def test_reject_page_shows_selected_objects(self, admin_client_logged_in, team):
+        url = reverse("admin:catalog_team_reject")
+
+        response = admin_client_logged_in.get(url, {"ids": str(team.pk)})
+
+        assert response.status_code == 200
+        assert team in response.context["sources"]
+        assert str(team) in response.content.decode()
+
+    def test_reject_with_reason_sets_status_and_logs(
+        self, admin_client_logged_in, team, admin_user
+    ):
+        url = reverse("admin:catalog_team_reject")
+
+        response = admin_client_logged_in.post(
+            url, {"ids": str(team.pk), "reason": "не та команда"}
+        )
+
+        assert response.status_code == 302
+        team.refresh_from_db()
+        assert team.status == Status.REJECTED
+        assert team.moderation_reason == "не та команда"
+        action = ModerationAction.objects.get(
+            object_id=team.pk, action=ModerationActionType.REJECT
+        )
+        assert action.reason == "не та команда"
+        assert action.moderator == admin_user
+
+    def test_reject_without_reason_changes_nothing(self, admin_client_logged_in, team):
+        url = reverse("admin:catalog_team_reject")
+
+        response = admin_client_logged_in.post(
+            url, {"ids": str(team.pk), "reason": "   "}
+        )
+
+        # Форма возвращается с ошибкой: страница, а не редирект в список.
+        assert response.status_code == 200
+        team.refresh_from_db()
+        assert team.status == Status.DRAFT
+        assert not ModerationAction.objects.exists()
+
+
+def grant_team_permissions(user):
+    """Права Django для админки: роль модератора их не заменяет."""
+    permissions = Permission.objects.filter(
+        content_type=ContentType.objects.get_for_model(Team),
+        codename__in=("view_team", "change_team"),
+    )
+    user.user_permissions.add(*permissions)
+    return user
+
+
+class TestScopedModerationInAdmin:
+    """Пакетное действие не падает на объекте чужой области.
+
+    До подэтапа 4.3 админка не спрашивала область модератора вовсе,
+    поэтому модератор с `is_staff` решал по чужому виду спорта.
+    """
+
+    @pytest.fixture
+    def scoped_moderator(self, baseball):
+        return grant_team_permissions(
+            ModeratorFactory(
+                email="scoped@example.com", is_staff=True, moderated_sports=[baseball]
+            )
+        )
+
+    def test_own_object_is_published_foreign_is_skipped(
+        self, client, scoped_moderator, baseball, softball
+    ):
+        own = TeamFactory(sport=baseball)
+        foreign = TeamFactory(sport=softball)
+        client.force_login(scoped_moderator)
+        url = reverse("admin:catalog_team_changelist")
+
+        response = client.post(
+            url,
+            {
+                "action": "action_publish",
+                "_selected_action": [str(own.pk), str(foreign.pk)],
+            },
+            follow=True,
+        )
+
+        own.refresh_from_db()
+        foreign.refresh_from_db()
+        assert own.status == Status.PUBLISHED
+        assert foreign.status == Status.DRAFT
+        assert "нет области модерации" in response.content.decode()
+        assert not ModerationAction.objects.filter(object_id=foreign.pk).exists()
+
+    def test_moderator_without_scope_skips_everything(self, client, baseball, softball):
+        """Пустая область — «не видит чужого ничего», а не «видит всё»."""
+        moderator = grant_team_permissions(
+            ModeratorFactory(
+                email="empty-scope@example.com",
+                is_staff=True,
+                moderated_sports=[],
+            )
+        )
+        team = TeamFactory(sport=baseball)
+        client.force_login(moderator)
+        url = reverse("admin:catalog_team_changelist")
+
+        response = client.post(
+            url,
+            {"action": "action_publish", "_selected_action": [str(team.pk)]},
+            follow=True,
+        )
+
+        team.refresh_from_db()
+        assert team.status == Status.DRAFT
+        assert "нет области модерации" in response.content.decode()
+        assert not ModerationAction.objects.exists()
+
+
+class TestAdminModerationRoutes:
+    """`get_urls()` двух миксинов складываются, а не перетирают друг друга."""
+
+    def test_photo_admin_has_merge_and_reject_routes(
+        self, admin_client_logged_in, photo
+    ):
+        ids = {"ids": str(photo.pk)}
+
+        merge = admin_client_logged_in.get(reverse("admin:photos_photo_merge"), ids)
+        reject = admin_client_logged_in.get(reverse("admin:photos_photo_reject"), ids)
+
+        assert merge.status_code == 200
+        assert reject.status_code == 200
 
 
 class TestMergeAction:
