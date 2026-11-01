@@ -77,6 +77,15 @@ class StatusModel(models.Model):
     def is_published(self) -> bool:
         return self.status == Status.PUBLISHED
 
+    @property
+    def is_auto_published(self) -> bool:
+        """Опубликовано без решения модератора.
+
+        Признак пост-модерации: доверенный автор публикует своё сразу,
+        и `moderated_by` остаётся пустым.
+        """
+        return self.status == Status.PUBLISHED and self.moderated_by_id is None
+
     def publish(self, moderator=None, reason=""):
         self.status = Status.PUBLISHED
         self.moderated_by = moderator

@@ -167,8 +167,9 @@ closed; 3.7 (batch upload) is deferred and taken by a separate decision.
 is [`plans/moderation-ui.md`](.koda/plans/moderation-ui.md); the decisions were agreed with
 the owner on 2026-10-31. The moderators are baseball veterans and many of them have only a
 phone, so routine decisions happen in the public site and the admin stays the superuser's
-place for hard cases. Sub-stage 4.0 (numbering shift) and 4.1 (moderator scope by sport) are
-done, then 4.2–4.6. A sub-stage plan is created as a separate file when work on it
+place for hard cases. Sub-stage 4.0 (numbering shift), 4.1 (moderator scope by sport)
+and 4.2 (status rule and post-moderation for trusted authors) are done, then 4.3–4.6.
+A sub-stage plan is created as a separate file when work on it
 starts (`plans/moderation-ui-4.N-<name>.md`).
 
 **Stage 5 (mobile PWA, legal layer, operations) is in planning.** The stage moved from
@@ -215,8 +216,8 @@ constructor". Legal pages and SMTP are stage 5.
 
 ## Current state
 
-- Version: 0.24.0; development branch `master`; 1402 tests passing on Python 3.12 and 3.13
-  (`make test`); linter clean (`make lint`).
+- Version: 0.25.0; development branch `master`; 1429 tests passing on Python 3.12
+  and 3.13 (`make test`); linter clean (`make lint`).
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is complete: sub-stages 3.1–3.6
   are done, 3.7 (batch upload) is deferred. Sub-stage 3.1 (processing foundation) — EXIF by
@@ -237,11 +238,12 @@ constructor". Legal pages and SMTP are stage 5.
   migrations, a merge moves relations and views, an old link returns 301 to the canonical
   photo, and the "Merge into this photo" button sits in the candidate row.
 - Stage 4 is in progress: the master plan [`plans/moderation-ui.md`](.koda/plans/moderation-ui.md)
-  was approved on 2026-10-31, sub-stages 4.0 (numbering shift in the documents) and 4.1
-  (moderator scope by sport) are closed. Next is 4.2 — the status rule and post-moderation for
-  trusted authors. Known leftovers that move into stage 5: the
-  account deletion policy (P5-12) and the S3 storage decision (R-1, Russian S3 chosen) — P5-13.
-  Re-cropping an uploaded photo (P3-18) stays a stage 3 task.
+  was approved on 2026-10-31, sub-stages 4.0 (numbering shift in the documents), 4.1
+  (moderator scope by sport) and 4.2 (status rule and post-moderation for trusted
+  authors) are closed. Next is 4.3 — the moderation decision service. Known leftovers
+  that move into stage 5: the account deletion policy (P5-12) and the S3 storage
+  decision (R-1, Russian S3 chosen) — P5-13. Re-cropping an uploaded photo (P3-18)
+  stays a stage 3 task.
 
 ### Public UI
 
@@ -434,13 +436,14 @@ object with the same reason within a day is not created; anonymous users are not
 `/photos/<pk>/edit/` holds the photo details and doubles as the edit page. Two forms instead
 of one exist because a chosen file does not survive a page transition: an error in the team
 name or a detour to create a team used to lose the shot. **The status rule has one place:**
-`initial_status_for(user)` in `apps/photos/services.py` returns `draft`; the function exists
-for P3-10 (trusted author), so the rule changes in one place instead of in the form and the
-view separately. **Team and event are typed as text** with a native `<datalist>` hint, and the
-server resolves the value through `resolve_by_name()`: without JavaScript the field works as
-plain text. An ambiguous name (two "Соколы" in different cities) is not guessed but asks for
-a city — a photo on the wrong team is worse than an empty field; the resolution queryset
-includes the user's own draft (a team is created right before uploading photos into it).
+`initial_status_for(user)` in `apps/moderation/services.py` returns `published` for a
+trusted author and `draft` for everyone else; the function is shared by photos,
+teams and events (4.2). **Team and event are typed as text** with a native
+`<datalist>` hint, and the server resolves the value through `resolve_by_name()`:
+without JavaScript the field works as plain text. An ambiguous name (two "Соколы" in
+different cities) is not guessed but asks for a city — a photo on the wrong team is
+worse than an empty field; the resolution queryset includes the user's own draft
+(a team is created right before uploading photos into it).
 **The daily limit is a rolling 24 hours** (`uploads_today()`, the default manager rather than
 `public`: a deleted photo does not give the quota back). **Badge states are
 `Photo.upload_state`** (seven keys: `deleted`, `failed`, `processing`, `published`, `hidden`,
@@ -476,7 +479,7 @@ checked by `User.can_moderate(obj)`; `User.is_moderator` stayed a "role without 
 used for access. An empty list means the moderator sees nothing of other authors; their own
 objects they see as the author. An object without a sport (`Person`) is open to every moderator —
 invariant 1. `User.is_trusted` ("trusted author") is added here as a field only; its status rule
-comes in sub-stage 4.2. The `accounts/0004` backfill gives every existing moderator and
+comes in 4.2 (below). The `accounts/0004` backfill gives every existing moderator and
 administrator **all** sports: before this sub-stage they saw everything, and after the deploy the
 behaviour stays the same until a superuser narrows the scope on purpose; the migration depends on
 `core/0002_seed_sports`, otherwise on a fresh database it would assign an empty list.
@@ -485,6 +488,30 @@ from the target when a report is submitted. Moderator emails go by the sport of 
 admins and superusers always get them, and `sport=None` means everyone. The user section of the
 admin is open to superusers only (`role` and `moderated_sports` are permissions: otherwise a
 moderator with `is_staff` would grant themselves a scope).
+
+**Post-moderation of a trusted author (4.2).** A trusted author publishes their
+own objects right away: `initial_status_for(user)` in
+`apps/moderation/services.py` returns `published` when `is_trusted` is set and
+`draft` in every other case. Three creation points call it — `_create_photo`
+(`apps/photos/views.py`), `team_create` and `event_create`
+(`apps/catalog/views.py`); the views no longer write `Status.DRAFT`,
+otherwise one path would publish at once and another would not. The function
+lives in `moderation`, not in `photos`: the rule is shared by three models,
+and 4.3 adds the decision service next to it. **An object published this way
+has empty `moderated_by` and `moderated_at`** — no moderator decided, and
+`publish()` is not called: it would set a "decision date" without a decision.
+The sign is read from the `StatusModel.is_auto_published` property
+(`status=published` and an empty `moderated_by`); the moderator letters and the
+future queue filter (4.4) branch on it. **The moderator letter is sent in both
+cases**, but the text is honest: "published right away: the author is trusted"
+instead of "waits for review", otherwise the moderator would look in the queue
+for an object that is not there. **The interface texts do not branch on
+`is_trusted`:** the cabinets, the forms and `/rules/` talk about selective
+review — true for a trusted and a regular author alike. **`is_trusted` gives no
+moderator rights and the other way round:** a trusted author gets 404 on
+someone else's draft and on editing it, while a moderator or admin without the
+flag creates a draft. The two abilities are independent, and the tests keep
+them apart so that the rule is not later "simplified" into one check.
 
 ### Code rules
 
@@ -546,10 +573,21 @@ moderator with `is_staff` would grant themselves a scope).
 - **A processing error never escapes:** `processing_status=failed` plus a short text in
   `processing_error`, the stack goes to the log. Otherwise one broken file would stop the whole
   backfill.
-- **The status of a new photo is decided by `initial_status_for(user)`**
-  (`apps/photos/services.py`), and by nothing else: the rule will change for trusted authors
-  (P3-10), and if it spread over the form and the view, one upload path would publish at once
-  and the other would not. Today it returns `draft`.
+- **The status of a new object is decided by `initial_status_for(user)`
+  (`apps/moderation/services.py`)**, and by nothing else: the three creation points
+  (photo, team, event) live in two apps, and if the rule spread over the views, one path
+  would publish at once and the other would not. A trusted author (`is_trusted`) gets
+  `published`, everyone else gets `draft`; the sport takes no part in the rule, trust is
+  given to a person.
+- **`moderated_by IS NULL` with `published` means published without review.** The sign
+  is read through the `StatusModel.is_auto_published` property, not by comparing
+  statuses in templates: the moderator letters and the queue filter branch on it.
+  `publish()` is not called on creation — it would set a decision date for a decision
+  that never happened.
+- **`is_trusted` gives no moderator rights and the other way round.** A trusted author
+  publishes their own objects right away, but does not see or edit someone else's draft
+  (404); a moderator or admin without the flag creates a draft. The two abilities are
+  independent, and the rule must not be simplified into one check.
 - **Editing photo details is allowed by `can_edit_photo(user, photo)`**
   (`apps/photos/services.py`), not by the view: the author (`uploaded_by`) or a moderator,
   with the object taken from `Photo.public`. Everyone else gets **404, not 403**: the

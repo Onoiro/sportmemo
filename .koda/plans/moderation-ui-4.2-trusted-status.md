@@ -181,7 +181,7 @@ def is_auto_published(self) -> bool:
 
 ## 3. Шаги
 
-### 1. [ ] Ветка и фикстура доверенного автора
+### 1. [x] Ветка и фикстура доверенного автора
 
 1. `git switch -c feature/trusted-authors` от `master`.
 2. `tests/conftest.py` — фикстура:
@@ -205,7 +205,7 @@ def is_auto_published(self) -> bool:
 Файлы:
 - `tests/conftest.py`
 
-### 2. [ ] Сервис правила статуса и переезд из `photos`
+### 2. [x] Сервис правила статуса и переезд из `photos`
 
 1. Новый модуль `apps/moderation/services.py`:
 
@@ -248,7 +248,7 @@ uv run pytest tests/test_photo_upload.py -q
 - `apps/photos/views.py`
 - `tests/test_photo_upload.py`
 
-### 3. [ ] Признак «опубликовано без проверки»
+### 3. [x] Признак «опубликовано без проверки»
 
 1. `apps/core/models.py`, `StatusModel`: свойство `is_auto_published`
    (код и docstring — 2.3).
@@ -257,7 +257,7 @@ uv run pytest tests/test_photo_upload.py -q
 Файлы:
 - `apps/core/models.py`
 
-### 4. [ ] Команда и событие: статус и сообщения
+### 4. [x] Команда и событие: статус и сообщения
 
 `apps/catalog/views.py`:
 
@@ -291,7 +291,7 @@ uv run pytest tests/test_team_create.py tests/test_event_create.py -q
 Файлы:
 - `apps/catalog/views.py`
 
-### 5. [ ] Письма модераторам: честный текст
+### 5. [x] Письма модераторам: честный текст
 
 1. `templates/catalog/email/new_team_notification.txt` — последняя строка
    ветвится по `team.is_auto_published` (2.4).
@@ -305,7 +305,7 @@ uv run pytest tests/test_team_create.py tests/test_event_create.py -q
 - `templates/catalog/email/new_team_notification.txt`
 - `templates/catalog/email/new_event_notification.txt`
 
-### 6. [ ] Тексты интерфейса и `/rules/`
+### 6. [x] Тексты интерфейса и `/rules/`
 
 Формулировки — из 2.5, каждая строка через `{% trans %}`:
 
@@ -328,7 +328,7 @@ uv run pytest tests/test_team_create.py tests/test_event_create.py -q
 Файлы:
 - перечислены в таблице
 
-### 7. [ ] Локализация
+### 7. [x] Локализация
 
 1. `make i18n`.
 2. `locale/ru/LC_MESSAGES/django.po`: снять `fuzzy` у новых записей,
@@ -343,7 +343,7 @@ uv run pytest tests/test_team_create.py tests/test_event_create.py -q
 - `locale/ru/LC_MESSAGES/django.po`
 - `locale/en/LC_MESSAGES/django.po`
 
-### 8. [ ] Тесты: `tests/test_trusted_author.py`
+### 8. [x] Тесты: `tests/test_trusted_author.py`
 
 Сценарии:
 
@@ -376,7 +376,7 @@ uv run pytest tests/test_team_create.py tests/test_event_create.py -q
 Файлы:
 - `tests/test_trusted_author.py`
 
-### 9. [ ] Документация
+### 9. [x] Документация
 
 1. `KODA.md` и `AGENTS.md` (синхронно, по правилу проекта):
    - в «Правилах для кода» заменить пункт про `initial_status_for` в
@@ -402,7 +402,7 @@ uv run pytest tests/test_team_create.py tests/test_event_create.py -q
 - `.koda/backlog.md`
 - `.koda/plans/moderation-ui.md`
 
-### 10. [ ] Проверка и коммит
+### 10. [x] Проверка и коммит
 
 ```bash
 make lint
@@ -484,13 +484,13 @@ Bump version: 0.24.0 → 0.25.0 (minor)
 
 | # | Шаг | Статус |
 |---|---|---|
-| 1 | Ветка и фикстура доверенного автора | [ ] |
-| 2 | Сервис правила статуса и переезд из `photos` | [ ] |
-| 3 | Признак «опубликовано без проверки» | [ ] |
-| 4 | Команда и событие: статус и сообщения | [ ] |
-| 5 | Письма модераторам: честный текст | [ ] |
-| 6 | Тексты интерфейса и `/rules/` | [ ] |
-| 7 | Локализация | [ ] |
-| 8 | Тесты | [ ] |
-| 9 | Документация | [ ] |
-| 10 | Проверка и коммит | [ ] |
+| 1 | Ветка и фикстура доверенного автора | [x] |
+| 2 | Сервис правила статуса и переезд из `photos` | [x] |
+| 3 | Признак «опубликовано без проверки» | [x] |
+| 4 | Команда и событие: статус и сообщения | [x] |
+| 5 | Письма модераторам: честный текст | [x] |
+| 6 | Тексты интерфейса и `/rules/` | [x] |
+| 7 | Локализация | [x] |
+| 8 | Тесты | [x] |
+| 9 | Документация | [x] |
+| 10 | Проверка и коммит | [x] |

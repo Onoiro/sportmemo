@@ -7,10 +7,11 @@
 недоступность хранилища, единственный случай, который имеет смысл
 повторить.
 
-Здесь же правила загрузки: начальный статус нового фото, суточный лимит,
-право на правку метаданных и резолв названия команды или события,
-введённого текстом. Они общие для формы и представления, поэтому живут
-в сервисе, а не в каждом из них по отдельности.
+Здесь же правила загрузки: суточный лимит, право на правку метаданных
+и резолв названия команды или события, введённого текстом. Они общие для
+формы и представления, поэтому живут в сервисе, а не в каждом из них по
+отдельности. Статус нового объекта считается не здесь, а в
+`apps/moderation/services.py`: правило одно для фото, команды и события.
 """
 
 import io
@@ -21,7 +22,6 @@ from django.core.files.base import ContentFile
 from django.utils import timezone
 from PIL import Image, UnidentifiedImageError
 
-from apps.core.models import Status
 from apps.photos.exif import extract_exif
 from apps.photos.models import Photo, ProcessingStatus
 from apps.photos.processing import (
@@ -79,17 +79,6 @@ def can_edit_photo(user, photo) -> bool:
     if user is None or not user.is_authenticated:
         return False
     return user.can_moderate(photo) or photo.uploaded_by_id == user.pk
-
-
-def initial_status_for(user) -> Status:
-    """Статус, с которым новое фото попадает в архив.
-
-    Одна точка правила: доверенным авторам (`User.is_trusted`, P3-10)
-    понадобится другой статус, и менять его будет один подэтап, а не форма
-    и представление по отдельности. `user` пока не используется — параметр
-    стоит здесь ради этой точки.
-    """
-    return Status.DRAFT
 
 
 def uploads_today(user) -> int:

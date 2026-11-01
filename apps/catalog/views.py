@@ -22,7 +22,6 @@ from apps.catalog.forms import EventForm, TeamForm
 from apps.catalog.models import Event, Person, Team
 from apps.catalog.roster import memberships_in_year, roster_years
 from apps.comments.services import comments_context
-from apps.core.models import Status
 from apps.core.schema import compact, event_schema, person_schema, team_schema
 from apps.core.seo import page_meta
 from apps.core.shortcuts import (
@@ -34,6 +33,7 @@ from apps.core.shortcuts import (
     photos_count,
     visible_photos,
 )
+from apps.moderation.services import initial_status_for
 
 TEAM_PAGE_SIZE = 24
 EVENT_PAGE_SIZE = 20
@@ -467,11 +467,13 @@ def person_detail(request, slug):
 @login_required
 @require_http_methods(["GET", "POST"])
 def team_create(request):
-    """Создание команды: сохраняется черновиком и ждёт модератора.
+    """Создание команды: статус решает правило модерации.
 
-    Вид спорта берётся из `default_sport()`: выбора в интерфейсе нет, схема
-    мультиспортная (инвариант № 1). Активных видов спорта нет — форма
-    недоступна: показать сообщение честнее, чем падать на пустом `sport`.
+    Обычный автор получает черновик и ждёт модератора, доверенный публикует
+    сразу (`initial_status_for`). Вид спорта берётся из `default_sport()`:
+    выбора в интерфейсе нет, схема мультиспортная (инвариант № 1). Активных
+    видов спорта нет — форма недоступна: показать сообщение честнее, чем
+    падать на пустом `sport`.
     """
     sport = default_sport()
     # Адрес возврата нужен форме фото: человек заводит команду прямо
@@ -483,14 +485,19 @@ def team_create(request):
         if form.is_valid():
             team = form.save(commit=False)
             team.sport = sport
-            team.status = Status.DRAFT
+            team.status = initial_status_for(request.user)
             team.created_by = request.user
             team.save()
             notify_moderators_new_team(team)
-            messages.success(
-                request,
-                _("Команда создана и отправлена на проверку модератору."),
-            )
+            # Склонение у каждой модели своё, поэтому сообщение живёт
+            # в представлении, а не в общей функции правила статуса.
+            if team.is_published:
+                messages.success(request, _("Команда создана и опубликована."))
+            else:
+                messages.success(
+                    request,
+                    _("Команда создана и отправлена на проверку модератору."),
+                )
             if next_url:
                 return redirect(next_with_team(next_url, team))
             return redirect(team.get_absolute_url())
@@ -597,11 +604,13 @@ def my_teams(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def event_create(request):
-    """Создание события: сохраняется черновиком и ждёт модератора.
+    """Создание события: статус решает правило модерации.
 
-    Вид спорта берётся из `default_sport()`: выбора в интерфейсе нет, схема
-    мультиспортная (инвариант № 1). Активных видов спорта нет — форма
-    недоступна: показать сообщение честнее, чем падать на пустом `sport`.
+    Обычный автор получает черновик и ждёт модератора, доверенный публикует
+    сразу (`initial_status_for`). Вид спорта берётся из `default_sport()`:
+    выбора в интерфейсе нет, схема мультиспортная (инвариант № 1). Активных
+    видов спорта нет — форма недоступна: показать сообщение честнее, чем
+    падать на пустом `sport`.
 
     Событие заводят прямо из формы загрузки фото — там же, где команду:
     поле «Событие» требует существующей записи, и без этой формы человек
@@ -615,14 +624,17 @@ def event_create(request):
         if form.is_valid():
             event = form.save(commit=False)
             event.sport = sport
-            event.status = Status.DRAFT
+            event.status = initial_status_for(request.user)
             event.created_by = request.user
             event.save()
             notify_moderators_new_event(event)
-            messages.success(
-                request,
-                _("Событие создано и отправлено на проверку модератору."),
-            )
+            if event.is_published:
+                messages.success(request, _("Событие создано и опубликовано."))
+            else:
+                messages.success(
+                    request,
+                    _("Событие создано и отправлено на проверку модератору."),
+                )
             if next_url:
                 return redirect(next_with_param(next_url, "event", event.pk))
             return redirect(event.get_absolute_url())

@@ -121,6 +121,16 @@ def moderator(db):
 
 
 @pytest.fixture
+def trusted_user(db):
+    """Доверенный автор: публикует своё сразу, чужого не видит."""
+    return User.objects.create_user(
+        email="trusted@example.com",
+        password="test-pass-12345",
+        is_trusted=True,
+    )
+
+
+@pytest.fixture
 def admin_user(db):
     return User.objects.create_superuser(
         email="admin@example.com", password="test-pass-12345"

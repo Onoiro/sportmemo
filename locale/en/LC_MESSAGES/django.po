@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-31 22:54+0300\n"
+"POT-Creation-Date: 2026-11-01 11:25+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -39,7 +39,7 @@ msgstr "Rights"
 msgid "Даты"
 msgstr "Dates"
 
-#: apps/accounts/admin.py:78 apps/core/models.py:288
+#: apps/accounts/admin.py:78 apps/core/models.py:297
 msgid "виды спорта"
 msgstr "sports"
 
@@ -125,7 +125,7 @@ msgstr "personal data consent"
 msgid "версия согласия на ПД"
 msgstr "personal data consent version"
 
-#: apps/accounts/models.py:77 apps/core/models.py:284
+#: apps/accounts/models.py:77 apps/core/models.py:293
 msgid "активен"
 msgstr "active"
 
@@ -148,12 +148,12 @@ msgstr "Profile updated"
 #: apps/accounts/views.py:38 apps/catalog/views.py:244
 #: apps/catalog/views.py:269 apps/catalog/views.py:348
 #: apps/catalog/views.py:388 apps/catalog/views.py:460
-#: apps/catalog/views.py:517 apps/catalog/views.py:559
-#: apps/catalog/views.py:590 apps/catalog/views.py:649
-#: apps/catalog/views.py:691 apps/catalog/views.py:718 apps/core/views.py:114
+#: apps/catalog/views.py:524 apps/catalog/views.py:566
+#: apps/catalog/views.py:597 apps/catalog/views.py:661
+#: apps/catalog/views.py:703 apps/catalog/views.py:730 apps/core/views.py:114
 #: apps/core/views.py:144 apps/core/views.py:192 apps/moderation/views.py:114
-#: apps/photos/views.py:157 apps/photos/views.py:212 apps/photos/views.py:247
-#: apps/photos/views.py:285 apps/search/views.py:40
+#: apps/photos/views.py:158 apps/photos/views.py:213 apps/photos/views.py:248
+#: apps/photos/views.py:286 apps/search/views.py:40
 #: templates/partials/footer.html:20
 msgid "Главная"
 msgstr "Home"
@@ -368,12 +368,12 @@ msgstr "manager"
 msgid "персонал"
 msgstr "staff"
 
-#: apps/catalog/models.py:91 apps/catalog/models.py:452 apps/core/models.py:287
+#: apps/catalog/models.py:91 apps/catalog/models.py:452 apps/core/models.py:296
 #: apps/moderation/models.py:61 apps/photos/models.py:150
 msgid "вид спорта"
 msgstr "sport"
 
-#: apps/catalog/models.py:95 apps/catalog/models.py:456 apps/core/models.py:281
+#: apps/catalog/models.py:95 apps/catalog/models.py:456 apps/core/models.py:290
 #: apps/photos/models.py:84
 msgid "название"
 msgstr "name"
@@ -654,8 +654,8 @@ msgid "Команд"
 msgstr "Teams"
 
 #: apps/catalog/views.py:237 apps/catalog/views.py:245
-#: apps/catalog/views.py:349 apps/catalog/views.py:518
-#: apps/catalog/views.py:560 apps/search/services.py:103
+#: apps/catalog/views.py:349 apps/catalog/views.py:525
+#: apps/catalog/views.py:567 apps/search/services.py:103
 #: templates/catalog/team_list.html:11 templates/core/home.html:52
 #: templates/partials/footer.html:12 templates/partials/navbar.html:14
 msgid "Команды"
@@ -666,8 +666,8 @@ msgid "Команды архива SportMemo: города, годы основ�
 msgstr "Teams in the SportMemo archive: cities, founding years and photos."
 
 #: apps/catalog/views.py:264 apps/catalog/views.py:270
-#: apps/catalog/views.py:389 apps/catalog/views.py:650
-#: apps/catalog/views.py:692 apps/search/services.py:109
+#: apps/catalog/views.py:389 apps/catalog/views.py:662
+#: apps/catalog/views.py:704 apps/search/services.py:109
 #: templates/catalog/event_list.html:11 templates/partials/footer.html:13
 #: templates/partials/navbar.html:17
 msgid "События"
@@ -692,56 +692,64 @@ msgstr "Event \"%(name)s\" in the SportMemo archive."
 msgid "Человек %(name)s в архиве SportMemo."
 msgstr "Person %(name)s in the SportMemo archive."
 
-#: apps/catalog/views.py:492
+#: apps/catalog/views.py:495
+msgid "Команда создана и опубликована."
+msgstr "The team is created and published."
+
+#: apps/catalog/views.py:499
 msgid "Команда создана и отправлена на проверку модератору."
 msgstr "The team is created and sent to a moderator for review."
 
-#: apps/catalog/views.py:507 apps/catalog/views.py:512
-#: apps/catalog/views.py:519
+#: apps/catalog/views.py:514 apps/catalog/views.py:519
+#: apps/catalog/views.py:526
 msgid "Новая команда"
 msgstr "New team"
 
-#: apps/catalog/views.py:508 apps/catalog/views.py:640
+#: apps/catalog/views.py:515 apps/catalog/views.py:652
 msgid "Создать"
 msgstr "Create"
 
-#: apps/catalog/views.py:540 apps/catalog/views.py:672 apps/photos/views.py:190
+#: apps/catalog/views.py:547 apps/catalog/views.py:684 apps/photos/views.py:191
 msgid "Изменения сохранены."
 msgstr "Changes saved."
 
-#: apps/catalog/views.py:549 apps/catalog/views.py:554
+#: apps/catalog/views.py:556 apps/catalog/views.py:561
 msgid "Редактирование команды"
 msgstr "Edit team"
 
-#: apps/catalog/views.py:550 apps/catalog/views.py:682
+#: apps/catalog/views.py:557 apps/catalog/views.py:694
 #: templates/accounts/profile.html:102 templates/photos/photo_details.html:129
 msgid "Сохранить"
 msgstr "Save"
 
-#: apps/catalog/views.py:562 apps/catalog/views.py:694
+#: apps/catalog/views.py:569 apps/catalog/views.py:706
 msgid "Редактирование"
 msgstr "Edit"
 
-#: apps/catalog/views.py:585 apps/catalog/views.py:591
+#: apps/catalog/views.py:592 apps/catalog/views.py:598
 #: templates/accounts/profile.html:59 templates/accounts/profile.html:65
 #: templates/catalog/my_teams.html:11 templates/partials/navbar.html:65
 msgid "Мои команды"
 msgstr "My teams"
 
-#: apps/catalog/views.py:624
+#: apps/catalog/views.py:632
+msgid "Событие создано и опубликовано."
+msgstr "The event is created and published."
+
+#: apps/catalog/views.py:636
 msgid "Событие создано и отправлено на проверку модератору."
 msgstr "The event is created and sent to a moderator for review."
 
-#: apps/catalog/views.py:639 apps/catalog/views.py:644
-#: apps/catalog/views.py:651
+#: apps/catalog/views.py:651 apps/catalog/views.py:656
+#: apps/catalog/views.py:663
 msgid "Новое событие"
 msgstr "New event"
 
-#: apps/catalog/views.py:681 apps/catalog/views.py:686
+#: apps/catalog/views.py:693 apps/catalog/views.py:698
 msgid "Редактирование события"
 msgstr "Edit event"
 
-#: apps/catalog/views.py:713 apps/catalog/views.py:719
+#: apps/catalog/views.py:725 apps/catalog/views.py:731
 #: templates/accounts/profile.html:70 templates/accounts/profile.html:76
 #: templates/catalog/my_events.html:11 templates/partials/navbar.html:68
 msgid "Мои события"
@@ -917,7 +925,7 @@ msgstr "created"
 msgid "изменено"
 msgstr "updated"
 
-#: apps/core/models.py:29 apps/core/models.py:282
+#: apps/core/models.py:29 apps/core/models.py:291
 msgid "slug"
 msgstr "slug"
 
@@ -945,27 +953,27 @@ msgstr "moderated at"
 msgid "причина решения"
 msgstr "decision reason"
 
-#: apps/core/models.py:167
+#: apps/core/models.py:176
 msgid "удалено"
 msgstr "deleted"
 
-#: apps/core/models.py:169
+#: apps/core/models.py:178
 msgid "причина удаления"
 msgstr "deletion reason"
 
-#: apps/core/models.py:202
+#: apps/core/models.py:211
 msgid "слит в"
 msgstr "merged into"
 
-#: apps/core/models.py:264
+#: apps/core/models.py:273
 msgid "слито с дубликатом"
 msgstr "merged with a duplicate"
 
-#: apps/core/models.py:283
+#: apps/core/models.py:292
 msgid "порядок сортировки"
 msgstr "sort order"
 
-#: apps/core/schema.py:150 apps/photos/views.py:294 apps/photos/views.py:298
+#: apps/core/schema.py:150 apps/photos/views.py:295 apps/photos/views.py:299
 #: templates/photos/my_photos.html:58 templates/photos/photo_detail.html:37
 msgid "Фотография"
 msgstr "Photo"
@@ -992,7 +1000,7 @@ msgstr ""
 "an error or a rights violation."
 
 #: apps/core/views.py:138 apps/core/views.py:145 apps/core/views.py:193
-#: apps/photos/views.py:288 templates/core/home.html:61
+#: apps/photos/views.py:289 templates/core/home.html:61
 #: templates/core/year_list.html:11 templates/partials/footer.html:14
 #: templates/partials/navbar.html:20
 msgid "Годы"
@@ -1002,7 +1010,7 @@ msgstr "Years"
 msgid "Хронология архива SportMemo: годы и фотографии каждого года."
 msgstr "The SportMemo archive timeline: years and the photos of each year."
 
-#: apps/core/views.py:187 apps/core/views.py:194 apps/photos/views.py:291
+#: apps/core/views.py:187 apps/core/views.py:194 apps/photos/views.py:292
 #: templates/core/year_detail.html:12
 #, python-format
 msgid "%(year)s год"
@@ -1613,7 +1621,7 @@ msgstr "The storage is unavailable. Please try again later."
 msgid "Ошибка обработки: %(error)s"
 msgstr "Processing error: %(error)s"
 
-#: apps/photos/views.py:139
+#: apps/photos/views.py:140
 msgid ""
 "Файл сохранён, фотография обрабатывается. Заполните данные о снимке — их "
 "можно изменить позже."
@@ -1621,27 +1629,27 @@ msgstr ""
 "The file is saved and the photo is being processed. Fill in the photo "
 "details — you can change them later."
 
-#: apps/photos/views.py:152 apps/photos/views.py:158
+#: apps/photos/views.py:153 apps/photos/views.py:159
 #: templates/photos/photo_form.html:11
 msgid "Загрузка фото"
 msgstr "Photo upload"
 
-#: apps/photos/views.py:187
+#: apps/photos/views.py:188
 msgid "Изменения сохранены. Фото остаётся в архиве."
 msgstr "Changes saved. The photo stays in the archive."
 
-#: apps/photos/views.py:207 apps/photos/views.py:214
+#: apps/photos/views.py:208 apps/photos/views.py:215
 #: templates/photos/photo_details.html:11
 msgid "Данные фотографии"
 msgstr "Photo details"
 
-#: apps/photos/views.py:213 apps/photos/views.py:242 apps/photos/views.py:248
+#: apps/photos/views.py:214 apps/photos/views.py:243 apps/photos/views.py:249
 #: templates/partials/navbar.html:71 templates/photos/my_photos.html:13
 #: templates/photos/photo_details.html:131 templates/photos/photo_form.html:130
 msgid "Мои фото"
 msgstr "My photos"
 
-#: apps/photos/views.py:307
+#: apps/photos/views.py:308
 msgid "Фотография из архива SportMemo"
 msgstr "A photo from the SportMemo archive"
 
@@ -2121,6 +2129,10 @@ msgid "В админке"
 msgstr "In the admin"
 
 #: templates/catalog/email/new_event_notification.txt:11
+msgid "Событие опубликовано сразу: автор — доверенный."
+msgstr "The event is published right away: the author is trusted."
+
+#: templates/catalog/email/new_event_notification.txt:11
 msgid "Событие создано в статусе «черновик» и ждёт проверки."
 msgstr "The event is created as a draft and waits for review."
 
@@ -2128,6 +2140,10 @@ msgstr "The event is created as a draft and waits for review."
 #, python-format
 msgid "Новая команда в архиве SportMemo: %(name)s"
 msgstr "New team in the SportMemo archive: %(name)s"
+
+#: templates/catalog/email/new_team_notification.txt:10
+msgid "Команда опубликована сразу: автор — доверенный."
+msgstr "The team is published right away: the author is trusted."
 
 #: templates/catalog/email/new_team_notification.txt:10
 msgid "Команда создана в статусе «черновик» и ждёт проверки."
@@ -2154,9 +2170,13 @@ msgstr "Event photos"
 msgid "Событие опубликовано: изменения появятся на сайте сразу."
 msgstr "The event is published: changes appear on the site at once."
 
-#: templates/catalog/event_form.html:18
-msgid "Публикует событие модератор — обычно в течение дня."
-msgstr "A moderator publishes the event, usually within a day."
+#: templates/catalog/event_form.html:18 templates/catalog/team_form.html:18
+msgid ""
+"Появится на сайте после проверки модератором или сразу, если вы доверенный "
+"автор."
+msgstr ""
+"It will appear on the site after a moderator check, or right away if you "
+"are a trusted author."
 
 #: templates/catalog/event_form.html:32
 msgid "Создание событий пока недоступно"
@@ -2219,11 +2239,13 @@ msgstr "Events will appear here once they are added and published."
 
 #: templates/catalog/my_events.html:18
 msgid ""
-"Публикует событие модератор — обычно в течение дня. До публикации событие "
-"видите только вы и модератор."
+"Событие проверяет модератор — обычно в течение дня; авторам, которым мы "
+"доверяем, оно попадает в архив сразу. До проверки событие видите только вы и "
+"модератор."
 msgstr ""
-"A moderator publishes the event, usually within a day. Until then only you "
-"and a moderator can see it."
+"A moderator checks the event, usually within a day; for authors we trust "
+"it joins the archive right away. Before the check only you and a moderator "
+"can see it."
 
 #: templates/catalog/my_events.html:46
 msgid "Вы ещё не создавали событий"
@@ -2231,29 +2253,33 @@ msgstr "You have not created events yet"
 
 #: templates/catalog/my_events.html:48
 msgid ""
-"Если вашего турнира или встречи нет в архиве — заведите событие. Публикует "
-"модератор."
+"Если вашего турнира или встречи нет в архиве — заведите событие. Оно попадёт "
+"в архив сразу или после проверки модератором."
 msgstr ""
-"If your tournament or game is not in the archive, create the event. A "
-"moderator publishes it."
+"If your tournament or game is not in the archive, create the event. It "
+"will join the archive right away or after a moderator check."
 
 #: templates/catalog/my_teams.html:18
 msgid ""
-"Публикует команду модератор — обычно в течение дня. До публикации команду "
-"видите только вы и модератор."
+"Команду проверяет модератор — обычно в течение дня; авторам, которым мы "
+"доверяем, она попадает в архив сразу. До проверки команду видите только вы и "
+"модератор."
 msgstr ""
-"A moderator publishes the team, usually within a day. Before that only you "
-"and the moderator can see it."
+"A moderator checks the team, usually within a day; for authors we trust it "
+"joins the archive right away. Before the check only you and a moderator "
+"can see it."
 
 #: templates/catalog/my_teams.html:46
 msgid "Вы ещё не создавали команд"
 msgstr "You have not created any teams yet"
 
 #: templates/catalog/my_teams.html:48
-msgid "Если вашей команды нет в архиве — заведите её. Публикует модератор."
+msgid ""
+"Если вашей команды нет в архиве — заведите её. Она попадёт в архив сразу или "
+"после проверки модератором."
 msgstr ""
-"If your team is missing from the archive, create it. A moderator publishes "
-"it.If your team is not in the archive, create it. A moderator publishes it."
+"If your team is not in the archive, create it. It will join the archive "
+"right away or after a moderator check."
 
 #: templates/catalog/my_teams.html:52 templates/catalog/team_list.html:19
 #: templates/photos/photo_details.html:66
@@ -2351,10 +2377,6 @@ msgstr "The archive does not list everyone who played."
 #: templates/catalog/team_form.html:14
 msgid "Команда опубликована: изменения появятся на сайте сразу."
 msgstr "The team is published: changes appear on the site at once."
-
-#: templates/catalog/team_form.html:18
-msgid "Публикует команду модератор — обычно в течение дня."
-msgstr "A moderator publishes the team, usually within a day."
 
 #: templates/catalog/team_form.html:32
 msgid "Создание команд пока недоступно"
@@ -2627,12 +2649,16 @@ msgstr "Review and reports"
 
 #: templates/core/rules.html:70
 msgid ""
-"Фото публикует модератор после быстрой проверки. Модератор смотрит, "
-"относится ли снимок к спорту и заполнена ли подпись; за права отвечает автор."
+"Фото обычно проверяет модератор: он смотрит, относится ли снимок к спорту и "
+"заполнена ли подпись; за права отвечает автор. Проверка выборочная: авторам, "
+"которым мы доверяем, снимки публикуются сразу, а остальные ждут решения — "
+"обычно в течение дня."
 msgstr ""
-"A moderator publishes the photo after a quick review. The moderator checks "
-"that the photo relates to sport and that the caption is filled in. The "
-"author is responsible for the rights."
+"A moderator usually checks a photo: he looks at whether the picture is "
+"about sport and whether the caption is filled in; the author is "
+"responsible for the rights. The check is selective: photos of the authors "
+"we trust are published right away, and the others wait for a decision, "
+"usually within a day."
 
 #: templates/core/rules.html:73
 msgid ""
@@ -2774,11 +2800,13 @@ msgstr "Next"
 
 #: templates/photos/my_photos.html:15
 msgid ""
-"Публикует фото модератор — обычно в течение дня. До публикации фото видите "
-"только вы и модератор."
+"Снимок проверяет модератор — обычно в течение дня; авторам, которым мы "
+"доверяем, он попадает в архив сразу. До проверки фото видите только вы и "
+"модератор."
 msgstr ""
-"A moderator publishes the photo, usually within a day. Before that only you "
-"and the moderator can see it."
+"A moderator checks the photo, usually within a day; for authors we trust "
+"it joins the archive right away. Before the check only you and a moderator "
+"can see it."
 
 #: templates/photos/my_photos.html:26
 msgid "Обновить"
@@ -2794,11 +2822,11 @@ msgstr "You have not uploaded any photos yet"
 
 #: templates/photos/my_photos.html:106
 msgid ""
-"Оцифруйте снимок из бумажного альбома — он попадёт в архив после проверки "
-"модератором."
+"Оцифруйте снимок из бумажного альбома — он попадёт в архив сразу или после "
+"проверки модератором."
 msgstr ""
-"Digitize a photo from a paper album and it will join the archive after a "
-"moderator review."
+"Digitize a photo from a paper album and it will join the archive right "
+"away or after a moderator check."
 
 #: templates/photos/partials/grid.html:15
 #, python-brace-format
@@ -2866,11 +2894,12 @@ msgstr "Create event «%(name)s»"
 #: templates/photos/photo_form.html:13
 msgid ""
 "Сначала файл, потом данные: снимок сохраняется сразу, а что на нём — "
-"заполним на следующем шаге. Публикует фото модератор — обычно в течение дня."
+"заполним на следующем шаге. Фото появится на сайте после проверки "
+"модератором или сразу, если вы доверенный автор."
 msgstr ""
-"First the file, then the details: the photo is saved right away, and we fill "
-"in what is on it in the next step. A moderator publishes the photo, usually "
-"within a day."
+"First the file, then the details: the photo is saved right away, and we "
+"fill in what is on it in the next step. The photo will appear on the site "
+"after a moderator check, or right away if you are a trusted author."
 
 #: templates/photos/photo_form.html:25
 msgid "Загрузка фото пока недоступна"

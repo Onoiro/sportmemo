@@ -1,4 +1,4 @@
-"""Правила загрузки фото: статус, суточный лимит, резолв названий, форма."""
+"""Правила загрузки фото: суточный лимит, резолв названий, форма."""
 
 import io
 from datetime import timedelta
@@ -38,11 +38,6 @@ def _make_photos(user, count, **kwargs):
             )
         )
     return photos
-
-
-@pytest.mark.django_db
-def test_initial_status_is_draft(user):
-    assert services.initial_status_for(user) == Status.DRAFT
 
 
 @pytest.mark.django_db

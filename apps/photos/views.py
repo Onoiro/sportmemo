@@ -26,6 +26,7 @@ from apps.core.shortcuts import (
     paginate,
     visible_photos,
 )
+from apps.moderation.services import initial_status_for
 from apps.photos import services
 from apps.photos.exif import taken_year
 from apps.photos.forms import PhotoDetailsForm, PhotoFileForm
@@ -48,7 +49,7 @@ def _create_photo(form, user, sport):
     photo = Photo(
         sport=sport,
         original=upload,
-        status=services.initial_status_for(user),
+        status=initial_status_for(user),
         uploaded_by=user,
         # Имя без пути: браузер присылает его как `C:\...\photo.jpg`,
         # а поле хранится для поиска в админке.

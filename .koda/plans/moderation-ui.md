@@ -122,6 +122,13 @@ rejected + `moderated_by`, `moderated_at`, `moderation_reason`), `SoftDeleteMode
 
 ### 4.2 Правило статуса и пост-модерация автора
 
+**Сделано** (0.25.0, ветка `feature/trusted-status`). Отличие от записи ниже:
+сигнатура — `initial_status_for(user)` без `sport`, решение владельца 2026-10-31
+(неиспользуемый аргумент создавал бы иллюзию правила по виду спорта). Признак
+«опубликовано без проверки» живёт в `StatusModel.is_auto_published`, письма
+модераторам ветвятся по нему. Детальный план —
+[`moderation-ui-4.2-trusted-status.md`](moderation-ui-4.2-trusted-status.md).
+
 - `initial_status_for(user, sport=None)` переезжает в общий слой
   (`apps/moderation/services.py`): доверенный автор (`is_trusted`) получает
   `Status.PUBLISHED`, остальные — `Status.DRAFT`. Вызывают три места:
