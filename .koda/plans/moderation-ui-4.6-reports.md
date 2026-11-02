@@ -371,7 +371,7 @@ class ReportResolutionForm(BootstrapFormMixin, forms.Form):
 
 ## 3. Шаги
 
-### 1. [ ] Ветка
+### 1. [x] Ветка
 
 1. `git status` — дерево чистое.
 2. `git switch -c feature/moderation-reports` от `master`.
@@ -379,7 +379,7 @@ class ReportResolutionForm(BootstrapFormMixin, forms.Form):
 
 Файлы: —
 
-### 2. [ ] Типы журнала и миграция
+### 2. [x] Типы журнала и миграция
 
 1. `apps/moderation/models.py` — в `ModerationActionType` добавить
    `REPORT_RESOLVED = "report_resolved", _("жалоба решена")` и
@@ -395,7 +395,7 @@ class ReportResolutionForm(BootstrapFormMixin, forms.Form):
 - `apps/moderation/models.py`
 - `apps/moderation/migrations/0003_report_action_types.py`
 
-### 3. [ ] Сервис решений по жалобам
+### 3. [x] Сервис решений по жалобам
 
 `apps/moderation/services.py` — три функции по 2.9, рядом с решениями
 по объектам (один модуль — одна тема: «что модератор решил»).
@@ -425,7 +425,7 @@ grep -rn "ModerationAction.objects.create" apps/   # только services.py, �
 Файлы:
 - `apps/moderation/services.py`
 
-### 4. [ ] `apps/moderation/reports.py`
+### 4. [x] `apps/moderation/reports.py`
 
 Новый модуль по 2.1, 2.3–2.6.
 
@@ -457,7 +457,7 @@ grep -n "select_related" apps/moderation/reports.py
 Файлы:
 - `apps/moderation/reports.py`
 
-### 5. [ ] Список: представление, маршрут, шаблоны
+### 5. [x] Список: представление, маршрут, шаблоны
 
 1. `apps/moderation/views.py` — `reports_list(request)`: `@login_required`,
    `@never_cache`, `@require_GET`; не-модератор → `PermissionDenied`;
@@ -492,15 +492,16 @@ grep -n "reports_list" apps/moderation/views.py apps/moderation/urls.py
 - `templates/moderation/report_list.html`
 - `templates/moderation/partials/report_card.html`
 
-### 6. [ ] Действия: форма, представление, маршрут, партиал
+### 6. [x] Действия: форма, представление, маршрут, партиал
 
 1. `apps/moderation/forms.py` — `ReportResolutionForm` по 2.11.
 2. `apps/moderation/views.py` — `report_decide(request, pk)`:
    `@login_required`, `@require_POST`; не-модератор → `PermissionDenied`;
    `next_url = _reports_next(request)`; далее всё внутри
    `transaction.atomic()` с `select_for_update()` (2.10):
-   `Report.objects.select_for_update().select_related("content_type",
-   "sport").filter(pk=pk).first()` → 404;
+   `Report.objects.select_for_update().filter(pk=pk).first()` → 404
+   (без `select_related("sport")`: пустой вид спорта даёт outer join,
+   а PostgreSQL отказывает в `FOR UPDATE` на его внешней стороне);
    `can_moderate(report)` → 404; `reports.is_own_report(report, user)` → 404;
    `reports.is_open(report)` → «Уже обработано» + редирект;
    `action` из POST (`take` / `resolve` / `reject`, иначе 400);
@@ -534,7 +535,7 @@ grep -n "select_for_update" apps/moderation/views.py                 # две с
 - `templates/moderation/partials/report_resolution_form.html`
 - `templates/moderation/partials/report_card.html`
 
-### 7. [ ] Письмо о новой жалобе
+### 7. [x] Письмо о новой жалобе
 
 1. `apps/moderation/emails.py` — `notify_moderators_new_report(report,
    request=None)` по 2.13: `_reports_url(request)`, `reports_url`
@@ -557,7 +558,7 @@ uv run pytest tests/test_reports_ui.py tests/test_moderator_scope.py -q
 - `templates/moderation/email/new_report_notification.txt`
 - `apps/moderation/views.py`
 
-### 8. [ ] Меню и стили
+### 8. [x] Меню и стили
 
 1. `templates/partials/navbar.html` — пункт «Жалобы» (`bi-flag`) сразу
    после «Очереди», только модератору.
@@ -580,7 +581,7 @@ grep -n "moderation:reports" templates/partials/navbar.html
 - `templates/partials/navbar.html`
 - `static/css/sportmemo.css`
 
-### 9. [ ] Тесты: `tests/test_moderation_reports_ui.py`
+### 9. [x] Тесты: `tests/test_moderation_reports_ui.py`
 
 Фабрики из `tests/factories.py`, фикстуры `baseball`, `softball`,
 `moderator`, `user`, `team`, `photo` из `tests/conftest.py`. Хелперы:
@@ -631,7 +632,7 @@ grep -n "moderation:reports" templates/partials/navbar.html
 Файлы:
 - `tests/test_moderation_reports_ui.py`
 
-### 10. [ ] Локализация
+### 10. [x] Локализация
 
 1. `make i18n`.
 2. `locale/ru/LC_MESSAGES/django.po`: снять `fuzzy`, выровнять пустые
@@ -651,7 +652,7 @@ grep -n "moderation:reports" templates/partials/navbar.html
 - `locale/ru/LC_MESSAGES/django.po`
 - `locale/en/LC_MESSAGES/django.po`
 
-### 11. [ ] Документация
+### 11. [x] Документация
 
 1. `KODA.md` и `AGENTS.md` (синхронно):
    - «Правила для кода»: правило жалоб живёт в `apps/moderation/reports.py`
@@ -679,7 +680,7 @@ grep -n "moderation:reports" templates/partials/navbar.html
 - `.koda/backlog.md`
 - `.koda/plans/moderation-ui.md`
 
-### 12. [ ] Проверка и коммит
+### 12. [x] Проверка и коммит
 
 ```bash
 make lint
@@ -759,15 +760,15 @@ Bump version: 0.27.0 → 0.28.0 (minor)
 
 | # | Шаг | Статус |
 |---|---|---|
-| 1 | Ветка | [ ] |
-| 2 | Типы журнала и миграция | [ ] |
-| 3 | Сервис решений по жалобам | [ ] |
-| 4 | `apps/moderation/reports.py` | [ ] |
-| 5 | Список: представление, маршрут, шаблоны | [ ] |
-| 6 | Действия: форма, представление, маршрут, партиал | [ ] |
-| 7 | Письмо о новой жалобе | [ ] |
-| 8 | Меню и стили | [ ] |
-| 9 | Тесты | [ ] |
-| 10 | Локализация | [ ] |
-| 11 | Документация | [ ] |
-| 12 | Проверка и коммит | [ ] |
+| 1 | Ветка | [x] |
+| 2 | Типы журнала и миграция | [x] |
+| 3 | Сервис решений по жалобам | [x] |
+| 4 | `apps/moderation/reports.py` | [x] |
+| 5 | Список: представление, маршрут, шаблоны | [x] |
+| 6 | Действия: форма, представление, маршрут, партиал | [x] |
+| 7 | Письмо о новой жалобе | [x] |
+| 8 | Меню и стили | [x] |
+| 9 | Тесты | [x] |
+| 10 | Локализация | [x] |
+| 11 | Документация | [x] |
+| 12 | Проверка и коммит | [x] |

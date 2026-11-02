@@ -65,7 +65,7 @@ stays tidy.
 | `apps/photos` | `Source`, `Photo`, `PhotoPerson`, EXIF parsing (`exif.py`), pure processing functions (`processing.py`), the pipeline (`services.py`), similar photo search by hash (`similar.py`), the Celery task (`tasks.py`), public views (`photo_detail`, the `grid` fragment), `photos/urls.py` |
 | `apps/search` | search: the `pg_trgm` extension, search text and query building (`indexing.py`), results and suggestions (`services.py`), the results page (`views.py`, `urls.py`), signals, the `search_reindex` command; it has no models of its own — the index fields live in `catalog` and `photos` |
 | `apps/comments` | `Comment` (generic FK, replies, statuses), `CommentSettings` (premoderation), target allow-list (`targets.py`), form, add view, visible query (`services.py`) |
-| `apps/moderation` | `Report`, `ModerationAction` (moderator decision log), `services.py` (status rule for new objects, decision rights, `log_action()`), report form and page |
+| `apps/moderation` | `Report`, `ModerationAction` (moderator decision log), `services.py` (status rule for new objects, decision rights, decisions on objects and reports, `log_action()`), `queue.py` (draft queue rule), `reports.py` (open report rule, scope, cards), report form and page, queue and report handling |
 
 ## Development conventions
 
@@ -136,7 +136,7 @@ match), then delete with `git branch -D`.
 | 1 | Foundation: data schema, admin, tests, CI | complete |
 | 2 | Public archive: layout, pages, galleries, search, comments, sign-up UI | complete |
 | 3 | Photo processing: user upload, frame correction, server pipeline, Celery, perceptual hash, duplicate merge | complete (0.23.0) |
-| 4 | Moderation in the public UI and trusted authors: moderator scope by sport, draft queue, reports | in progress |
+| 4 | Moderation in the public UI and trusted authors: moderator scope by sport, draft queue, reports | complete (0.28.0) |
 | 5 | Mobile PWA, legal layer, deployment, backups, monitoring | planning |
 
 Details in `.koda/plans/foundation-and-data-model.md` (stage 1),
@@ -163,13 +163,13 @@ is created as a separate file when work on it starts
 (`plans/photo-processing-3.N-<name>.md`). Sub-stages 3.1–3.6 are complete and stage 3 is
 closed; 3.7 (batch upload) is deferred and taken by a separate decision.
 
-**Stage 4 (moderation in the public UI and trusted authors) is in progress.** The master plan
+**Stage 4 (moderation in the public UI and trusted authors) is complete.** The master plan
 is [`plans/moderation-ui.md`](.koda/plans/moderation-ui.md); the decisions were agreed with
 the owner on 2026-10-31. The moderators are baseball veterans and many of them have only a
 phone, so routine decisions happen in the public site and the admin stays the superuser's
-place for hard cases. Sub-stage 4.0 (numbering shift), 4.1 (moderator scope by sport),
-4.2 (status rule and post-moderation for trusted authors) and 4.3 (decision service,
-one place for the log) are done, then 4.4–4.6.
+place for hard cases. Sub-stages 4.0 (numbering shift), 4.1 (moderator scope by sport),
+4.2 (status rule and post-moderation for trusted authors), 4.3 (decision service, one place
+for the log), 4.4 and 4.5 (draft queue) and 4.6 (report handling) are done.
 A sub-stage plan is created as a separate file when work on it
 starts (`plans/moderation-ui-4.N-<name>.md`).
 
@@ -217,7 +217,7 @@ constructor". Legal pages and SMTP are stage 5.
 
 ## Current state
 
-- Version: 0.27.0; development branch `master`; 1511 tests passing on Python 3.12
+- Version: 0.28.0; development branch `master`; 1552 tests passing on Python 3.12
   and 3.13 (`make test`); linter clean (`make lint`).
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is complete: sub-stages 3.1–3.6
@@ -238,19 +238,16 @@ constructor". Legal pages and SMTP are stage 5.
   `Photo` inherits `MergeableModel`, `duplicate_of` became `merged_into` through two
   migrations, a merge moves relations and views, an old link returns 301 to the canonical
   photo, and the "Merge into this photo" button sits in the candidate row.
-- Stage 4 is in progress: the master plan [`plans/moderation-ui.md`](.koda/plans/moderation-ui.md)
-  was approved on 2026-10-31, sub-stages 4.0 (numbering shift in the documents), 4.1
-  (moderator scope by sport), 4.2 (status rule and post-moderation for trusted
-  authors), 4.3 (moderation decision service), 4.4 and 4.5 (draft queue: list and
-  decisions) are closed. Decisions are now made by
-  `apps/moderation/services.py`: five functions change the object state, check the right
-  through `can_moderate(obj)` and write the log through `log_action()`; the admin and the
-  public interface must go through them. Rejection in the admin goes through a page with a
-  reason. The queue lives at `/moderation/queue/`, its rules in
-  `apps/moderation/queue.py`. Next is 4.6 — report handling in the interface. Known leftovers
-  that move into stage 5: the account deletion policy (P5-12) and the S3 storage
-  decision (R-1, Russian S3 chosen) — P5-13. Re-cropping an uploaded photo (P3-18)
-  stays a stage 3 task.
+- Stage 4 is complete: sub-stages 4.0–4.6 are done, master plan
+  [`plans/moderation-ui.md`](.koda/plans/moderation-ui.md). Decisions are made by
+  `apps/moderation/services.py`: five functions change the object state, three change the
+  report state; the right is checked through `can_moderate(obj)` and the log is written
+  through `log_action()`, so the admin and the public interface must go through the service.
+  The draft queue lives at `/moderation/queue/` with its rules in
+  `apps/moderation/queue.py`; report handling lives at `/moderation/reports/` with its rules
+  in `apps/moderation/reports.py`. Known leftovers that move into stage 5: the account
+  deletion policy (P5-12) and the S3 storage decision (R-1, Russian S3 chosen) — P5-13.
+  Re-cropping an uploaded photo (P3-18) stays a stage 3 task.
 
 ### Public UI
 
@@ -294,6 +291,16 @@ Components and pages. The rules for visibility, privacy and their reasoning live
   and the decision on one object (POST only). They require a login and the moderator role,
   they are `noindex`, and `robots.txt` has `Disallow: /moderation/`. Twelve cards per page,
   oldest first; the link sits in the user menu for moderators only.
+- `/moderation/reports/` and `/moderation/reports/<pk>/` (4.6) are report handling and the
+  decision on one report (POST only). They show open reports (`new`, `in_review`) of the
+  moderator's sports, newest first, twenty per page; resolved and rejected reports stay in
+  the admin. A non-moderator gets 403, the page is `noindex, nofollow` and `never_cache`
+  because another moderator may already have handled a report. An empty scope shows the
+  "no sports are assigned to you" notice, but the list is still built: reports without a
+  sport are visible to everyone. The actions are "Take in work", "Resolved" and "Rejected"
+  with a required text, because a person reads the decision and not only the log. The form
+  opens through `<details>`, not a modal window. The letter about a new report leads to this
+  page, not to the admin.
 - Public queries: `SoftDeleteQuerySet.published()` (filters by `status=Status.PUBLISHED`).
   The `.visible()` method was **removed** in 3.1: after decision 2.1 it filtered nothing, and
   an empty wrapper would lie to the reader. Shared entry points live in
@@ -564,6 +571,37 @@ assigned to you" is more honest than "all handled". The forms work without
 JavaScript: "Reject" opens a `<details>` element instead of a modal. The
 queue link sits in the user menu for moderators only, without a counter
 (a count on every page is an extra query).
+
+**Reports (4.6).** `/moderation/reports/` handles reports from a phone: a
+report about rights or privacy must not wait until the moderator reaches a
+computer. The rules live in `apps/moderation/reports.py`: `open_reports()`
+for the list and `is_open()` for one object — one rule for both paths,
+otherwise a report is visible in the list but cannot be decided. Open means
+`new` and `in_review`, newest first (unlike the draft queue, where the oldest
+matters more), 20 per page. **A report without a sport is visible to every
+moderator:** `Q(sport__isnull=True) | Q(sport_id__in=...)`, because
+`can_moderate` answers "yes" for an object without a sport and the list
+filter must match it; otherwise such a report would open by a direct link
+but get lost in the list. **A moderator does not handle their own report:**
+`is_own_report()` keeps it out of the list (`Q(reporter__isnull=True) |
+~Q(reporter=user)`, or an anonymous report would vanish because a comparison
+with `NULL` is never true) and returns 404 in `report_decide`; the check runs
+**before** `is_open`, or their own resolved report would answer "Already
+handled" and hint that the address exists. **A report decision goes into the
+log for the report**, with two types (`report_resolved`, `report_rejected`),
+not for the object: handling a report does not change the object — the
+moderator decides whether the claim is fair, while hiding and editing the
+object stay separate actions. `take_report` writes no log: "taken in work" is
+a service step, and its trace stays in the report history. The decision text
+is required and checked in the service (`ValueError` on a blank text), and the
+form checks the same in advance. A decision locks the row
+(`select_for_update` inside `transaction.atomic()`), "still open" is checked
+by the view, and a `False` answer from the service gives "Already handled" —
+the same three layers as in the queue. The card is the `ReportCard` dataclass
+with ready fields, and targets are loaded in batches by `content_type_id`, so
+the query count does not grow with the page. There is one POST address with an
+`action` field (`take` / `resolve` / `reject`): a report decision is one event
+with three outcomes.
 
 ### Code rules
 
@@ -897,4 +935,40 @@ queue link sits in the user menu for moderators only, without a counter
   is more honest than "all handled": otherwise the person never asks the administrator.
 - **The queue forms work without JavaScript.** "Reject" opens a `<details>` element with a reason
   field instead of a Bootstrap modal: a moderator on a phone may be on a slow network.
+- **The report rule lives in `apps/moderation/reports.py`**, not in a view: `open_reports()` for
+  the list and `is_open()` for one object are the single point, otherwise a report becomes
+  visible in the list but impossible to decide. A second "is the report open" rule in a view
+  would drift for the same reason.
+- **A report without a sport is visible to every moderator.** The list filter is
+  `Q(sport__isnull=True) | Q(sport_id__in=sport_ids)`: `can_moderate` answers "yes" for an
+  object without a sport, and without the first half such a report would open by a direct link
+  but get lost in the list. A report must not get lost.
+- **A moderator never handles their own report.** `is_own_report()` keeps it out of the list and
+  returns 404 in `report_decide`. The list exclusion is written as
+  `Q(reporter__isnull=True) | ~Q(reporter=user)`: `exclude(reporter=user)` would drop anonymous
+  reports too, because a comparison with `NULL` is never true. The check in the action runs
+  before `is_open`, or their own resolved report would answer "Already handled" and hint that
+  the address exists.
+- **A report decision writes the log for the report**, with two types (`report_resolved`,
+  `report_rejected`), not for the object. Handling a report does not change the object: the
+  moderator decides whether the claim is fair, while hiding and editing the object stay
+  separate actions. A `hide`/`publish` entry for an object that did not change would be a lie in
+  the log, and invariant 6 requires the log to be true.
+- **`take_report` writes no log.** "Taken in work" is a service step, not a decision: its trace
+  stays in the `Report` history, and the decision log must not be diluted with read marks.
+- **The decision text for a report is required and checked in the service** (`ValueError` on an
+  empty or blank text), and the form checks the same in advance: otherwise the admin and the site
+  would answer differently — the same decision as with `reject_object`.
+- **A report decision locks the row** (`select_for_update` inside `transaction.atomic()`), "still
+  open" is checked by the view, and a `False` answer from the service gives "Already handled".
+  The three layers are the same as in the queue: without the lock the second moderator would
+  override the first, and `take_report` on a resolved report would return it to work.
+- **Report targets are loaded in batches** by `content_type_id` (`_targets()` in
+  `apps/moderation/reports.py`): a generic FK costs a query per card, so the query count would
+  grow with the page. The target link is built only for a live object: a deleted or merged
+  target gives the "object deleted" text instead of a broken link.
+- **The report page is closed by role, not by scope:** a non-moderator gets 403 (a service page,
+  its address reveals nothing), a foreign scope and their own report give 404 (the number is
+  guessable by order). The letter about a new report leads to `/moderation/reports/`: a mail
+  client does not open a relative admin address, and the admin is hard to use on a phone.
 

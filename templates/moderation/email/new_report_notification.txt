@@ -5,6 +5,6 @@
 {% endif %}{% trans "Объект" %}: {{ target|default:"—" }}
 {% if report.reporter %}{% trans "Заявитель" %}: {{ report.reporter }}
 {% else %}{% trans "Заявитель" %}: {% trans "анонимно" %}
-{% endif %}{% trans "В админке" %}: {{ admin_url }}
+{% endif %}{% trans "Разобрать жалобу" %}: {{ reports_url }}
 
 {% trans "Жалоба ждёт решения модератора." %}

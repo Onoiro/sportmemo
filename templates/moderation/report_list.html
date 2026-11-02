@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load i18n pagination %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1 class="page-header__title">{% trans "Жалобы" %}</h1>
+        <p class="page-header__lead">
+            {% trans "Открытые жалобы ваших видов спорта: свежие сверху" %}
+        </p>
+    </header>
+
+    {% if scope_missing %}
+        {% comment %}
+        Пустая область не значит «жалоб нет»: жалобы без вида спорта видны
+        всем модераторам, и страница с пустым списком соврала бы. Плашка
+        объясняет, почему остальных жалоб здесь нет.
+        {% endcomment %}
+        <div class="alert alert-warning" role="alert">
+            <p class="mb-1"><strong>{% trans "Вам не назначены виды спорта" %}</strong></p>
+            <p class="mb-0">
+                {% trans "Вы видите только жалобы без вида спорта. Обратитесь к администратору архива: он назначит вид спорта." %}
+            </p>
+        </div>
+    {% endif %}
+
+    {% if cards %}
+        <ul class="reports-grid">
+            {% for card in cards %}
+                {% include "moderation/partials/report_card.html" with card=card resolution_form=resolution_form %}
+            {% endfor %}
+        </ul>
+        {% if page_obj.has_other_pages %}
+            {% pagination page_obj %}
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-flag empty-state__icon" aria-hidden="true"></i>
+            <p class="empty-state__title">{% trans "Открытых жалоб нет" %}</p>
+            <p class="mb-0">{% trans "Все жалобы разобраны" %}</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

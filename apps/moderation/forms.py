@@ -41,6 +41,31 @@ class QueueRejectForm(BootstrapFormMixin, ModerationRejectForm):
     """
 
 
+class ReportResolutionForm(BootstrapFormMixin, forms.Form):
+    """Текст решения по жалобе: один на оба исхода.
+
+    Одна форма с двумя кнопками (`resolve` и `reject`) вместо двух форм:
+    текст решения одинаков, а две формы с одним полем дали бы дублирующиеся
+    `id` и вторую копию правила «текст обязателен».
+
+    Пробельный текст считается пустым: заявителю нечего было бы прочитать.
+    Сервис проверяет то же, но форма отвечает раньше и человеческим текстом.
+    """
+
+    resolution = forms.CharField(
+        label=_("Решение"),
+        max_length=MAX_REPORT_COMMENT_LENGTH,
+        widget=forms.Textarea(attrs={"rows": 3}),
+    )
+
+    def clean_resolution(self):
+        """Пробельный текст — та же пустота."""
+        value = self.cleaned_data["resolution"].strip()
+        if not value:
+            raise forms.ValidationError(_("Текст решения обязателен"))
+        return value
+
+
 class ReportForm(BootstrapFormMixin, forms.Form):
     """Жалоба на объект: причина и необязательное пояснение.
 

@@ -1,4 +1,4 @@
-"""Представления модерации: жалоба на объект и очередь черновиков."""
+"""Представления модерации: жалоба, очередь черновиков и разбор жалоб."""
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -16,9 +16,13 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 
 from apps.comments.targets import resolve_target, target_key
 from apps.core.seo import page_meta
-from apps.moderation import queue, services
+from apps.moderation import queue, reports, services
 from apps.moderation.emails import notify_moderators_new_report
-from apps.moderation.forms import QueueRejectForm, ReportForm
+from apps.moderation.forms import (
+    QueueRejectForm,
+    ReportForm,
+    ReportResolutionForm,
+)
 from apps.moderation.models import Report
 
 # Сутки: повторная жалоба того же пользователя на тот же объект с той же
@@ -93,7 +97,7 @@ def report_add(request):
                 reason=reason,
                 comment=form.cleaned_data["comment"],
             )
-            notify_moderators_new_report(report)
+            notify_moderators_new_report(report, request=request)
             messages.success(request, _("Спасибо! Модератор проверит."))
             return redirect(next_url)
     else:
@@ -263,6 +267,150 @@ def queue_decide(request, kind, pk):
     # первый. Молчание выглядело бы как успех, поэтому отвечаем честно.
     if not decided:
         messages.info(request, _("Уже обработано"))
+    else:
+        messages.success(request, success)
+    return redirect(next_url)
+
+
+@login_required
+@never_cache
+@require_GET
+def reports_list(request):
+    """Открытые жалобы области модератора: свежие сверху, порция 20.
+
+    Разбор жалоб на телефоне важнее разбора черновиков: жалоба о нарушении
+    прав или приватности не должна ждать, пока модератор доберётся
+    до компьютера.
+
+    Не кэшируется: жалобу может разобрать другой модератор, и копия
+    из кэша показала бы уже решённую.
+    """
+    # Служебная страница, а не объект архива: 403 честнее 404, как в очереди.
+    if not request.user.is_moderator:
+        raise PermissionDenied
+
+    # Пустая область не значит «жалоб нет»: жалобы без вида спорта видны
+    # всем, поэтому список строится всегда, а плашка объясняет остальное.
+    scope_missing = request.user.moderated_sport_ids() == []
+    page_obj, cards = reports.reports_page(request.user, request)
+
+    context = {
+        "page_obj": page_obj,
+        "cards": cards,
+        "scope_missing": scope_missing,
+        # Одна форма на страницу: карточки берут из неё подпись и виджет,
+        # а `id` поля собирают сами с номером жалобы.
+        "resolution_form": ReportResolutionForm(),
+        "meta": page_meta(
+            request,
+            title=_("Жалобы"),
+            noindex=True,
+            nofollow=True,
+        ),
+        "breadcrumbs": [
+            {"url": reverse("core:home"), "label": _("Главная")},
+            {"label": _("Жалобы")},
+        ],
+    }
+    return render(request, "moderation/report_list.html", context)
+
+
+def _reports_next(request):
+    """Куда вернуться после решения по жалобе.
+
+    Адрес приходит скрытым полем из карточки — список с `?page=N`.
+    Небезопасный или пустой заменяется первой страницей списка: открытый
+    редирект на чужой сайт известен как приём фишинга.
+    """
+    value = request.POST.get("next", "")
+    if value and url_has_allowed_host_and_scheme(
+        value, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return value
+    return reverse("moderation:reports")
+
+
+def _report_denied():
+    """404 на всё, чего этому человеку не существует.
+
+    Чужая область, своя жалоба и несуществующий номер отвечают одинаково:
+    иначе по коду ответа можно перебрать номера и узнать, о чём жалуются
+    в чужом виде спорта (то же правило, что `queue_decide`).
+    """
+    raise Http404("Объект не найден")
+
+
+@login_required
+@require_POST
+def report_decide(request, pk):
+    """Решение по жалобе: взять в работу, решить или отклонить.
+
+    Один адрес с полем `action`, а не три маршрута: решение по жалобе —
+    одно событие с тремя исходами, и три адреса трижды повторяли бы поиск
+    объекта, проверку области и проверку «ещё открыта».
+
+    Только POST: решение меняет чужие данные, а ссылка-«решить» в адресной
+    строке открывалась бы превью браузера и роботом.
+
+    `PermissionDenied` из сервиса отдельно не ловим: Django отвечает на него
+    403, а `transaction.atomic()` откатывает уже начатую запись.
+    """
+    if not request.user.is_moderator:
+        raise PermissionDenied
+
+    next_url = _reports_next(request)
+
+    # Блокировка строки: два модератора могут разбирать одну жалобу
+    # одновременно. Без неё оба прошли бы проверку «ещё открыта», и второй
+    # переписал бы решение первого — в журнале остались бы два решения.
+    with transaction.atomic():
+        # `select_related("sport")` здесь нельзя: вид спорта у жалобы может
+        # быть пустым, а PostgreSQL отказывает в `FOR UPDATE` на внешней
+        # стороне outer join. Право читает `sport_id`, и подгрузка строки
+        # вида спорта всё равно не нужна.
+        report = Report.objects.select_for_update().filter(pk=pk).first()
+        if report is None:
+            _report_denied()
+        if not request.user.can_moderate(report):
+            _report_denied()
+        # Свою жалобу разбирает другой человек. Проверка стоит до `is_open`:
+        # иначе своя уже решённая ответила бы «Уже обработано» и подсказала
+        # бы, что адрес существует.
+        if reports.is_own_report(report, request.user):
+            _report_denied()
+
+        # «Ещё открыта» проверяет представление, а не сервис: `take_report`
+        # на решённой вернул бы жалобу в работу и отменил решение первого
+        # модератора.
+        if not reports.is_open(report):
+            messages.info(request, _("Уже обработано"))
+            return redirect(next_url)
+
+        action = request.POST.get("action")
+        if action == "take":
+            decided = services.take_report(report, request.user)
+            success = _("Жалоба взята в работу")
+            stale = _("Жалоба уже в работе")
+        elif action in ("resolve", "reject"):
+            form = ReportResolutionForm(request.POST)
+            if not form.is_valid():
+                messages.error(request, form.errors["resolution"][0])
+                return redirect(next_url)
+            resolution = form.cleaned_data["resolution"]
+            if action == "resolve":
+                decided = services.resolve_report(report, request.user, resolution)
+                success = _("Жалоба решена")
+            else:
+                decided = services.reject_report(report, request.user, resolution)
+                success = _("Жалоба отклонена")
+            stale = _("Уже обработано")
+        else:
+            return HttpResponseBadRequest(_("Неизвестное действие"))
+
+    # Сверхузкая гонка: оба модератора прошли проверку, а решение принял
+    # первый. Молчание выглядело бы как успех, поэтому отвечаем честно.
+    if not decided:
+        messages.info(request, stale)
     else:
         messages.success(request, success)
     return redirect(next_url)

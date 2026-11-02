@@ -116,6 +116,11 @@ class ModerationActionType(models.TextChoices):
     MERGE = "merge", _("слить")
     DELETE = "delete", _("удалить")
     RESTORE = "restore", _("восстановить")
+    # Решение по жалобе пишется по жалобе, а не по её цели: при разборе
+    # претензии объект не меняется, и запись «скрыть» или «опубликовать»
+    # по объекту была бы ложью в журнале.
+    REPORT_RESOLVED = "report_resolved", _("жалоба решена")
+    REPORT_REJECTED = "report_rejected", _("жалоба отклонена")
 
 
 class ModerationAction(TimeStampedModel):

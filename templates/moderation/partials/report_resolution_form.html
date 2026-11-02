@@ -1,0 +1,40 @@
+{% load i18n %}
+{% comment %}
+Форма решения внутри карточки жалобы. Параметры: `card`, `resolution_form`.
+
+`<details>` вместо модального окна Bootstrap: модератор на телефоне может
+оказаться с выключенным JavaScript или на медленной сети, а решение уходит
+обычным POST.
+
+Одна форма на оба исхода: текст решения одинаков, и две формы с одним полем
+дали бы дублирующиеся `id`. Поле рендерится вручную с номером жалобы в `id`:
+экземпляр формы на странице один, а карточек двадцать, и одинаковые `id`
+увели бы подпись в первое поле списка.
+{% endcomment %}
+<details class="reports-resolve">
+    <summary class="reports-resolve__summary">
+        <i class="bi bi-check2-circle" aria-hidden="true"></i>
+        {% trans "Решить с текстом" %}
+    </summary>
+    <form class="reports-resolve__form" method="post"
+          action="{% url 'moderation:report_decide' card.report_id %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <label class="form-label" for="resolution-{{ card.report_id }}">
+            {{ resolution_form.resolution.label }}
+        </label>
+        <textarea class="form-control reports-resolve__field"
+                  id="resolution-{{ card.report_id }}"
+                  name="resolution" rows="3" required></textarea>
+        <div class="reports-resolve__actions">
+            <button class="btn btn-success btn-sm" type="submit"
+                    name="action" value="resolve">
+                {% trans "Решена" %}
+            </button>
+            <button class="btn btn-outline-danger btn-sm" type="submit"
+                    name="action" value="reject">
+                {% trans "Отклонена" %}
+            </button>
+        </div>
+    </form>
+</details>

@@ -1,0 +1,52 @@
+{% load i18n %}
+{% comment %}
+Карточка жалобы. Все значения готовые: подпись причины, статус, заголовок
+цели и адрес считает `apps/moderation/reports.py`, шаблон ничего
+не сравнивает и не добирает — то же правило, что у карточки очереди.
+
+Ссылка на цель печатается только при `target_url`: удалённый или слитый
+объект отдал бы 404, а карточка обязана вести туда, куда обещает. Иначе
+подпись `target_note` говорит, что с объектом стало.
+
+Действия — обычные POST-формы: «Взять в работу» отдельной формой, решение
+с текстом раскрывается через `<details>`. Модератор на телефоне может
+оказаться без JavaScript, и решение не должно зависеть от скриптов.
+{% endcomment %}
+<li class="reports-card">
+    <div class="reports-card__head">
+        <span class="badge-status{% if card.is_new %} badge-status--processing{% endif %}">
+            {{ card.status_label }}
+        </span>
+        <p class="reports-card__reason">{{ card.reason_label }}</p>
+    </div>
+
+    {% if card.comment %}
+        <p class="reports-card__comment">{{ card.comment }}</p>
+    {% endif %}
+
+    <p class="reports-card__target">
+        {% if card.target_url %}
+            <a href="{{ card.target_url }}">{{ card.target_title }}</a>
+        {% else %}
+            {{ card.target_title }}
+            {% if card.target_note %}({{ card.target_note }}){% endif %}
+        {% endif %}
+    </p>
+
+    <p class="reports-card__meta">
+        {{ card.reporter }} · {{ card.created_at|date:"j E Y" }}
+    </p>
+
+    <div class="reports-card__actions">
+        <form method="post"
+              action="{% url 'moderation:report_decide' card.report_id %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="take">
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button class="btn btn-primary btn-sm" type="submit">
+                {% trans "Взять в работу" %}
+            </button>
+        </form>
+        {% include "moderation/partials/report_resolution_form.html" with card=card resolution_form=resolution_form %}
+    </div>
+</li>

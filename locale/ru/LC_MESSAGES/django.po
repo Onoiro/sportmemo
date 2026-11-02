@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-01 17:27+0300\n"
+"POT-Creation-Date: 2026-11-01 22:18+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,7 +21,7 @@ msgstr ""
 
 #: apps/accounts/admin.py:37 apps/accounts/views.py:36
 #: apps/accounts/views.py:39 templates/accounts/profile.html:11
-#: templates/partials/navbar.html:88
+#: templates/partials/navbar.html:96
 msgid "Профиль"
 msgstr "Профиль"
 
@@ -70,7 +70,7 @@ msgid "пользователь"
 msgstr "пользователь"
 
 #: apps/accounts/models.py:13 apps/core/models.py:64
-#: apps/moderation/models.py:130
+#: apps/moderation/models.py:135
 msgid "модератор"
 msgstr "модератор"
 
@@ -153,10 +153,11 @@ msgstr "Профиль обновлён"
 #: apps/catalog/views.py:524 apps/catalog/views.py:566
 #: apps/catalog/views.py:597 apps/catalog/views.py:661
 #: apps/catalog/views.py:703 apps/catalog/views.py:730 apps/core/views.py:114
-#: apps/core/views.py:144 apps/core/views.py:192 apps/moderation/views.py:120
-#: apps/moderation/views.py:167 apps/photos/views.py:158
-#: apps/photos/views.py:213 apps/photos/views.py:248 apps/photos/views.py:286
-#: apps/search/views.py:40 templates/partials/footer.html:20
+#: apps/core/views.py:144 apps/core/views.py:192 apps/moderation/views.py:124
+#: apps/moderation/views.py:171 apps/moderation/views.py:311
+#: apps/photos/views.py:158 apps/photos/views.py:213 apps/photos/views.py:248
+#: apps/photos/views.py:286 apps/search/views.py:40
+#: templates/partials/footer.html:20
 msgid "Главная"
 msgstr "Главная"
 
@@ -730,7 +731,7 @@ msgstr "Редактирование"
 
 #: apps/catalog/views.py:592 apps/catalog/views.py:598
 #: templates/accounts/profile.html:59 templates/accounts/profile.html:65
-#: templates/catalog/my_teams.html:11 templates/partials/navbar.html:79
+#: templates/catalog/my_teams.html:11 templates/partials/navbar.html:87
 msgid "Мои команды"
 msgstr "Мои команды"
 
@@ -753,7 +754,7 @@ msgstr "Редактирование события"
 
 #: apps/catalog/views.py:725 apps/catalog/views.py:731
 #: templates/accounts/profile.html:70 templates/accounts/profile.html:76
-#: templates/catalog/my_events.html:11 templates/partials/navbar.html:82
+#: templates/catalog/my_events.html:11 templates/partials/navbar.html:90
 msgid "Мои события"
 msgstr "Мои события"
 
@@ -812,12 +813,12 @@ msgid "ответ на"
 msgstr "ответ на"
 
 #: apps/comments/models.py:87 apps/moderation/models.py:53
-#: apps/moderation/models.py:142
+#: apps/moderation/models.py:147
 msgid "тип объекта"
 msgstr "тип объекта"
 
 #: apps/comments/models.py:90 apps/moderation/models.py:56
-#: apps/moderation/models.py:145
+#: apps/moderation/models.py:150
 msgid "id объекта"
 msgstr "id объекта"
 
@@ -1074,7 +1075,7 @@ msgstr "Отклонить жалобы"
 msgid "Отклонено жалоб: %(count)d"
 msgstr "Отклонено жалоб: %(count)d"
 
-#: apps/moderation/emails.py:20
+#: apps/moderation/emails.py:40
 #, python-format
 msgid "Жалоба на объект: %(reason)s"
 msgstr "Жалоба на объект: %(reason)s"
@@ -1087,16 +1088,24 @@ msgstr "Причина отклонения"
 msgid "Опишите причину: автор её увидит."
 msgstr "Опишите причину: автор её увидит."
 
-#: apps/moderation/forms.py:61
+#: apps/moderation/forms.py:56
+msgid "Решение"
+msgstr "Решение"
+
+#: apps/moderation/forms.py:65
+msgid "Текст решения обязателен"
+msgstr "Текст решения обязателен"
+
+#: apps/moderation/forms.py:86
 #: templates/moderation/email/new_report_notification.txt:3
 msgid "Причина"
 msgstr "Причина"
 
-#: apps/moderation/forms.py:66
+#: apps/moderation/forms.py:91
 msgid "Что не так"
 msgstr "Что не так"
 
-#: apps/moderation/forms.py:73
+#: apps/moderation/forms.py:98
 msgid "Опишите ошибку: что указано неверно и как правильно."
 msgstr "Опишите ошибку: что указано неверно и как правильно."
 
@@ -1140,7 +1149,7 @@ msgstr "отклонена"
 msgid "заявитель"
 msgstr "заявитель"
 
-#: apps/moderation/models.py:69 apps/moderation/models.py:147
+#: apps/moderation/models.py:69 apps/moderation/models.py:152
 msgid "причина"
 msgstr "причина"
 
@@ -1188,15 +1197,23 @@ msgstr "удалить"
 msgid "восстановить"
 msgstr "восстановить"
 
-#: apps/moderation/models.py:135
+#: apps/moderation/models.py:122
+msgid "жалоба решена"
+msgstr "жалоба решена"
+
+#: apps/moderation/models.py:123
+msgid "жалоба отклонена"
+msgstr "жалоба отклонена"
+
+#: apps/moderation/models.py:140
 msgid "действие"
 msgstr "действие"
 
-#: apps/moderation/models.py:152
+#: apps/moderation/models.py:157
 msgid "решение модератора"
 msgstr "решение модератора"
 
-#: apps/moderation/models.py:153
+#: apps/moderation/models.py:158
 msgid "решения модераторов"
 msgstr "решения модераторов"
 
@@ -1220,42 +1237,77 @@ msgstr "Фото"
 msgid "автор неизвестен"
 msgstr "автор неизвестен"
 
-#: apps/moderation/views.py:78 apps/moderation/views.py:97
+#: apps/moderation/reports.py:130
+msgid "объект недоступен"
+msgstr "объект недоступен"
+
+#: apps/moderation/reports.py:132 apps/moderation/reports.py:134
+msgid "объект удалён"
+msgstr "объект удалён"
+
+#: apps/moderation/reports.py:152
+#: templates/moderation/email/new_report_notification.txt:7
+msgid "анонимно"
+msgstr "анонимно"
+
+#: apps/moderation/views.py:82 apps/moderation/views.py:101
 msgid "Спасибо! Модератор проверит."
 msgstr "Спасибо! Модератор проверит."
 
-#: apps/moderation/views.py:83
+#: apps/moderation/views.py:87
 msgid "Жалоба на этот объект уже отправлена."
 msgstr "Жалоба на этот объект уже отправлена."
 
-#: apps/moderation/views.py:115 apps/moderation/views.py:122
+#: apps/moderation/views.py:119 apps/moderation/views.py:126
 #: templates/moderation/report_form.html:11
 #: templates/partials/report_link.html:15
 msgid "Сообщить об ошибке"
 msgstr "Сообщить об ошибке"
 
-#: apps/moderation/views.py:162 apps/moderation/views.py:168
+#: apps/moderation/views.py:166 apps/moderation/views.py:172
 #: templates/moderation/queue.html:11
 msgid "Очередь черновиков"
 msgstr "Очередь черновиков"
 
-#: apps/moderation/views.py:241 apps/moderation/views.py:265
+#: apps/moderation/views.py:245 apps/moderation/views.py:269
+#: apps/moderation/views.py:386 apps/moderation/views.py:406
 msgid "Уже обработано"
 msgstr "Уже обработано"
 
-#: apps/moderation/views.py:247
+#: apps/moderation/views.py:251
 #, python-format
 msgid "%(kind)s: опубликовано."
 msgstr "%(kind)s: опубликовано."
 
-#: apps/moderation/views.py:256
+#: apps/moderation/views.py:260
 #, python-format
 msgid "%(kind)s: отклонено, автор увидит причину."
 msgstr "%(kind)s: отклонено, автор увидит причину."
 
-#: apps/moderation/views.py:260
+#: apps/moderation/views.py:264 apps/moderation/views.py:408
 msgid "Неизвестное действие"
 msgstr "Неизвестное действие"
+
+#: apps/moderation/views.py:306 apps/moderation/views.py:312
+#: templates/moderation/report_list.html:11 templates/partials/navbar.html:82
+msgid "Жалобы"
+msgstr "Жалобы"
+
+#: apps/moderation/views.py:392
+msgid "Жалоба взята в работу"
+msgstr "Жалоба взята в работу"
+
+#: apps/moderation/views.py:393
+msgid "Жалоба уже в работе"
+msgstr "Жалоба уже в работе"
+
+#: apps/moderation/views.py:402
+msgid "Жалоба решена"
+msgstr "Жалоба решена"
+
+#: apps/moderation/views.py:405
+msgid "Жалоба отклонена"
+msgstr "Жалоба отклонена"
 
 #: apps/photos/admin.py:154
 msgid "Привязка"
@@ -1716,7 +1768,7 @@ msgid "Данные фотографии"
 msgstr "Данные фотографии"
 
 #: apps/photos/views.py:214 apps/photos/views.py:243 apps/photos/views.py:249
-#: templates/partials/navbar.html:85 templates/photos/my_photos.html:13
+#: templates/partials/navbar.html:93 templates/photos/my_photos.html:13
 #: templates/photos/photo_details.html:131 templates/photos/photo_form.html:130
 msgid "Мои фото"
 msgstr "Мои фото"
@@ -1877,7 +1929,7 @@ msgstr "Вход"
 
 #: templates/account/login.html:21
 #: templates/account/password_reset_from_key_done.html:12
-#: templates/partials/navbar.html:100
+#: templates/partials/navbar.html:108
 msgid "Войти"
 msgstr "Войти"
 
@@ -1906,7 +1958,7 @@ msgid "Выйти из аккаунта?"
 msgstr "Выйти из аккаунта?"
 
 #: templates/account/logout.html:20 templates/accounts/profile.html:82
-#: templates/partials/navbar.html:95
+#: templates/partials/navbar.html:103
 msgid "Выйти"
 msgstr "Выйти"
 
@@ -1916,7 +1968,7 @@ msgid "Смена пароля"
 msgstr "Смена пароля"
 
 #: templates/account/password_change.html:20
-#: templates/accounts/profile.html:124 templates/partials/navbar.html:91
+#: templates/accounts/profile.html:124 templates/partials/navbar.html:99
 msgid "Сменить пароль"
 msgstr "Сменить пароль"
 
@@ -2213,7 +2265,6 @@ msgstr "Страница"
 
 #: templates/catalog/email/new_event_notification.txt:9
 #: templates/catalog/email/new_team_notification.txt:8
-#: templates/moderation/email/new_report_notification.txt:8
 msgid "В админке"
 msgstr "В админке"
 
@@ -2806,9 +2857,9 @@ msgstr "Пояснение"
 msgid "Заявитель"
 msgstr "Заявитель"
 
-#: templates/moderation/email/new_report_notification.txt:7
-msgid "анонимно"
-msgstr "анонимно"
+#: templates/moderation/email/new_report_notification.txt:8
+msgid "Разобрать жалобу"
+msgstr "Разобрать жалобу"
 
 #: templates/moderation/email/new_report_notification.txt:10
 msgid "Жалоба ждёт решения модератора."
@@ -2818,11 +2869,27 @@ msgstr "Жалоба ждёт решения модератора."
 msgid "Опубликовать"
 msgstr "Опубликовать"
 
+#: templates/moderation/partials/report_card.html:47
+msgid "Взять в работу"
+msgstr "Взять в работу"
+
+#: templates/moderation/partials/report_resolution_form.html:17
+msgid "Решить с текстом"
+msgstr "Решить с текстом"
+
+#: templates/moderation/partials/report_resolution_form.html:32
+msgid "Решена"
+msgstr "Решена"
+
+#: templates/moderation/partials/report_resolution_form.html:36
+msgid "Отклонена"
+msgstr "Отклонена"
+
 #: templates/moderation/queue.html:13
 msgid "Здесь черновики ваших видов спорта: старые сверху"
 msgstr "Здесь черновики ваших видов спорта: старые сверху"
 
-#: templates/moderation/queue.html:24
+#: templates/moderation/queue.html:24 templates/moderation/report_list.html:25
 msgid "Вам не назначены виды спорта"
 msgstr "Вам не назначены виды спорта"
 
@@ -2855,6 +2922,26 @@ msgid ""
 "Жалоба не требует регистрации. Если вы вошли, модератор увидит, от кого она."
 msgstr ""
 "Жалоба не требует регистрации. Если вы вошли, модератор увидит, от кого она."
+
+#: templates/moderation/report_list.html:13
+msgid "Открытые жалобы ваших видов спорта: свежие сверху"
+msgstr "Открытые жалобы ваших видов спорта: свежие сверху"
+
+#: templates/moderation/report_list.html:27
+msgid ""
+"Вы видите только жалобы без вида спорта. Обратитесь к администратору архива: "
+"он назначит вид спорта."
+msgstr ""
+"Вы видите только жалобы без вида спорта. Обратитесь к администратору "
+"архива: он назначит вид спорта."
+
+#: templates/moderation/report_list.html:44
+msgid "Открытых жалоб нет"
+msgstr "Открытых жалоб нет"
+
+#: templates/moderation/report_list.html:45
+msgid "Все жалобы разобраны"
+msgstr "Все жалобы разобраны"
 
 #: templates/partials/breadcrumbs.html:3
 msgid "Хлебные крошки"
@@ -2908,7 +2995,7 @@ msgstr "Переключить тему"
 msgid "Меню пользователя"
 msgstr "Меню пользователя"
 
-#: templates/partials/navbar.html:74
+#: templates/partials/navbar.html:76
 msgid "Очередь"
 msgstr "Очередь"
 
