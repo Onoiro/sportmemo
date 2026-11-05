@@ -137,12 +137,13 @@ match), then delete with `git branch -D`.
 | 2 | Public archive: layout, pages, galleries, search, comments, sign-up UI | complete |
 | 3 | Photo processing: user upload, frame correction, server pipeline, Celery, perceptual hash, duplicate merge | complete (0.23.0) |
 | 4 | Moderation in the public UI and trusted authors: moderator scope by sport, draft queue, reports | complete (0.28.0) |
-| 5 | Mobile PWA, legal layer, deployment, backups, monitoring | planning |
+| 5 | Mobile PWA, legal layer, deployment, backups, monitoring | in progress (master plan [`plans/mobile-legal-deploy.md`](.koda/plans/mobile-legal-deploy.md)) |
 
 Details in `.koda/plans/foundation-and-data-model.md` (stage 1),
 `.koda/plans/public-archive.md` (stage 2 master plan),
 `.koda/plans/photo-processing.md` (stage 3 master plan),
-`.koda/plans/moderation-ui.md` (stage 4 master plan) and `.koda/backlog.md`.
+`.koda/plans/moderation-ui.md` (stage 4 master plan),
+`.koda/plans/mobile-legal-deploy.md` (stage 5 master plan) and `.koda/backlog.md`.
 
 **Stage 2 is split into 16 sub-stages**, one session each (sub-stage 2.8 is split in two parts:
 2.8a — sign-up, login and password; 2.8b — user profile and menu). A sub-stage plan is created
@@ -173,11 +174,19 @@ for the log), 4.4 and 4.5 (draft queue) and 4.6 (report handling) are done.
 A sub-stage plan is created as a separate file when work on it
 starts (`plans/moderation-ui-4.N-<name>.md`).
 
-**Stage 5 (mobile PWA, legal layer, operations) is in planning.** The stage moved from
-number 4 to number 5 by the owner's decision on 2026-10-31: number 4 went to moderation work.
-There is no master plan yet: it is the first step of the stage
-(`plans/mobile-legal-deploy.md`) and must be approved by the owner. The task list is in the
-backlog, section "Stage 5".
+**Stage 5 (mobile PWA, legal layer, operations) is in progress.** The master plan is
+[`plans/mobile-legal-deploy.md`](.koda/plans/mobile-legal-deploy.md); the decisions were
+agreed with the owner on 2026-11-02. The stage moved from number 4 to number 5 by the
+owner's decision on 2026-10-31. **The order of sub-stages is a condition, not a
+convenience:** PWA cannot be tested without HTTPS, backups cannot wait until after the
+first real data, and the staging server is needed before production so that the deploy is
+rehearsed on a machine that does not matter. Order: 5.0 docs → 5.1 mail and domain →
+5.2 storage → 5.3 staging → 5.4 backups → 5.5 legal pages → 5.6 account deletion →
+5.7 production, then improvements 5.8–5.12. A sub-stage plan is created as a separate file
+when work on it starts (`plans/mobile-legal-deploy-5.N-<name>.md`). Gates: after 5.3 —
+check if the staging server and the current VPS are good enough; after 5.4 — check that a
+restore works; before 5.5 — the data-protection notice is filed and sign-up is closed on
+production; after 5.7 — the neighbouring projects are alive.
 
 **Stage 3 decisions that must not be broken:**
 
@@ -248,6 +257,14 @@ constructor". Legal pages and SMTP are stage 5.
   in `apps/moderation/reports.py`. Known leftovers that move into stage 5: the account
   deletion policy (P5-12) and the S3 storage decision (R-1, Russian S3 chosen) — P5-13.
   Re-cropping an uploaded photo (P3-18) stays a stage 3 task.
+- Stage 5 is in progress: sub-stage 5.0 (master plan and documentation) is closed, the next
+  one is 5.1 (mail and domain). The master plan
+  [`plans/mobile-legal-deploy.md`](.koda/plans/mobile-legal-deploy.md) records the owner's
+  decisions of 2026-11-02: mail is VK WorkSpace for receiving and Yandex Cloud Postbox for
+  sending, `From: info@sportmemo.ru`, production stays on the current VPS (port 8005),
+  staging is a second VPS in the Netherlands with synthetic data only, S3 is Yandex Object
+  Storage, watermarks and the download log (P5-4) are cancelled, and legal texts are
+  Russian only.
 
 ### Public UI
 
