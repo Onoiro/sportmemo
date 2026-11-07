@@ -4,6 +4,7 @@ import pytest
 from django.db import IntegrityError
 
 from apps.accounts.models import User, UserRole
+from config.settings import cookie_name
 
 pytestmark = pytest.mark.django_db
 
@@ -174,3 +175,49 @@ class TestAdminAccess:
         response = client.get("/admin/")
 
         assert response.status_code == 302
+
+
+class TestCookieNames:
+    """Имена cookie разводят соседние проекты на localhost.
+
+    Cookie не различаются по порту: `localhost:8000` и `localhost:8001`
+    делят один `sessionid`, и соседний проект на другом порту стирает
+    нашу сессию — он не находит ключ в своей базе. Поэтому в dev имена
+    свои, а на сервере остаются штатные: сайт там один, и смена имени
+    разлогинила бы всех.
+    """
+
+    def test_dev_gets_own_names(self):
+        assert cookie_name("", debug=True, prod="sessionid", dev="sid") == "sid"
+
+    def test_server_keeps_default_names(self):
+        assert cookie_name("", debug=False, prod="sessionid", dev="sid") == "sessionid"
+
+    def test_env_value_wins(self):
+        name = cookie_name("custom", debug=True, prod="sessionid", dev="sid")
+        assert name == "custom"
+
+    def test_project_uses_prefixed_names_for_dev(self):
+        """Значения, которые проект передаёт функции, тоже проверяются."""
+        assert (
+            cookie_name("", debug=True, prod="sessionid", dev="sportmemo_sessionid")
+            == "sportmemo_sessionid"
+        )
+        assert (
+            cookie_name("", debug=False, prod="sessionid", dev="sportmemo_sessionid")
+            == "sessionid"
+        )
+
+    def test_session_cookie_uses_configured_name(self, client, user, settings):
+        """Django ставит cookie ровно с тем именем, что в настройках.
+
+        Проверка нужна потому, что имя легко «потерять»: опечатка в настройке
+        не ломает вход в браузере до тех пор, пока рядом нет второго проекта,
+        а сосед на другом порту стирает cookie молча.
+        """
+        settings.SESSION_COOKIE_NAME = "sportmemo_sessionid"
+        client.force_login(user)
+
+        client.get("/")
+
+        assert "sportmemo_sessionid" in client.cookies

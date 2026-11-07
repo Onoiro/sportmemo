@@ -226,7 +226,7 @@ constructor". Legal pages and SMTP are stage 5.
 
 ## Current state
 
-- Version: 0.28.0; development branch `master`; 1552 tests passing on Python 3.12
+- Version: 0.28.1; development branch `master`; 1565 tests passing on Python 3.12
   and 3.13 (`make test`); linter clean (`make lint`).
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is complete: sub-stages 3.1–3.6
@@ -988,4 +988,19 @@ with three outcomes.
   its address reveals nothing), a foreign scope and their own report give 404 (the number is
   guessable by order). The letter about a new report leads to `/moderation/reports/`: a mail
   client does not open a relative admin address, and the admin is hard to use on a phone.
+- **A POST action is closed by `post_action(fallback)`, not by the pair `login_required` +
+  `require_POST`** (`apps/core/auth.py`). `login_required` sends an anonymous user to login with
+  `next` equal to the POST address itself; after login allauth follows it with a GET, the view
+  answers 405, the login page offers to sign in again — the person is stuck in a loop.
+  `post_action` checks the method, then the login, and puts `next` from the hidden form field
+  (checked against an open redirect), or the list route name when it is empty. The return address
+  must open with GET: the form data is lost by then, and the button has to be pressed again.
+  An anonymous GET still gets 405, not a redirect: an extra reload must not take the person away
+  from the page.
+- **Cookie names in dev carry the project prefix** (`SESSION_COOKIE_NAME`, `CSRF_COOKIE_NAME` in
+  `config/settings.py`, the `cookie_name()` helper). Cookies are not separated by port:
+  `localhost:8000` and `localhost:8001` share one `sessionid` on the `localhost` domain, and a
+  neighbouring project on another port erases our session — it does not find the key in its own
+  database and clears the cookie (`Max-Age=0`). On the server the name stays default: the site is
+  alone there, and renaming would sign everyone out. Both values can be overridden by env.
 

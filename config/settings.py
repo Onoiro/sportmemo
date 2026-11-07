@@ -37,6 +37,37 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
+# Имена cookie в dev — с префиксом проекта. Cookie не различаются по порту:
+# `localhost:8000` и `localhost:8001` делят один `sessionid` на домене
+# `localhost`, и соседний проект на другом порту гасит нашу сессию, потому
+# что не находит ключ в своей базе и стирает cookie. На боевом сервере сайт
+# один, поэтому имя по умолчанию остаётся: смена имени разлогинила бы всех.
+
+
+def cookie_name(explicit, *, debug, prod, dev):
+    """Имя cookie: из env, иначе своё в dev и штатное на сервере.
+
+    Вынесено в функцию, чтобы правило проверялось тестом: настройки
+    вычисляются при импорте, и подменить `DEBUG` в готовом модуле нельзя.
+    """
+    if explicit:
+        return explicit
+    return dev if debug else prod
+
+
+SESSION_COOKIE_NAME = cookie_name(
+    env("SESSION_COOKIE_NAME", default=""),
+    debug=DEBUG,
+    prod="sessionid",
+    dev="sportmemo_sessionid",
+)
+CSRF_COOKIE_NAME = cookie_name(
+    env("CSRF_COOKIE_NAME", default=""),
+    debug=DEBUG,
+    prod="csrftoken",
+    dev="sportmemo_csrftoken",
+)
+
 # --- Приложения ---
 DJANGO_APPS = [
     "django.contrib.admin",

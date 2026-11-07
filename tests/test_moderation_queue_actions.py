@@ -10,6 +10,8 @@
 противоположных решения.
 """
 
+from urllib.parse import quote
+
 import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
@@ -258,6 +260,69 @@ class TestRights:
 
         assert response.status_code == 302
         assert reverse("account_login") in response["Location"]
+
+    def test_anonymous_returns_to_queue_not_to_post_address(self, client, baseball):
+        """`next` обязан открываться GET-ом: иначе петля входа.
+
+        После входа allauth ведёт на `next` GET-запросом. Если там адрес
+        самого решения, браузер получает 405, страница входа предлагает
+        войти снова — и выйти из этого круга можно только правкой адреса
+        в строке браузера.
+        """
+        team = TeamFactory(sport=baseball)
+
+        response = client.post(
+            decide_url("team", team.pk),
+            {"action": "publish", "next": QUEUE_URL},
+        )
+
+        assert response.status_code == 302
+        location = response["Location"]
+        assert reverse("account_login") in location
+        # Адрес возврата в `next` — очередь, а не адрес решения.
+        assert "next=" + quote(QUEUE_URL) in location
+        assert decide_url("team", team.pk) not in location
+
+    def test_anonymous_post_without_next_returns_to_queue(self, client, baseball):
+        """Пустой `next` заменяется очередью, а не адресом решения."""
+        team = TeamFactory(sport=baseball)
+
+        response = client.post(decide_url("team", team.pk), {"action": "publish"})
+
+        assert "next=" + quote(QUEUE_URL) in response["Location"]
+
+    def test_anonymous_post_ignores_foreign_next(self, client, baseball):
+        """Открытый редирект на чужой сайт не проходит."""
+        team = TeamFactory(sport=baseball)
+
+        response = client.post(
+            decide_url("team", team.pk),
+            {"action": "publish", "next": "https://evil.example/steal"},
+        )
+
+        assert "evil.example" not in response["Location"]
+        assert "next=" + quote(QUEUE_URL) in response["Location"]
+
+    def test_next_opens_after_login(self, client, baseball):
+        """Сквозной сценарий петли: анонимный POST → вход → `next` GET-ом.
+
+        Именно этот путь проходил человек: нажал «Опубликовать», попал
+        на вход, вошёл — и получил 405. Проверка держит весь сценарий,
+        а не только форму редиректа.
+        """
+        team = TeamFactory(sport=baseball)
+        moderator = baseball_moderator(baseball)
+
+        anonymous = client.post(
+            decide_url("team", team.pk),
+            {"action": "publish", "next": QUEUE_URL},
+        )
+        next_url = anonymous["Location"].split("next=")[1]
+
+        client.force_login(moderator)
+        response = client.get(next_url)
+
+        assert response.status_code == 200
 
     def test_admin_role_can_decide_any_sport(self, client, baseball, softball):
         admin = UserFactory(role=UserRole.ADMIN)

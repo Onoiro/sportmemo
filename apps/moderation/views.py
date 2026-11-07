@@ -12,9 +12,10 @@ from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET, require_http_methods, require_POST
+from django.views.decorators.http import require_GET, require_http_methods
 
 from apps.comments.targets import resolve_target, target_key
+from apps.core.auth import post_action
 from apps.core.seo import page_meta
 from apps.moderation import queue, reports, services
 from apps.moderation.emails import notify_moderators_new_report
@@ -200,13 +201,15 @@ def _queue_denied():
     raise Http404("Объект не найден")
 
 
-@login_required
-@require_POST
+@post_action("moderation:queue")
 def queue_decide(request, kind, pk):
     """Решение по черновику: опубликовать или отклонить с причиной.
 
     Только POST: решение меняет чужие данные, и ссылка-«одобрить»
     в адресной строке открывалась бы превью браузера и роботом.
+
+    Аноним возвращается на очередь, а не на этот адрес: после входа браузер
+    открыл бы его GET-ом и получил 405 — человек застрял бы в петле входа.
 
     Объект ищется в `objects`, а не в `public` и не в очереди: удалённый
     или уже решённый объект должен получить понятный ответ, а не 404.
@@ -340,8 +343,7 @@ def _report_denied():
     raise Http404("Объект не найден")
 
 
-@login_required
-@require_POST
+@post_action("moderation:reports")
 def report_decide(request, pk):
     """Решение по жалобе: взять в работу, решить или отклонить.
 
@@ -351,6 +353,9 @@ def report_decide(request, pk):
 
     Только POST: решение меняет чужие данные, а ссылка-«решить» в адресной
     строке открывалась бы превью браузера и роботом.
+
+    Аноним возвращается на список жалоб, а не на этот адрес: после входа
+    браузер открыл бы его GET-ом и получил 405 — та же петля, что в очереди.
 
     `PermissionDenied` из сервиса отдельно не ловим: Django отвечает на него
     403, а `transaction.atomic()` откатывает уже начатую запись.

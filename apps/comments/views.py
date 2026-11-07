@@ -1,19 +1,18 @@
 """Представление добавления комментария."""
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
-from django.views.decorators.http import require_POST
 
 from apps.comments.forms import CommentForm
 from apps.comments.models import Comment, CommentSettings
 from apps.comments.services import comments_context
 from apps.comments.targets import resolve_target
+from apps.core.auth import post_action
 from apps.core.models import Status
 
 # Окно, в котором тот же текст тому же объекту считается дублем: двойной
@@ -57,8 +56,7 @@ def render_comments(request, target_obj, form=None, notice="", next_url=""):
     )
 
 
-@login_required
-@require_POST
+@post_action("core:home")
 def add(request):
     """Добавить комментарий или ответ.
 

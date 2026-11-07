@@ -5,6 +5,8 @@
 от дублей. Разметка меняется чаще, чем смысл страницы.
 """
 
+from urllib.parse import quote
+
 import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
@@ -101,6 +103,32 @@ class TestCommentAccess:
 
         assert response.status_code == 302
         assert response["Location"].startswith(LOGIN_URL)
+
+    def test_anonymous_returns_to_photo_not_to_post_address(self, client, photo):
+        """`next` обязан открываться GET-ом: иначе петля входа.
+
+        После входа allauth ведёт на `next` GET-запросом. Адрес добавления
+        комментария отвечает 405, страница входа предлагает войти снова,
+        и человек застревает, пока не поправит адрес в строке браузера.
+        """
+        response = client.post(
+            add_url(),
+            comment_data(photo, "photo", next=photo.get_absolute_url()),
+        )
+
+        assert response.status_code == 302
+        location = response["Location"]
+        assert "next=" + quote(photo.get_absolute_url()) in location
+        assert add_url() not in location
+
+    def test_anonymous_post_ignores_foreign_next(self, client, photo):
+        """Открытый редирект на чужой сайт не проходит."""
+        response = client.post(
+            add_url(),
+            comment_data(photo, "photo", next="https://evil.example/steal"),
+        )
+
+        assert "evil.example" not in response["Location"]
 
     def test_get_is_not_allowed(self, client, user):
         client.force_login(user)

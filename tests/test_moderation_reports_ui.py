@@ -11,6 +11,8 @@
 generic-FK дал бы запрос на каждую карточку.
 """
 
+from urllib.parse import quote
+
 import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.core import mail
@@ -390,6 +392,34 @@ class TestAccess:
 
         assert response.status_code == 302
         assert reverse("account_login") in response["Location"]
+
+    def test_anonymous_post_returns_to_reports_not_to_post_address(self, client, photo):
+        """`next` обязан открываться GET-ом: иначе петля входа.
+
+        После входа allauth ведёт на `next` GET-запросом. Адрес самого
+        решения ответил бы 405, страница входа предложила бы войти снова.
+        """
+        report = report_for(photo)
+
+        response = client.post(decide_url(report.pk), {"action": "take"})
+
+        assert response.status_code == 302
+        location = response["Location"]
+        assert reverse("account_login") in location
+        assert "next=" + quote(reports_url()) in location
+        assert decide_url(report.pk) not in location
+
+    def test_anonymous_post_ignores_foreign_next(self, client, photo):
+        """Открытый редирект на чужой сайт не проходит."""
+        report = report_for(photo)
+
+        response = client.post(
+            decide_url(report.pk),
+            {"action": "take", "next": "https://evil.example/steal"},
+        )
+
+        assert "evil.example" not in response["Location"]
+        assert "next=" + quote(reports_url()) in response["Location"]
 
     def test_plain_user_gets_403(self, client, user, photo):
         report_for(photo)
