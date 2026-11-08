@@ -186,7 +186,7 @@ def photo_edit(request, pk):
             if photo.status == Status.PUBLISHED:
                 messages.success(
                     request,
-                    _("Изменения сохранены. Фото остаётся в архиве."),
+                    _("Изменения сохранены. Фото остаётся опубликованным."),
                 )
             else:
                 messages.success(request, _("Изменения сохранены."))
@@ -292,7 +292,7 @@ def photo_remove(request, pk):
     if cabinet.remove_from_cabinet(photo):
         messages.success(
             request,
-            _("Фото убрано из списка. Оно осталось в архиве."),
+            _("Фото убрано из списка. Вернуть его можно на вкладке «Убранные»."),
         )
     else:
         messages.info(request, _("Фото уже убрано из списка."))

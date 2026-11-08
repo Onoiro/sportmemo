@@ -57,16 +57,16 @@ STATE_FIELDS = {
     },
 }
 
-# Раскладка из плана (таблица 2): «Не в архиве» собирает всё, чего нет
-# и не будет в публичном архиве и что не ждёт проверки.
+# Раскладка из плана (таблица 2): «Не опубликованы» собирает всё, что
+# не опубликовано и не ждёт проверки.
 STATE_TAB = {
-    "published": cabinet.TAB_ARCHIVE,
+    "published": cabinet.TAB_PUBLISHED,
     "review": cabinet.TAB_REVIEW,
     "processing": cabinet.TAB_REVIEW,
-    "rejected": cabinet.TAB_FAILED,
-    "hidden": cabinet.TAB_FAILED,
-    "failed": cabinet.TAB_FAILED,
-    "deleted": cabinet.TAB_FAILED,
+    "rejected": cabinet.TAB_UNPUBLISHED,
+    "hidden": cabinet.TAB_UNPUBLISHED,
+    "failed": cabinet.TAB_UNPUBLISHED,
+    "deleted": cabinet.TAB_UNPUBLISHED,
 }
 
 
@@ -121,9 +121,9 @@ class TestTabsMatchUploadState:
         counts = cabinet.cabinet_counts(user)
 
         assert (
-            counts[cabinet.TAB_ARCHIVE]
+            counts[cabinet.TAB_PUBLISHED]
             + counts[cabinet.TAB_REVIEW]
-            + counts[cabinet.TAB_FAILED]
+            + counts[cabinet.TAB_UNPUBLISHED]
             == counts[cabinet.TAB_ALL]
         )
 
@@ -213,7 +213,7 @@ class TestRemoveFromCabinet:
         assert photo.cabinet_removed_at is None
         assert "Фото возвращено в список" in response.content.decode()
         assert (
-            cabinet.cabinet_photos(user, cabinet.TAB_ARCHIVE)
+            cabinet.cabinet_photos(user, cabinet.TAB_PUBLISHED)
             .filter(pk=photo.pk)
             .exists()
         )
@@ -328,7 +328,9 @@ class TestCardLinks:
         photo.soft_delete(reason="Не по теме архива")
         client.force_login(user)
 
-        html = client.get(MY_PHOTOS_URL, {"tab": cabinet.TAB_FAILED}).content.decode()
+        html = client.get(
+            MY_PHOTOS_URL, {"tab": cabinet.TAB_UNPUBLISHED}
+        ).content.decode()
 
         # Ищем именно ссылку: адрес фото — префикс адреса уборки,
         # и проверка «подстроки» прошла бы на форме удаления.
@@ -344,7 +346,9 @@ class TestCardLinks:
         client.force_login(user)
 
         source_url = source.get_absolute_url()
-        html = client.get(MY_PHOTOS_URL, {"tab": cabinet.TAB_FAILED}).content.decode()
+        html = client.get(
+            MY_PHOTOS_URL, {"tab": cabinet.TAB_UNPUBLISHED}
+        ).content.decode()
 
         assert f'href="{source_url}"' in html
         assert client.get(source_url).status_code == 301
@@ -389,9 +393,11 @@ class TestPaginationKeepsTab:
             _photo(user, title=f"Фото {index}", status=Status.PUBLISHED)
         client.force_login(user)
 
-        html = client.get(MY_PHOTOS_URL, {"tab": cabinet.TAB_ARCHIVE}).content.decode()
+        html = client.get(
+            MY_PHOTOS_URL, {"tab": cabinet.TAB_PUBLISHED}
+        ).content.decode()
 
-        assert f"tab={cabinet.TAB_ARCHIVE}" in html
+        assert f"tab={cabinet.TAB_PUBLISHED}" in html
         assert "page=2" in html
 
 
@@ -400,7 +406,7 @@ class TestWorksWithoutJavaScript:
 
     @pytest.mark.django_db
     def test_cards_use_plain_post_forms(self, client, user):
-        _photo(user, title="В архиве")
+        _photo(user, title="Опубликовано")
         removed = _photo(user, title="Убранное")
         removed.remove_from_cabinet()
         client.force_login(user)

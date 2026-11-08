@@ -4,9 +4,9 @@
 же `Q` идёт и в выборку, и в `Count(filter=...)`, поэтому вкладки и счётчики
 не могут разойтись. Шаблон получает готовую панель и не сравнивает статусы.
 
-Раскладка состояний согласована с `Photo.upload_state`: вкладка «Не в архиве»
-собирает `rejected`, `hidden`, `deleted` и `failed` — ровно те фото, которых
-нет и не будет в публичном архиве и которые не ждут проверки. Иначе скрытое
+Раскладка состояний согласована с `Photo.upload_state`: вкладка
+«Не опубликованы» собирает `rejected`, `hidden`, `deleted` и `failed` — ровно
+те фото, которые не опубликованы и не ждут проверки. Иначе скрытое
 модератором фото не попало бы ни в одну вкладку, кроме «Все», и сумма
 вкладок не сошлась бы с общим числом.
 
@@ -23,26 +23,28 @@ from apps.core.models import Status
 from apps.photos.models import Photo, ProcessingStatus
 
 TAB_ALL = "all"
-TAB_ARCHIVE = "archive"
+TAB_PUBLISHED = "published"
 TAB_REVIEW = "review"
-TAB_FAILED = "failed"  # подпись «Не в архиве»
+TAB_UNPUBLISHED = "unpublished"
 TAB_REMOVED = "removed"
 
 # Порядок вкладок в панели: от широкого к узкому, уборка — последней.
-TAB_ORDER = (TAB_ALL, TAB_ARCHIVE, TAB_REVIEW, TAB_FAILED, TAB_REMOVED)
+TAB_ORDER = (TAB_ALL, TAB_PUBLISHED, TAB_REVIEW, TAB_UNPUBLISHED, TAB_REMOVED)
 
 TAB_LABELS = {
     TAB_ALL: _("Все"),
-    TAB_ARCHIVE: _("В архиве"),
+    TAB_PUBLISHED: _("Опубликованы"),
     TAB_REVIEW: _("На проверке"),
-    TAB_FAILED: _("Не в архиве"),
+    TAB_UNPUBLISHED: _("Не опубликованы"),
     TAB_REMOVED: _("Убранные"),
 }
 
 # Подпись под панелью: на «Убранных» человек должен понимать, что уборка
-# из списка — не удаление из архива.
+# из списка — не удаление и обратима.
 TAB_NOTES = {
-    TAB_REMOVED: _("Эти фото остаются в архиве и открываются по ссылке"),
+    TAB_REMOVED: _(
+        "Уборка не удаляет фото: вернуть его в список можно в любой момент."
+    ),
 }
 
 
@@ -56,8 +58,8 @@ class CabinetTab:
     selected: bool = False
 
 
-def _archive_q():
-    """Фото, которые есть в публичном архиве."""
+def _published_q():
+    """Фото, которые опубликованы и видны всем."""
     return Q(
         status=Status.PUBLISHED,
         deleted_at__isnull=True,
@@ -95,19 +97,19 @@ def selected_tab(request) -> str:
 def tab_filter(tab):
     """Условие отбора для вкладки.
 
-    «Не в архиве» считается дополнением к двум другим вкладкам, а не
+    «Не опубликованы» считается дополнением к двум другим вкладкам, а не
     перечислением статусов: порядок проверок в `upload_state` сильнее
     статуса (фото в обработке читается как «Обрабатывается», даже если
     его уже скрыли), и перечисление дало бы фото в двух вкладках сразу.
     Так сумма трёх вкладок равна «Все» по построению.
     """
     visible = Q(cabinet_removed_at__isnull=True)
-    if tab == TAB_ARCHIVE:
-        return visible & _archive_q()
+    if tab == TAB_PUBLISHED:
+        return visible & _published_q()
     if tab == TAB_REVIEW:
         return visible & _review_q()
-    if tab == TAB_FAILED:
-        return visible & ~(_archive_q() | _review_q())
+    if tab == TAB_UNPUBLISHED:
+        return visible & ~(_published_q() | _review_q())
     if tab == TAB_REMOVED:
         return Q(cabinet_removed_at__isnull=False)
     return visible

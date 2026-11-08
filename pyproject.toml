@@ -1,6 +1,6 @@
 [project]
 name = "sportmemo"
-version = "0.29.1"
+version = "0.29.2"
 description = "SportMemo — публичный архив спортивных фотографий"
 readme = "README.md"
 requires-python = ">=3.12"

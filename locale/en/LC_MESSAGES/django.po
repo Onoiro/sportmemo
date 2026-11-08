@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-08 17:37+0300\n"
+"POT-Creation-Date: 2026-11-08 23:39+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1360,24 +1360,24 @@ msgid "Все"
 msgstr "All"
 
 #: apps/photos/cabinet.py:36
-msgid "В архиве"
-msgstr "In the archive"
+msgid "Опубликованы"
+msgstr "Published"
 
 #: apps/photos/cabinet.py:37 apps/photos/models.py:135
 msgid "На проверке"
 msgstr "Under review"
 
 #: apps/photos/cabinet.py:38
-msgid "Не в архиве"
-msgstr "Not in the archive"
+msgid "Не опубликованы"
+msgstr "Not published"
 
 #: apps/photos/cabinet.py:39
 msgid "Убранные"
 msgstr "Removed"
 
-#: apps/photos/cabinet.py:45
-msgid "Эти фото остаются в архиве и открываются по ссылке"
-msgstr "These photos stay in the archive and open by link"
+#: apps/photos/cabinet.py:46 templates/photos/my_photos.html:150
+msgid "Уборка не удаляет фото: вернуть его в список можно в любой момент."
+msgstr "Removing a photo does not delete it: you can put it back any time."
 
 #: apps/photos/forms.py:66
 msgid "Обрезка кадра"
@@ -1768,8 +1768,8 @@ msgid "Загрузка фото"
 msgstr "Photo upload"
 
 #: apps/photos/views.py:189
-msgid "Изменения сохранены. Фото остаётся в архиве."
-msgstr "Changes saved. The photo stays in the archive."
+msgid "Изменения сохранены. Фото остаётся опубликованным."
+msgstr "Changes saved. The photo stays published."
 
 #: apps/photos/views.py:209 apps/photos/views.py:216
 #: templates/photos/photo_details.html:11
@@ -1783,8 +1783,9 @@ msgid "Мои фото"
 msgstr "My photos"
 
 #: apps/photos/views.py:295
-msgid "Фото убрано из списка. Оно осталось в архиве."
-msgstr "The photo is removed from the list. It stays in the archive."
+msgid "Фото убрано из списка. Вернуть его можно на вкладке «Убранные»."
+msgstr ""
+"The photo is removed from the list. You can put it back on the Removed tab."
 
 #: apps/photos/views.py:298
 msgid "Фото уже убрано из списка."
@@ -2409,12 +2410,12 @@ msgstr "Events will appear here once they are added and published."
 #: templates/catalog/my_events.html:18
 msgid ""
 "Событие проверяет модератор — обычно в течение дня; авторам, которым мы "
-"доверяем, оно попадает в архив сразу. До проверки событие видите только вы и "
+"доверяем, оно публикуется сразу. До проверки событие видите только вы и "
 "модератор."
 msgstr ""
 "A moderator checks the event, usually within a day; for authors we trust it "
-"joins the archive right away. Before the check only you and a moderator can "
-"see it."
+"is published right away. Before the check only you and a moderator can see "
+"it."
 
 #: templates/catalog/my_events.html:46
 msgid "Вы ещё не создавали событий"
@@ -2422,21 +2423,21 @@ msgstr "You have not created events yet"
 
 #: templates/catalog/my_events.html:48
 msgid ""
-"Если вашего турнира или встречи нет в архиве — заведите событие. Оно попадёт "
-"в архив сразу или после проверки модератором."
+"Если вашего турнира или встречи нет в архиве — заведите событие. Оно будет "
+"опубликовано сразу или после проверки модератором."
 msgstr ""
 "If your tournament or game is not in the archive, create the event. It will "
-"join the archive right away or after a moderator check."
+"be published right away or after a moderator check."
 
 #: templates/catalog/my_teams.html:18
 msgid ""
 "Команду проверяет модератор — обычно в течение дня; авторам, которым мы "
-"доверяем, она попадает в архив сразу. До проверки команду видите только вы и "
+"доверяем, она публикуется сразу. До проверки команду видите только вы и "
 "модератор."
 msgstr ""
 "A moderator checks the team, usually within a day; for authors we trust it "
-"joins the archive right away. Before the check only you and a moderator can "
-"see it."
+"is published right away. Before the check only you and a moderator can see "
+"it."
 
 #: templates/catalog/my_teams.html:46
 msgid "Вы ещё не создавали команд"
@@ -2444,11 +2445,11 @@ msgstr "You have not created any teams yet"
 
 #: templates/catalog/my_teams.html:48
 msgid ""
-"Если вашей команды нет в архиве — заведите её. Она попадёт в архив сразу или "
-"после проверки модератором."
+"Если вашей команды нет в архиве — заведите её. Она будет опубликована сразу "
+"или после проверки модератором."
 msgstr ""
-"If your team is not in the archive, create it. It will join the archive "
-"right away or after a moderator check."
+"If your team is not in the archive, create it. It will be published right "
+"away or after a moderator check."
 
 #: templates/catalog/my_teams.html:52 templates/catalog/team_list.html:19
 #: templates/photos/photo_details.html:66
@@ -3038,12 +3039,12 @@ msgstr "Next"
 #: templates/photos/my_photos.html:15
 msgid ""
 "Снимок проверяет модератор — обычно в течение дня; авторам, которым мы "
-"доверяем, он попадает в архив сразу. До проверки фото видите только вы и "
+"доверяем, он публикуется сразу. До проверки фото видите только вы и "
 "модератор."
 msgstr ""
 "A moderator checks the photo, usually within a day; for authors we trust it "
-"joins the archive right away. Before the check only you and a moderator can "
-"see it."
+"is published right away. Before the check only you and a moderator can see "
+"it."
 
 #: templates/photos/my_photos.html:26
 msgid "Обновить"
@@ -3065,21 +3066,17 @@ msgstr "Remove from the list"
 msgid "Вы ничего не убирали"
 msgstr "You have not removed anything"
 
-#: templates/photos/my_photos.html:150
-msgid "Фото, убранные из списка, остаются в архиве и открываются по ссылке."
-msgstr "Photos removed from the list stay in the archive and open by link."
-
 #: templates/photos/my_photos.html:156
 msgid "Вы ещё не загружали фото"
 msgstr "You have not uploaded any photos yet"
 
 #: templates/photos/my_photos.html:158
 msgid ""
-"Оцифруйте снимок из бумажного альбома — он попадёт в архив сразу или после "
+"Оцифруйте снимок из бумажного альбома — он будет опубликован сразу или после "
 "проверки модератором."
 msgstr ""
-"Digitize a photo from a paper album and it will join the archive right away "
-"or after a moderator check."
+"Digitize a photo from a paper album and it will be published right away or "
+"after a moderator check."
 
 #: templates/photos/my_photos.html:168
 msgid "Здесь пока пусто"
@@ -3250,6 +3247,18 @@ msgstr "Showing the first %(shown)s of %(total)s"
 #: templates/search/partials/suggestions.html:12
 msgid "Возможно, вы искали"
 msgstr "Did you mean"
+
+#~ msgid "В архиве"
+#~ msgstr "In the archive"
+
+#~ msgid "Не в архиве"
+#~ msgstr "Not in the archive"
+
+#~ msgid "Эти фото остаются в архиве и открываются по ссылке"
+#~ msgstr "These photos stay in the archive and open by link"
+
+#~ msgid "Фото, убранные из списка, остаются в архиве и открываются по ссылке."
+#~ msgstr "Photos removed from the list stay in the archive and open by link."
 
 #~ msgid "дубликат фото"
 #~ msgstr "duplicate of"

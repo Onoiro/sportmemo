@@ -226,8 +226,11 @@ constructor". Legal pages and SMTP are stage 5.
 
 ## Current state
 
-- Version: 0.29.0; development branch `master`; 1594 tests passing on Python 3.12
-  and 3.13 (`make test`); linter clean (`make lint`).
+- Version: 0.29.2; development branch `master`; 1594 tests passing on Python 3.12
+  and 3.13 (`make test`); linter clean (`make lint`). Version 0.29.1 fixed
+  `collectstatic` (the `sourceMappingURL` lines of the vendor Bootstrap files are gone),
+  and 0.29.2 removed the word "archive" from the cabinet: the tabs now read "Published"
+  and "Not published".
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is complete: sub-stages 3.1–3.6
   are done, 3.7 (batch upload) is deferred. Sub-stage 3.1 (processing foundation) — EXIF by
@@ -304,15 +307,15 @@ Components and pages. The rules for visibility, privacy and their reasoning live
 - `/photos/upload/`, `/photos/<pk>/edit/`, `/photos/mine/` (3.2, 3.3) and `/rules/`
   (`core:rules`) are the two upload steps, the author cabinet and the service rules. Both
   step forms and the cabinet are `noindex`; `/rules/` is indexed.
-- `/photos/mine/` with tabs (0.29.0, P3-23) has five tabs via `?tab=`: "All", "In the
-  archive", "Under review", "Not in the archive", "Removed". "Not in the archive" covers
-  `rejected`, `hidden`, `deleted` and `failed` at once: a photo hidden by a moderator and a
-  broken file are what a person looks for first, and "Failed" would be wrong for them.
+- `/photos/mine/` with tabs (0.29.0, P3-23; labels fixed in 0.29.2) has five tabs via
+  `?tab=`: "All", "Published", "Under review", "Not published", "Removed". "Not published"
+  covers `rejected`, `hidden`, `deleted` and `failed` at once: a photo hidden by a moderator
+  and a broken file are what a person looks for first, and "Failed" would be wrong for them.
   "All" shows everything except what the author removed, otherwise the tab would become a
   dump again; the other three tabs add up to "All", and a parity test holds that, not
   discipline. The actions `POST /photos/<pk>/remove/` and `POST /photos/<pk>/restore/`
-  remove a photo from the list and put it back; removal is reversible, the archive does not
-  change, and the "Removed" tab carries a note that the photos still open by link.
+  remove a photo from the list and put it back; removal is reversible, publication does not
+  change, and the "Removed" tab carries a note that the photo can be put back.
 - `/moderation/queue/` and `/moderation/queue/<kind>/<pk>/` (4.4, 4.5) are the draft queue
   and the decision on one object (POST only). They require a login and the moderator role,
   they are `noindex`, and `robots.txt` has `Disallow: /moderation/`. Twelve cards per page,
@@ -752,9 +755,16 @@ with three outcomes.
   the view: the same `Q` goes into both the queryset and `Count(filter=...)`, so tabs and
   counters cannot drift apart. The template compares nothing with `request.GET` and does not
   decide whether `?tab=` is valid (an invalid value means "All", as in the catalog filters).
-  The state layout agrees with `Photo.upload_state`; "Not in the archive" is the complement
+  The state layout agrees with `Photo.upload_state`; "Not published" is the complement
   of the other two tabs rather than a list of statuses, otherwise the tabs would not add up
   to "All".
+- **Three words mean three different things: "published", "in the list", "archive".**
+  "Published" is about being visible to everyone (`status=published`); "in the list" is about
+  the author cabinet; "archive" is only the whole project ("SportMemo public archive",
+  "Search the archive", "years in the archive"). "Archive" is never a synonym for
+  "published": the tab "In the archive" read like "archived, not published" — the opposite
+  of what it meant, and "the photo stays in the archive" was plainly false for a rejected
+  photo.
 - **Only the author removes and restores** (`can_manage_cabinet`); a moderator cannot:
   another person's cabinet is not their business and removal is not a moderation decision.
   Strangers get **404**, not 403 — the same rule as `can_edit_photo`. The object comes from
@@ -762,7 +772,7 @@ with three outcomes.
   since it is the one that clutters the list most.
 - **Removal from the list does not give the quota back and does not change the public
   output.** `uploads_today()` counts `Photo.objects` without looking at
-  `cabinet_removed_at`, and a published removed photo stays in the archive and opens by
+  `cabinet_removed_at`, and a published removed photo stays published and opens by
   link. A card gets a link only when `photo.is_page_available`: a photo deleted by a
   moderator returns 404 even for the author, while a merged duplicate returns 301 to the
   canonical photo and the link works.
