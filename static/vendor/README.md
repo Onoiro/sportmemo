@@ -26,8 +26,8 @@
 ## Контрольные суммы (sha256)
 
 ```
-d85327d99c7a3ee1f9b5d0500d1370acea3ad2db39c163c2f51f232baedbdede  bootstrap/css/bootstrap.min.css
-e4fd49181388c48ec5040bd3fe66f57c29c8e67fcd8502b3354b96ec7ab47cc7  bootstrap/js/bootstrap.bundle.min.js
+8f8173cb2d8f867274aeb0cb15328e60f490c7f272351e51a55f1dabb486e4ff  bootstrap/css/bootstrap.min.css
+c6f670216aedd2c61ec83102f7e40c1c44114eecd7f37b2edc332757390c386a  bootstrap/js/bootstrap.bundle.min.js
 79c99c1a1e0e937f808a58165728b7ed00800f02ef5efcfcd10dfe71464e675d  bootstrap-icons/bootstrap-icons.min.css
 2b7689746f87e0beeae25338bc021dd2515c2f6f003f3d3d064d878d380b2150  bootstrap-icons/fonts/bootstrap-icons.woff2
 24929e8a44da027588f833d4e82240ee734bd65bf962b08b0545af58a9ce80fa  bootstrap-icons/fonts/bootstrap-icons.woff
@@ -50,5 +50,10 @@ d6fdc75f204e6bdefa99b69bf1e6d4ac69b8a364f77929f45c13476b4000f717  htmx/htmx.min.
        https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css
    ```
 
-3. Пересчитать суммы (`sha256sum static/vendor/**/*`) и обновить таблицу и блок выше.
-4. Прогнать `make test` и открыть сайт: сломанный CSS или пропавшие иконки видно сразу.
+3. Удалить строки `sourceMappingURL` из `bootstrap.min.css` и
+   `bootstrap.bundle.min.js`: карт `.map` в репозитории нет, а `collectstatic`
+   падает, когда ссылка ведёт на отсутствующий файл. Строки стоят в конце
+   CSS-файла и последней строкой JS-файла.
+4. Пересчитать суммы (`sha256sum static/vendor/**/*`) и обновить таблицу и блок выше.
+5. Прогнать `make test` и открыть сайт: сломанный CSS или пропавшие иконки видно сразу.
+6. Прогнать `make collectstatic` — манифест обязан собраться без ошибок.
