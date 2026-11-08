@@ -14,6 +14,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from apps.catalog.models import Event, Team
 from apps.comments.services import comments_context
+from apps.core.auth import post_action, safe_next
 from apps.core.models import Status
 from apps.core.schema import compact, photo_schema
 from apps.core.seo import page_meta
@@ -27,7 +28,7 @@ from apps.core.shortcuts import (
     visible_photos,
 )
 from apps.moderation.services import initial_status_for
-from apps.photos import services
+from apps.photos import cabinet, services
 from apps.photos.exif import taken_year
 from apps.photos.forms import PhotoDetailsForm, PhotoFileForm
 from apps.photos.models import Photo
@@ -222,22 +223,28 @@ def photo_edit(request, pk):
 @never_cache
 @require_GET
 def my_photos(request):
-    """Свои фото: любые статусы, включая мягко удалённые.
+    """Свои фото по вкладкам: ни одно фото не исчезает по статусу.
 
     Менеджер по умолчанию, а не `public`: фото, убранное модератором,
     не должно исчезать из кабинета молча — человек увидит плашку и причину.
     Страница не кэшируется: статус меняет модератор, и устаревшая копия
     показывала бы «На проверке» после публикации.
+
+    Отбор и счётчики собирает `apps/photos/cabinet.py`: один `Q` идёт
+    и в выборку, и в счётчик, поэтому вкладка и число на ней не разойдутся.
     """
-    photos = (
-        Photo.objects.filter(uploaded_by=request.user)
-        .select_related("team", "event")
-        .order_by("-created_at")
-    )
+    tab = cabinet.selected_tab(request)
+    photos = cabinet.cabinet_photos(request.user, tab)
     page_obj = paginate(request, photos, PHOTO_PAGE_SIZE)
     context = {
         "photos": page_obj.object_list,
         "page_obj": page_obj,
+        "tabs": cabinet.cabinet_tabs(request.user, tab),
+        "selected_tab": tab,
+        "note": cabinet.tab_note(tab),
+        # Адрес возврата для форм карточки: текущая вкладка и страница,
+        # чтобы уборка не выбивала человека из списка.
+        "next_url": request.get_full_path(),
         "meta": page_meta(
             request,
             title=_("Мои фото"),
@@ -250,6 +257,57 @@ def my_photos(request):
         ],
     }
     return render(request, "photos/my_photos.html", context)
+
+
+def _get_own_photo_or_404(request, pk):
+    """Своё фото для уборки из списка или 404.
+
+    Объект берётся из `Photo.objects`, а не из `Photo.public`: убрать
+    из списка нужно уметь и фото, удалённое модератором, — как раз оно
+    чаще всего и мешает. Это действие автора над своим фото, а не
+    публичная выборка.
+
+    Посторонним — 404, а не 403: не раскрываем существование чужого
+    черновика (правило `can_edit_photo` и `can_edit`). Право проверяет
+    `can_manage_cabinet`: чужой кабинет не дело модератора.
+    """
+    try:
+        photo = Photo.objects.select_related("merged_into").get(pk=pk)
+    except Photo.DoesNotExist as exc:
+        raise Http404("Фотография не найдена") from exc
+
+    if not cabinet.can_manage_cabinet(request.user, photo):
+        raise Http404("Фотография не найдена")
+    return photo
+
+
+@post_action("photos:my_photos")
+def photo_remove(request, pk):
+    """Убрать своё фото из списка кабинета.
+
+    Обратное действие — `photo_restore`: уборка не удаляет фото и не влияет
+    на архив, поэтому подтверждения не спрашиваем.
+    """
+    photo = _get_own_photo_or_404(request, pk)
+    if cabinet.remove_from_cabinet(photo):
+        messages.success(
+            request,
+            _("Фото убрано из списка. Оно осталось в архиве."),
+        )
+    else:
+        messages.info(request, _("Фото уже убрано из списка."))
+    return redirect(safe_next(request, "photos:my_photos"))
+
+
+@post_action("photos:my_photos")
+def photo_restore(request, pk):
+    """Вернуть своё фото в список кабинета."""
+    photo = _get_own_photo_or_404(request, pk)
+    if cabinet.restore_to_cabinet(photo):
+        messages.success(request, _("Фото возвращено в список."))
+    else:
+        messages.info(request, _("Фото уже в списке."))
+    return redirect(safe_next(request, "photos:my_photos"))
 
 
 @require_GET

@@ -229,7 +229,7 @@ def safe_next(request, fallback):
 
 ## 4. Шаги
 
-### 1. [ ] Ветка и исходная проверка
+### 1. [x] Ветка и исходная проверка
 
 1. `git status` — дерево чистое (ожидается `master`, `e54a307`).
 2. `git switch -c feature/photo-cabinet-tabs`.
@@ -239,7 +239,7 @@ def safe_next(request, fallback):
 Навыки: koda-coder.
 Файлы: —
 
-### 2. [ ] Поле модели, методы и миграция
+### 2. [x] Поле модели, методы и миграция
 
 `apps/photos/models.py`:
 
@@ -265,7 +265,7 @@ uv run python manage.py makemigrations --check --dry-run   # пусто
 - `apps/photos/models.py`
 - `apps/photos/migrations/0006_photo_cabinet_removed_at.py`
 
-### 3. [ ] Модуль вкладок `apps/photos/cabinet.py`
+### 3. [x] Модуль вкладок `apps/photos/cabinet.py`
 
 Новый модуль по 3.3: константы вкладок, `selected_tab`, `tab_filter`,
 `cabinet_photos`, `cabinet_counts`, `CabinetTab`, `cabinet_tabs`,
@@ -285,7 +285,7 @@ grep -n "from apps.photos.models" apps/photos/cabinet.py   # только мод
 Файлы:
 - `apps/photos/cabinet.py`
 
-### 4. [ ] `safe_next` и представления с маршрутами
+### 4. [x] `safe_next` и представления с маршрутами
 
 1. `apps/core/auth.py` — `safe_next(request, fallback)` (3.5).
 2. `apps/photos/views.py`:
@@ -311,7 +311,7 @@ uv run python manage.py check
 - `apps/photos/views.py`
 - `apps/photos/urls.py`
 
-### 5. [ ] Шаблоны кабинета
+### 5. [x] Шаблоны кабинета
 
 1. `templates/photos/partials/cabinet_tabs.html` — чипы с подписями и счётчиками.
 2. `templates/photos/my_photos.html`:
@@ -332,7 +332,7 @@ uv run pytest tests/test_photo_upload.py -q   # старые тесты каби
 - `templates/photos/my_photos.html`
 - `templates/photos/partials/cabinet_tabs.html`
 
-### 6. [ ] Стили
+### 6. [x] Стили
 
 `static/css/sportmemo.css` — блок вкладок кабинета по 3.7; проверить обе темы
 (светлая сепия и тёмная) и мобильную ширину.
@@ -347,7 +347,7 @@ grep -n "cabinet-tab\|cabinet-note\|upload-card__action--button" static/css/spor
 Файлы:
 - `static/css/sportmemo.css`
 
-### 7. [ ] Локализация
+### 7. [x] Локализация
 
 1. `make i18n`.
 2. `locale/ru/LC_MESSAGES/django.po` — снять `fuzzy`, выровнять `msgstr` по `msgid`.
@@ -365,7 +365,7 @@ grep -n "cabinet-tab\|cabinet-note\|upload-card__action--button" static/css/spor
 - `locale/ru/LC_MESSAGES/django.po`
 - `locale/en/LC_MESSAGES/django.po`
 
-### 8. [ ] Тесты `tests/test_photo_cabinet.py`
+### 8. [x] Тесты `tests/test_photo_cabinet.py`
 
 1. **Паритет вкладок.** Для всех семи `upload_state` (`review`, `processing`,
    `published`, `hidden`, `rejected`, `failed`, `deleted`) вкладка, в которой фото
@@ -397,7 +397,7 @@ grep -n "cabinet-tab\|cabinet-note\|upload-card__action--button" static/css/spor
 Файлы:
 - `tests/test_photo_cabinet.py`
 
-### 9. [ ] Проверка
+### 9. [x] Проверка
 
 ```bash
 make lint
@@ -414,7 +414,7 @@ grep -rn "deleted_at =" apps/photos/views.py   # пусто: автор не с�
 Навыки: koda-coder.
 Файлы: —
 
-### 10. [ ] Документация и версия
+### 10. [x] Документация и версия
 
 1. `KODA.md` и `AGENTS.md` (синхронно):
    - «Правила для кода»: `cabinet_removed_at` — про кабинет, `deleted_at` — про
@@ -480,13 +480,13 @@ Bump version: 0.28.1 → 0.29.0 (minor)
 
 | # | Шаг | Статус |
 |---|---|---|
-| 1 | Ветка и исходная проверка | [ ] |
-| 2 | Поле модели, методы и миграция | [ ] |
-| 3 | Модуль вкладок `apps/photos/cabinet.py` | [ ] |
-| 4 | `safe_next` и представления с маршрутами | [ ] |
-| 5 | Шаблоны кабинета | [ ] |
-| 6 | Стили | [ ] |
-| 7 | Локализация | [ ] |
-| 8 | Тесты `tests/test_photo_cabinet.py` | [ ] |
-| 9 | Проверка | [ ] |
-| 10 | Документация и версия | [ ] |
+| 1 | Ветка и исходная проверка | [x] |
+| 2 | Поле модели, методы и миграция | [x] |
+| 3 | Модуль вкладок `apps/photos/cabinet.py` | [x] |
+| 4 | `safe_next` и представления с маршрутами | [x] |
+| 5 | Шаблоны кабинета | [x] |
+| 6 | Стили | [x] |
+| 7 | Локализация | [x] |
+| 8 | Тесты `tests/test_photo_cabinet.py` | [x] |
+| 9 | Проверка | [x] |
+| 10 | Документация и версия | [x] |

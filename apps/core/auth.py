@@ -18,6 +18,24 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 
+def safe_next(request, fallback):
+    """Адрес возврата из скрытого поля формы или `fallback`.
+
+    Открытый редирект на чужой сайт — известный приём фишинга, поэтому
+    значение проверяется. Небезопасное или пустое заменяется `fallback`:
+    это имя маршрута списка, а не адрес самого действия, иначе человек
+    вернулся бы на POST-адрес и получил 405.
+    """
+    value = request.POST.get("next", "") or request.GET.get("next", "")
+    if value and url_has_allowed_host_and_scheme(
+        value,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return value
+    return resolve_url(fallback)
+
+
 def post_action(fallback):
     """Действие только для POST, и аноним возвращается на GET-адрес.
 
@@ -26,9 +44,8 @@ def post_action(fallback):
     по кнопке «обновить» не должен уводить со страницы.
 
     `next` берётся из скрытого поля формы и проверяется от открытого
-    редиректа — тот же приём фишинга, что в `_safe_next` у форм.
-    Небезопасный или пустой заменяется `fallback`: это имя маршрута списка,
-    а не адрес самого действия, иначе вернулась бы та же петля 405.
+    редиректа тем же `safe_next`, что и в представлениях: своя копия
+    проверки разошлась бы с общей при первой правке.
     """
 
     def decorator(view):
@@ -36,14 +53,7 @@ def post_action(fallback):
         @wraps(view)
         def wrapper(request, *args, **kwargs):
             if not request.user.is_authenticated:
-                value = request.POST.get("next", "")
-                if value and url_has_allowed_host_and_scheme(
-                    value,
-                    allowed_hosts={request.get_host()},
-                    require_https=request.is_secure(),
-                ):
-                    return redirect_to_login(value)
-                return redirect_to_login(resolve_url(fallback))
+                return redirect_to_login(safe_next(request, fallback))
             return view(request, *args, **kwargs)
 
         return wrapper

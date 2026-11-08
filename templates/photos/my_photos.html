@@ -27,11 +27,23 @@
         </div>
     </header>
 
+    {% include "photos/partials/cabinet_tabs.html" %}
+
     {% if photos %}
         <ul class="upload-grid">
             {% for photo in photos %}
                 <li class="upload-card">
-                    <a class="upload-card__media" href="{{ photo.get_absolute_url }}">
+                    {% comment %}
+                    Превью — ссылка только у фото, которое откроется: карточка
+                    удалённого модератором снимка вела бы в тупик (404).
+                    Обёртка выбирается условием, содержимое у обеих веток
+                    одно и то же, поэтому дублируется только тег.
+                    {% endcomment %}
+                    {% if photo.is_page_available %}
+                        <a class="upload-card__media" href="{{ photo.get_absolute_url }}">
+                    {% else %}
+                        <span class="upload-card__media">
+                    {% endif %}
                         {% if photo.thumbnail %}
                             <img class="upload-card__image" src="{{ photo.thumbnail.url }}"
                                  alt="" loading="lazy" decoding="async">
@@ -44,18 +56,18 @@
                                 <i class="bi bi-image" aria-hidden="true"></i>
                             </span>
                         {% endif %}
-                    </a>
+                    {% if photo.is_page_available %}</a>{% else %}</span>{% endif %}
                     <div class="upload-card__body">
                         <p class="upload-card__title">
-                            <a href="{{ photo.get_absolute_url }}">
-                                {% if photo.title %}
-                                    {{ photo.title }}
-                                {% elif photo.original_filename %}
-                                    {{ photo.original_filename }}
-                                {% else %}
-                                    {% trans "Фотография" %}
-                                {% endif %}
-                            </a>
+                            {% if photo.is_page_available %}<a href="{{ photo.get_absolute_url }}">{% endif %}
+                            {% if photo.title %}
+                                {{ photo.title }}
+                            {% elif photo.original_filename %}
+                                {{ photo.original_filename }}
+                            {% else %}
+                                {% trans "Фотография" %}
+                            {% endif %}
+                            {% if photo.is_page_available %}</a>{% endif %}
                         </p>
                         <p class="upload-card__meta">
                             {% if photo.year %}{{ photo.year }} · {% endif %}
@@ -87,6 +99,36 @@
                                 {% trans "Изменить данные" %}
                             </a>
                         {% endif %}
+                        {% comment %}
+                        Уборка из списка — действие автора, а не решение
+                        модератора: фото остаётся в архиве, поэтому
+                        подтверждение не спрашиваем, а обратное действие
+                        стоит на вкладке «Убранные». `next` возвращает
+                        человека на ту же вкладку и страницу.
+                        {% endcomment %}
+                        {% if photo.is_removed_from_cabinet %}
+                            <form class="upload-card__form" method="post"
+                                  action="{% url 'photos:photo_restore' photo.pk %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ next_url }}">
+                                <button class="upload-card__action upload-card__action--button"
+                                        type="submit">
+                                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                                    {% trans "Вернуть в список" %}
+                                </button>
+                            </form>
+                        {% else %}
+                            <form class="upload-card__form" method="post"
+                                  action="{% url 'photos:photo_remove' photo.pk %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ next_url }}">
+                                <button class="upload-card__action upload-card__action--button"
+                                        type="submit">
+                                    <i class="bi bi-eye-slash" aria-hidden="true"></i>
+                                    {% trans "Убрать из списка" %}
+                                </button>
+                            </form>
+                        {% endif %}
                     </div>
                 </li>
             {% endfor %}
@@ -94,7 +136,15 @@
         {% if page_obj.has_other_pages %}
             {% pagination page_obj %}
         {% endif %}
-    {% else %}
+    {% elif selected_tab == "removed" %}
+        <div class="empty-state">
+            <i class="bi bi-eye empty-state__icon" aria-hidden="true"></i>
+            <p class="empty-state__title">{% trans "Вы ничего не убирали" %}</p>
+            <p class="mb-0">
+                {% trans "Фото, убранные из списка, остаются в архиве и открываются по ссылке." %}
+            </p>
+        </div>
+    {% elif selected_tab == "all" %}
         <div class="empty-state">
             <i class="bi bi-images empty-state__icon" aria-hidden="true"></i>
             <p class="empty-state__title">{% trans "Вы ещё не загружали фото" %}</p>
@@ -105,6 +155,11 @@
                 <i class="bi bi-plus-lg" aria-hidden="true"></i>
                 {% trans "Загрузить фото" %}
             </a>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-images empty-state__icon" aria-hidden="true"></i>
+            <p class="empty-state__title">{% trans "Здесь пока пусто" %}</p>
         </div>
     {% endif %}
 </div>

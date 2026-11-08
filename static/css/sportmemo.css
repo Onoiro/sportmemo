@@ -1184,6 +1184,97 @@ html[data-bs-theme="dark"] {
     font-size: 0.875rem;
 }
 
+/* Действие в карточке — форма, а не ссылка: уборка из списка меняет
+   состояние. Прижатие к низу переезжает на форму: `margin-top: auto`
+   у кнопки внутри формы свободного места не видит. */
+.upload-card__form {
+    margin-top: auto;
+    padding-top: 0.25rem;
+}
+
+.upload-card__form .upload-card__action {
+    margin-top: 0;
+    padding-top: 0;
+}
+
+/* Кнопка выглядит как ссылка: уборка — то же действие автора, что
+   и «Изменить данные», и не должна спорить с ней за внимание. */
+.upload-card__action--button {
+    display: inline-flex;
+    gap: 0.375rem;
+    align-items: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--bs-link-color);
+    font: inherit;
+    font-size: 0.875rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.upload-card__action--button:hover,
+.upload-card__action--button:focus {
+    color: var(--bs-link-hover-color);
+    text-decoration: underline;
+}
+
+/* --- Кабинет автора: вкладки --- */
+
+/* Вкладки идут одной строкой с прокруткой: пять подписей со счётчиками
+   на узком экране не помещаются, а перенос строк сделал бы панель
+   выше самих карточек. */
+.cabinet-tabs {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.25rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+}
+
+.cabinet-tab {
+    display: inline-flex;
+    flex: 0 0 auto;
+    gap: 0.375rem;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid transparent;
+    border-radius: var(--sm-radius);
+    color: var(--bs-secondary-color);
+    font-size: 0.9375rem;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.cabinet-tab:hover,
+.cabinet-tab:focus {
+    color: var(--bs-link-hover-color);
+    background-color: var(--bs-tertiary-bg);
+}
+
+/* Активная вкладка — единственная с рамкой и фоном: цвет ссылки
+   в панели не читается как «выбрано». */
+.cabinet-tab--active {
+    background-color: var(--bs-secondary-bg);
+    border-color: var(--bs-border-color);
+    color: var(--bs-heading-color);
+    font-weight: 600;
+}
+
+.cabinet-tab__count {
+    color: var(--bs-secondary-color);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.cabinet-note {
+    margin: -0.5rem 0 1rem;
+    color: var(--bs-secondary-color);
+    font-size: 0.875rem;
+}
+
 /* --- Очередь черновиков --- */
 
 /* Сетка та же, что у кабинета: очередь тоже список объектов с превью,
@@ -1899,6 +1990,23 @@ html[data-bs-theme="dark"] {
     .upload-card__image,
     .upload-card__placeholder {
         height: 11rem;
+    }
+
+    /* Вкладки листают пальцем: цель ниже 44 px легко промахнуть,
+       а прокрутка вбок должна оставаться плавной. */
+    .cabinet-tabs {
+        margin-bottom: 0.75rem;
+        scroll-snap-type: x proximity;
+    }
+
+    .cabinet-tab {
+        min-height: 44px;
+        padding: 0.5rem 0.75rem;
+        scroll-snap-align: start;
+    }
+
+    .upload-card__action--button {
+        min-height: 44px;
     }
 
     /* Очередь решают пальцем с телефона: одна колонка, кнопки на всю

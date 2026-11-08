@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-01 22:18+0300\n"
+"POT-Creation-Date: 2026-11-08 17:37+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -87,7 +87,7 @@ msgid "как обращаться"
 msgstr "как обращаться"
 
 #: apps/accounts/models.py:27 apps/catalog/models.py:191
-#: apps/photos/models.py:457
+#: apps/photos/models.py:506
 msgid "роль"
 msgstr "роль"
 
@@ -153,10 +153,10 @@ msgstr "Профиль обновлён"
 #: apps/catalog/views.py:524 apps/catalog/views.py:566
 #: apps/catalog/views.py:597 apps/catalog/views.py:661
 #: apps/catalog/views.py:703 apps/catalog/views.py:730 apps/core/views.py:114
-#: apps/core/views.py:144 apps/core/views.py:192 apps/moderation/views.py:124
-#: apps/moderation/views.py:171 apps/moderation/views.py:311
-#: apps/photos/views.py:158 apps/photos/views.py:213 apps/photos/views.py:248
-#: apps/photos/views.py:286 apps/search/views.py:40
+#: apps/core/views.py:144 apps/core/views.py:192 apps/moderation/views.py:125
+#: apps/moderation/views.py:172 apps/moderation/views.py:314
+#: apps/photos/views.py:159 apps/photos/views.py:214 apps/photos/views.py:255
+#: apps/photos/views.py:344 apps/search/views.py:40
 #: templates/partials/footer.html:20
 msgid "Главная"
 msgstr "Главная"
@@ -355,11 +355,11 @@ msgid ""
 msgstr ""
 "Событие с таким названием и годом уже есть в архиве. Проверьте список выше."
 
-#: apps/catalog/models.py:75 apps/photos/models.py:429
+#: apps/catalog/models.py:75 apps/photos/models.py:478
 msgid "игрок"
 msgstr "игрок"
 
-#: apps/catalog/models.py:76 apps/photos/models.py:430
+#: apps/catalog/models.py:76 apps/photos/models.py:479
 msgid "тренер"
 msgstr "тренер"
 
@@ -409,7 +409,7 @@ msgid "дополнительные атрибуты"
 msgstr "дополнительные атрибуты"
 
 #: apps/catalog/models.py:116 apps/catalog/models.py:299
-#: apps/catalog/models.py:474 apps/photos/models.py:251
+#: apps/catalog/models.py:474 apps/photos/models.py:258
 msgid "поисковый индекс"
 msgstr "поисковый индекс"
 
@@ -423,7 +423,7 @@ msgid "команды"
 msgstr "команды"
 
 #: apps/catalog/models.py:184 apps/catalog/models.py:304
-#: apps/catalog/models.py:392 apps/photos/models.py:452
+#: apps/catalog/models.py:392 apps/photos/models.py:501
 msgid "человек"
 msgstr "человек"
 
@@ -444,7 +444,7 @@ msgid "амплуа"
 msgstr "амплуа"
 
 #: apps/catalog/models.py:195 apps/catalog/models.py:403
-#: apps/photos/models.py:468
+#: apps/photos/models.py:517
 msgid "примечание"
 msgstr "примечание"
 
@@ -583,7 +583,7 @@ msgid "церемония"
 msgstr "церемония"
 
 #: apps/catalog/models.py:438 apps/moderation/models.py:21
-#: apps/photos/models.py:67 apps/photos/models.py:434
+#: apps/photos/models.py:67 apps/photos/models.py:483
 msgid "другое"
 msgstr "другое"
 
@@ -712,7 +712,7 @@ msgstr "Новая команда"
 msgid "Создать"
 msgstr "Создать"
 
-#: apps/catalog/views.py:547 apps/catalog/views.py:684 apps/photos/views.py:191
+#: apps/catalog/views.py:547 apps/catalog/views.py:684 apps/photos/views.py:192
 msgid "Изменения сохранены."
 msgstr "Изменения сохранены."
 
@@ -830,15 +830,15 @@ msgstr "комментарий"
 msgid "комментарии"
 msgstr "комментарии"
 
-#: apps/comments/views.py:87
+#: apps/comments/views.py:85
 msgid "Такой комментарий вы уже отправляли."
 msgstr "Такой комментарий вы уже отправляли."
 
-#: apps/comments/views.py:111
+#: apps/comments/views.py:109
 msgid "Комментарий отправлен на проверку модератору."
 msgstr "Комментарий отправлен на проверку модератору."
 
-#: apps/comments/views.py:113
+#: apps/comments/views.py:111
 msgid "Комментарий добавлен."
 msgstr "Комментарий добавлен."
 
@@ -1009,8 +1009,8 @@ msgid "порядок сортировки"
 msgstr "порядок сортировки"
 
 #: apps/core/schema.py:150 apps/moderation/queue.py:219
-#: apps/photos/views.py:295 apps/photos/views.py:299
-#: templates/photos/my_photos.html:58 templates/photos/photo_detail.html:37
+#: apps/photos/views.py:353 apps/photos/views.py:357
+#: templates/photos/my_photos.html:71 templates/photos/photo_detail.html:37
 msgid "Фотография"
 msgstr "Фотография"
 
@@ -1036,7 +1036,7 @@ msgstr ""
 "нарушении прав."
 
 #: apps/core/views.py:138 apps/core/views.py:145 apps/core/views.py:193
-#: apps/photos/views.py:289 templates/core/home.html:61
+#: apps/photos/views.py:347 templates/core/home.html:61
 #: templates/core/year_list.html:11 templates/partials/footer.html:14
 #: templates/partials/navbar.html:20
 msgid "Годы"
@@ -1046,7 +1046,7 @@ msgstr "Годы"
 msgid "Хронология архива SportMemo: годы и фотографии каждого года."
 msgstr "Хронология архива SportMemo: годы и фотографии каждого года."
 
-#: apps/core/views.py:187 apps/core/views.py:194 apps/photos/views.py:292
+#: apps/core/views.py:187 apps/core/views.py:194 apps/photos/views.py:350
 #: templates/core/year_detail.html:12
 #, python-format
 msgid "%(year)s год"
@@ -1250,62 +1250,62 @@ msgstr "объект удалён"
 msgid "анонимно"
 msgstr "анонимно"
 
-#: apps/moderation/views.py:82 apps/moderation/views.py:101
+#: apps/moderation/views.py:83 apps/moderation/views.py:102
 msgid "Спасибо! Модератор проверит."
 msgstr "Спасибо! Модератор проверит."
 
-#: apps/moderation/views.py:87
+#: apps/moderation/views.py:88
 msgid "Жалоба на этот объект уже отправлена."
 msgstr "Жалоба на этот объект уже отправлена."
 
-#: apps/moderation/views.py:119 apps/moderation/views.py:126
+#: apps/moderation/views.py:120 apps/moderation/views.py:127
 #: templates/moderation/report_form.html:11
 #: templates/partials/report_link.html:15
 msgid "Сообщить об ошибке"
 msgstr "Сообщить об ошибке"
 
-#: apps/moderation/views.py:166 apps/moderation/views.py:172
+#: apps/moderation/views.py:167 apps/moderation/views.py:173
 #: templates/moderation/queue.html:11
 msgid "Очередь черновиков"
 msgstr "Очередь черновиков"
 
-#: apps/moderation/views.py:245 apps/moderation/views.py:269
-#: apps/moderation/views.py:386 apps/moderation/views.py:406
+#: apps/moderation/views.py:248 apps/moderation/views.py:272
+#: apps/moderation/views.py:391 apps/moderation/views.py:411
 msgid "Уже обработано"
 msgstr "Уже обработано"
 
-#: apps/moderation/views.py:251
+#: apps/moderation/views.py:254
 #, python-format
 msgid "%(kind)s: опубликовано."
 msgstr "%(kind)s: опубликовано."
 
-#: apps/moderation/views.py:260
+#: apps/moderation/views.py:263
 #, python-format
 msgid "%(kind)s: отклонено, автор увидит причину."
 msgstr "%(kind)s: отклонено, автор увидит причину."
 
-#: apps/moderation/views.py:264 apps/moderation/views.py:408
+#: apps/moderation/views.py:267 apps/moderation/views.py:413
 msgid "Неизвестное действие"
 msgstr "Неизвестное действие"
 
-#: apps/moderation/views.py:306 apps/moderation/views.py:312
+#: apps/moderation/views.py:309 apps/moderation/views.py:315
 #: templates/moderation/report_list.html:11 templates/partials/navbar.html:82
 msgid "Жалобы"
 msgstr "Жалобы"
 
-#: apps/moderation/views.py:392
+#: apps/moderation/views.py:397
 msgid "Жалоба взята в работу"
 msgstr "Жалоба взята в работу"
 
-#: apps/moderation/views.py:393
+#: apps/moderation/views.py:398
 msgid "Жалоба уже в работе"
 msgstr "Жалоба уже в работе"
 
-#: apps/moderation/views.py:402
+#: apps/moderation/views.py:407
 msgid "Жалоба решена"
 msgstr "Жалоба решена"
 
-#: apps/moderation/views.py:405
+#: apps/moderation/views.py:410
 msgid "Жалоба отклонена"
 msgstr "Жалоба отклонена"
 
@@ -1368,6 +1368,30 @@ msgstr "Обработать заново"
 #, python-format
 msgid "Поставлено в обработку: %(count)d."
 msgstr "Поставлено в обработку: %(count)d."
+
+#: apps/photos/cabinet.py:35
+msgid "Все"
+msgstr "Все"
+
+#: apps/photos/cabinet.py:36
+msgid "В архиве"
+msgstr "В архиве"
+
+#: apps/photos/cabinet.py:37 apps/photos/models.py:135
+msgid "На проверке"
+msgstr "На проверке"
+
+#: apps/photos/cabinet.py:38
+msgid "Не в архиве"
+msgstr "Не в архиве"
+
+#: apps/photos/cabinet.py:39
+msgid "Убранные"
+msgstr "Убранные"
+
+#: apps/photos/cabinet.py:45
+msgid "Эти фото остаются в архиве и открываются по ссылке"
+msgstr "Эти фото остаются в архиве и открываются по ссылке"
 
 #: apps/photos/forms.py:66
 msgid "Обрезка кадра"
@@ -1584,10 +1608,6 @@ msgstr "Скрыто модератором"
 msgid "Отклонено"
 msgstr "Отклонено"
 
-#: apps/photos/models.py:135
-msgid "На проверке"
-msgstr "На проверке"
-
 #: apps/photos/models.py:179
 msgid "дата съёмки"
 msgstr "дата съёмки"
@@ -1656,11 +1676,15 @@ msgstr ""
 msgid "статус обработки"
 msgstr "статус обработки"
 
-#: apps/photos/models.py:238
+#: apps/photos/models.py:242
+msgid "убрано из кабинета"
+msgstr "убрано из кабинета"
+
+#: apps/photos/models.py:245
 msgid "права подтверждены"
 msgstr "права подтверждены"
 
-#: apps/photos/models.py:241
+#: apps/photos/models.py:248
 msgid ""
 "Исторический флаг для админки: на видимость фото не влияет. Ответственность "
 "за контент несёт автор (Правила сервиса)."
@@ -1668,63 +1692,63 @@ msgstr ""
 "Исторический флаг для админки: на видимость фото не влияет. Ответственность "
 "за контент несёт автор (Правила сервиса)."
 
-#: apps/photos/models.py:246
+#: apps/photos/models.py:253
 msgid "дата подтверждения прав"
 msgstr "дата подтверждения прав"
 
-#: apps/photos/models.py:252
+#: apps/photos/models.py:259
 msgid "EXIF"
 msgstr "EXIF"
 
-#: apps/photos/models.py:253
+#: apps/photos/models.py:260
 msgid "просмотров"
 msgstr "просмотров"
 
-#: apps/photos/models.py:256
+#: apps/photos/models.py:263
 msgid "загрузил"
 msgstr "загрузил"
 
-#: apps/photos/models.py:283 apps/photos/models.py:446
+#: apps/photos/models.py:290 apps/photos/models.py:495
 msgid "фотография"
 msgstr "фотография"
 
-#: apps/photos/models.py:284
+#: apps/photos/models.py:291
 msgid "фотографии"
 msgstr "фотографии"
 
-#: apps/photos/models.py:431
+#: apps/photos/models.py:480
 msgid "судья"
 msgstr "судья"
 
-#: apps/photos/models.py:432
+#: apps/photos/models.py:481
 msgid "зритель"
 msgstr "зритель"
 
-#: apps/photos/models.py:433
+#: apps/photos/models.py:482
 msgid "фотограф"
 msgstr "фотограф"
 
-#: apps/photos/models.py:463
+#: apps/photos/models.py:512
 msgid "позиция в кадре"
 msgstr "позиция в кадре"
 
-#: apps/photos/models.py:466
+#: apps/photos/models.py:515
 msgid "Например: «слева второй»"
 msgstr "Например: «слева второй»"
 
-#: apps/photos/models.py:471
+#: apps/photos/models.py:520
 msgid "добавил"
 msgstr "добавил"
 
-#: apps/photos/models.py:477
+#: apps/photos/models.py:526
 msgid "дата добавления"
 msgstr "дата добавления"
 
-#: apps/photos/models.py:482
+#: apps/photos/models.py:531
 msgid "человек на фото"
 msgstr "человек на фото"
 
-#: apps/photos/models.py:483
+#: apps/photos/models.py:532
 msgid "люди на фото"
 msgstr "люди на фото"
 
@@ -1745,7 +1769,7 @@ msgstr "Хранилище недоступно, попробуйте позже
 msgid "Ошибка обработки: %(error)s"
 msgstr "Ошибка обработки: %(error)s"
 
-#: apps/photos/views.py:140
+#: apps/photos/views.py:141
 msgid ""
 "Файл сохранён, фотография обрабатывается. Заполните данные о снимке — их "
 "можно изменить позже."
@@ -1753,27 +1777,43 @@ msgstr ""
 "Файл сохранён, фотография обрабатывается. Заполните данные о снимке — их "
 "можно изменить позже."
 
-#: apps/photos/views.py:153 apps/photos/views.py:159
+#: apps/photos/views.py:154 apps/photos/views.py:160
 #: templates/photos/photo_form.html:11
 msgid "Загрузка фото"
 msgstr "Загрузка фото"
 
-#: apps/photos/views.py:188
+#: apps/photos/views.py:189
 msgid "Изменения сохранены. Фото остаётся в архиве."
 msgstr "Изменения сохранены. Фото остаётся в архиве."
 
-#: apps/photos/views.py:208 apps/photos/views.py:215
+#: apps/photos/views.py:209 apps/photos/views.py:216
 #: templates/photos/photo_details.html:11
 msgid "Данные фотографии"
 msgstr "Данные фотографии"
 
-#: apps/photos/views.py:214 apps/photos/views.py:243 apps/photos/views.py:249
+#: apps/photos/views.py:215 apps/photos/views.py:250 apps/photos/views.py:256
 #: templates/partials/navbar.html:93 templates/photos/my_photos.html:13
 #: templates/photos/photo_details.html:131 templates/photos/photo_form.html:130
 msgid "Мои фото"
 msgstr "Мои фото"
 
-#: apps/photos/views.py:308
+#: apps/photos/views.py:295
+msgid "Фото убрано из списка. Оно осталось в архиве."
+msgstr "Фото убрано из списка. Оно осталось в архиве."
+
+#: apps/photos/views.py:298
+msgid "Фото уже убрано из списка."
+msgstr "Фото уже убрано из списка."
+
+#: apps/photos/views.py:307
+msgid "Фото возвращено в список."
+msgstr "Фото возвращено в список."
+
+#: apps/photos/views.py:309
+msgid "Фото уже в списке."
+msgstr "Фото уже в списке."
+
+#: apps/photos/views.py:366
 msgid "Фотография из архива SportMemo"
 msgstr "Фотография из архива SportMemo"
 
@@ -2653,7 +2693,7 @@ msgid "Хронология архива: что происходило в ка�
 msgstr "Хронология архива: что происходило в каждом году."
 
 #: templates/core/home.html:71 templates/partials/navbar.html:29
-#: templates/photos/my_photos.html:110
+#: templates/photos/my_photos.html:162
 msgid "Загрузить фото"
 msgstr "Загрузить фото"
 
@@ -2932,8 +2972,8 @@ msgid ""
 "Вы видите только жалобы без вида спорта. Обратитесь к администратору архива: "
 "он назначит вид спорта."
 msgstr ""
-"Вы видите только жалобы без вида спорта. Обратитесь к администратору "
-"архива: он назначит вид спорта."
+"Вы видите только жалобы без вида спорта. Обратитесь к администратору архива: "
+"он назначит вид спорта."
 
 #: templates/moderation/report_list.html:44
 msgid "Открытых жалоб нет"
@@ -3025,21 +3065,45 @@ msgstr ""
 msgid "Обновить"
 msgstr "Обновить"
 
-#: templates/photos/my_photos.html:91
+#: templates/photos/my_photos.html:104
 msgid "Изменить данные"
 msgstr "Изменить данные"
 
-#: templates/photos/my_photos.html:104
+#: templates/photos/my_photos.html:123
+msgid "Вернуть в список"
+msgstr "Вернуть в список"
+
+#: templates/photos/my_photos.html:134
+msgid "Убрать из списка"
+msgstr "Убрать из списка"
+
+#: templates/photos/my_photos.html:148
+msgid "Вы ничего не убирали"
+msgstr "Вы ничего не убирали"
+
+#: templates/photos/my_photos.html:150
+msgid "Фото, убранные из списка, остаются в архиве и открываются по ссылке."
+msgstr "Фото, убранные из списка, остаются в архиве и открываются по ссылке."
+
+#: templates/photos/my_photos.html:156
 msgid "Вы ещё не загружали фото"
 msgstr "Вы ещё не загружали фото"
 
-#: templates/photos/my_photos.html:106
+#: templates/photos/my_photos.html:158
 msgid ""
 "Оцифруйте снимок из бумажного альбома — он попадёт в архив сразу или после "
 "проверки модератором."
 msgstr ""
 "Оцифруйте снимок из бумажного альбома — он попадёт в архив сразу или после "
 "проверки модератором."
+
+#: templates/photos/my_photos.html:168
+msgid "Здесь пока пусто"
+msgstr "Здесь пока пусто"
+
+#: templates/photos/partials/cabinet_tabs.html:10
+msgid "Разделы кабинета"
+msgstr "Разделы кабинета"
 
 #: templates/photos/partials/grid.html:15
 #, python-brace-format

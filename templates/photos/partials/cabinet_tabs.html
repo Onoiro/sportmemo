@@ -1,0 +1,22 @@
+{% load i18n %}
+{% comment %}
+Вкладки кабинета автора. Параметры — `tabs` (готовая панель), `selected_tab`
+и `note` из `apps/photos/cabinet.py`.
+
+Обычные ссылки, а не кнопки: работают без JavaScript, адрес вкладки можно
+сохранить или переслать. Счётчик приходит посчитанным: шаблон не сравнивает
+статусы и не решает, что попадает во вкладку.
+{% endcomment %}
+<nav class="cabinet-tabs" aria-label="{% trans "Разделы кабинета" %}">
+    {% for tab in tabs %}
+        <a class="cabinet-tab{% if tab.selected %} cabinet-tab--active{% endif %}"
+           href="{% querystring tab=tab.key page=None %}"
+           {% if tab.selected %}aria-current="page"{% endif %}>
+            {{ tab.label }}
+            <span class="cabinet-tab__count">{{ tab.count }}</span>
+        </a>
+    {% endfor %}
+</nav>
+{% if note %}
+    <p class="cabinet-note">{{ note }}</p>
+{% endif %}

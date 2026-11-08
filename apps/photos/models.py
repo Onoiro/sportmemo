@@ -234,6 +234,13 @@ class Photo(TimeStampedModel, StatusModel, SoftDeleteModel, MergeableModel):
     )
     processing_error = models.TextField(_("ошибка обработки"), blank=True)
 
+    # Уборка из личного списка автора. Отдельное поле, а не `deleted_at`:
+    # `deleted_at` значит «скрыто решением модератора», на нём держатся
+    # `public`, права на правку и журнал решений. Автор, ставящий тот же
+    # признак, стёр бы разницу между уборкой в списке и решением модератора.
+    cabinet_removed_at = models.DateTimeField(
+        _("убрано из кабинета"), null=True, blank=True, db_index=True
+    )
     rights_confirmed = models.BooleanField(
         _("права подтверждены"),
         default=False,
@@ -324,6 +331,48 @@ class Photo(TimeStampedModel, StatusModel, SoftDeleteModel, MergeableModel):
         `rights_confirmed` — исторический флаг и на видимость не влияет.
         """
         return self.status == Status.PUBLISHED and not self.is_deleted
+
+    @property
+    def is_removed_from_cabinet(self) -> bool:
+        """Автор убрал фото из своего списка «Мои фото»."""
+        return self.cabinet_removed_at is not None
+
+    @property
+    def is_page_available(self) -> bool:
+        """Открывается ли страница фото.
+
+        Удалённое модератором фото отдаёт 404 даже автору, поэтому ссылка
+        на карточке вела бы в тупик. Слитый дубликат — исключение: он
+        отдаёт 301 на канон, и ссылка работает.
+        """
+        if not self.is_deleted:
+            return True
+        canonical = self.merged_into if self.merged_into_id else None
+        return bool(canonical and canonical.is_public)
+
+    def remove_from_cabinet(self) -> bool:
+        """Убрать фото из списка кабинета.
+
+        Возвращает `False`, если фото уже убрано: это гонка двух вкладок,
+        а не ошибка. `update_fields` не даёт лишней записи истории.
+        """
+        if self.cabinet_removed_at is not None:
+            return False
+        self.cabinet_removed_at = timezone.now()
+        self.save(update_fields=["cabinet_removed_at", "updated_at"])
+        return True
+
+    def restore_to_cabinet(self) -> bool:
+        """Вернуть фото в список кабинета.
+
+        Возвращает `False`, если фото и так в списке: правило то же,
+        что у уборки.
+        """
+        if self.cabinet_removed_at is None:
+            return False
+        self.cabinet_removed_at = None
+        self.save(update_fields=["cabinet_removed_at", "updated_at"])
+        return True
 
     @property
     def upload_state(self) -> str:
