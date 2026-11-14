@@ -11,6 +11,8 @@ from datetime import timedelta
 
 import pytest
 from django.contrib.contenttypes.models import ContentType
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 
@@ -22,7 +24,9 @@ from apps.photos.models import ProcessingStatus
 from tests.factories import (
     EventFactory,
     ModeratorFactory,
+    PersonFactory,
     PhotoFactory,
+    PhotoPersonFactory,
     TeamFactory,
     UserFactory,
 )
@@ -350,3 +354,98 @@ class TestMeta:
 
         assert "noindex" in html
         assert "nofollow" in html
+
+
+class TestPeopleCheckbox:
+    """Чекбокс «Опубликовать и людей на фото» на карточке снимка.
+
+    Людей публикует тот же модератор, который одобрил снимок: имена —
+    часть той же проверки, и второй заход в отдельную очередь был бы
+    лишней работой. Без черновиков флажка нет: он обещал бы действие,
+    которого нет.
+    """
+
+    def test_checkbox_is_checked_by_default(self, client, baseball, other_user):
+        moderator = baseball_moderator(baseball)
+        photo = PhotoFactory(
+            sport=baseball,
+            status=Status.DRAFT,
+            processing_status=ProcessingStatus.PROCESSED,
+        )
+        PhotoPersonFactory(photo=photo, person=PersonFactory(created_by=other_user))
+        client.force_login(moderator)
+
+        html = client.get(QUEUE_URL).content.decode()
+
+        assert 'name="publish_people"' in html
+        assert f'id="publish-people-{photo.pk}"' in html
+        assert "checked" in html
+        assert "Опубликовать человека на фото (1)" in html
+
+    def test_plural_label_counts_people(self, client, baseball, other_user):
+        moderator = baseball_moderator(baseball)
+        photo = PhotoFactory(
+            sport=baseball,
+            status=Status.DRAFT,
+            processing_status=ProcessingStatus.PROCESSED,
+        )
+        for _ in range(3):
+            PhotoPersonFactory(photo=photo, person=PersonFactory(created_by=other_user))
+        client.force_login(moderator)
+
+        html = client.get(QUEUE_URL).content.decode()
+
+        assert "Опубликовать людей на фото (3)" in html
+
+    def test_no_checkbox_without_drafts(self, client, baseball):
+        moderator = baseball_moderator(baseball)
+        PhotoFactory(
+            sport=baseball,
+            status=Status.DRAFT,
+            processing_status=ProcessingStatus.PROCESSED,
+        )
+        client.force_login(moderator)
+
+        html = client.get(QUEUE_URL).content.decode()
+
+        assert 'name="publish_people"' not in html
+
+    def test_only_photo_card_gets_checkbox(self, client, baseball, other_user):
+        """Счётчик считается только по фото: у команды людей на фото нет."""
+        moderator = baseball_moderator(baseball)
+        photo = PhotoFactory(
+            sport=baseball,
+            status=Status.DRAFT,
+            processing_status=ProcessingStatus.PROCESSED,
+        )
+        PhotoPersonFactory(photo=photo, person=PersonFactory(created_by=other_user))
+        TeamFactory(sport=baseball)
+        client.force_login(moderator)
+
+        html = client.get(QUEUE_URL).content.decode()
+
+        assert html.count('name="publish_people"') == 1
+
+    def test_query_count_does_not_grow_with_photos(self, client, baseball, other_user):
+        """Счётчик черновиков — один запрос на страницу, а не на карточку."""
+        moderator = baseball_moderator(baseball)
+
+        def count_queries(photos):
+            for _ in range(photos):
+                photo = PhotoFactory(
+                    sport=baseball,
+                    status=Status.DRAFT,
+                    processing_status=ProcessingStatus.PROCESSED,
+                )
+                PhotoPersonFactory(
+                    photo=photo, person=PersonFactory(created_by=other_user)
+                )
+            client.force_login(moderator)
+            with CaptureQueriesContext(connection) as queries:
+                client.get(QUEUE_URL)
+            return len(queries)
+
+        one = count_queries(1)
+        five = count_queries(4)
+
+        assert five == one

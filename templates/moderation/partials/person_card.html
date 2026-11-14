@@ -1,0 +1,73 @@
+{% load i18n %}
+{% comment %}
+Карточка человека в очереди. Все значения готовые: имя, подпись видимости,
+год, команду, автора и адрес превью считает `apps/moderation/people.py`,
+шаблон ничего не сравнивает и не добирает — то же правило, что у карточки
+очереди и карточки жалобы.
+
+Имя — `public_name`, а не `display_name`: служебная страница не повод
+раскрывать скрытую фамилию. Подпись видимости рядом говорит, что именно
+модератор публикует.
+
+Ссылка на человека не выводится: черновик отдаёт 404 посторонним, и
+модератору достаточно имени. Ссылка на снимок нужна — решение принимается
+по фото, и без него непонятно, кого публикуют.
+
+Действия — обычные POST-формы, причина раскрывается через `<details>`:
+модератор на телефоне может оказаться без JavaScript.
+{% endcomment %}
+<li class="person-card">
+    <div class="person-card__media">
+        {% if card.image_url %}
+            <img class="person-card__image" src="{{ card.image_url }}"
+                 alt="" loading="lazy" decoding="async">
+        {% else %}
+            {% comment %}
+            Человека завели без снимка или файл в хранилище битый: заглушка
+            честнее битой картинки, а очередь не должна падать из-за файла.
+            {% endcomment %}
+            <span class="person-card__placeholder">
+                <i class="bi bi-person" aria-hidden="true"></i>
+            </span>
+        {% endif %}
+    </div>
+    <div class="person-card__body">
+        <p class="person-card__name">{{ card.name }}</p>
+        <p class="person-card__visibility">{{ card.visibility_label }}</p>
+        {% if card.year or card.team %}
+            <p class="person-card__meta">
+                {% if card.year %}{{ card.year }}{% endif %}
+                {% if card.year and card.team %} · {% endif %}
+                {% if card.team %}{{ card.team }}{% endif %}
+            </p>
+        {% endif %}
+        <p class="person-card__author">
+            {{ card.author }} · {{ card.created_at|date:"j E Y" }}
+        </p>
+        <p class="person-card__photo">
+            {% if card.photo_url %}
+                <a href="{{ card.photo_url }}">{{ card.photo_title }}</a>
+            {% else %}
+                {{ card.photo_title }}
+                {% if card.photo_note %}({{ card.photo_note }}){% endif %}
+            {% endif %}
+        </p>
+    </div>
+    <div class="person-card__actions">
+        <form method="post"
+              action="{% url 'moderation:person_decide' card.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="publish">
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button class="btn btn-primary btn-sm" type="submit">
+                {% trans "Опубликовать" %}
+            </button>
+        </form>
+        {% url 'moderation:person_decide' card.pk as reject_action %}
+        {% with pk_str=card.pk|stringformat:"s" %}
+            {% with reject_field_id="reason-person-"|add:pk_str %}
+                {% include "moderation/partials/reject_form.html" with card=card reject_form=reject_form reject_action=reject_action reject_field_id=reject_field_id %}
+            {% endwith %}
+        {% endwith %}
+    </div>
+</li>

@@ -1,5 +1,6 @@
 """Представления модерации: жалоба, очередь черновиков и разбор жалоб."""
 
+from django.apps import apps
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
@@ -15,9 +16,9 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
 from apps.comments.targets import resolve_target, target_key
-from apps.core.auth import post_action
+from apps.core.auth import post_action, safe_next
 from apps.core.seo import page_meta
-from apps.moderation import queue, reports, services
+from apps.moderation import people, queue, reports, services
 from apps.moderation.emails import notify_moderators_new_report
 from apps.moderation.forms import (
     QueueRejectForm,
@@ -252,6 +253,23 @@ def queue_decide(request, kind, pk):
         if action == "publish":
             decided = services.publish_object(obj, request.user)
             success = _("%(kind)s: опубликовано.") % {"kind": spec.label}
+            # Людей публикуем только после удачного решения по снимку:
+            # побочного эффекта у неудавшегося решения быть не должно.
+            # Только для фото: `publish_people_for_photo` ищет связи
+            # по номеру снимка, и у команды с тем же номером он взял бы
+            # людей чужого фото.
+            if decided and spec.key == "photo" and request.POST.get("publish_people"):
+                published, skipped = people.publish_people_for_photo(obj, request.user)
+                if published:
+                    success += " " + _("Людей опубликовано: %(count)s.") % {
+                        "count": published
+                    }
+                if skipped:
+                    messages.info(
+                        request,
+                        _("Своих людей публикует другой модератор: %(count)s.")
+                        % {"count": skipped},
+                    )
         elif action == "reject":
             form = QueueRejectForm(request.POST)
             if not form.is_valid():
@@ -263,6 +281,133 @@ def queue_decide(request, kind, pk):
             success = _("%(kind)s: отклонено, автор увидит причину.") % {
                 "kind": spec.label
             }
+        else:
+            return HttpResponseBadRequest(_("Неизвестное действие"))
+
+    # Сверхузкая гонка: оба модератора прошли проверку, а решение принял
+    # первый. Молчание выглядело бы как успех, поэтому отвечаем честно.
+    if not decided:
+        messages.info(request, _("Уже обработано"))
+    else:
+        messages.success(request, success)
+    return redirect(next_url)
+
+
+@login_required
+@never_cache
+@require_GET
+def people_list(request):
+    """Черновики людей: очередь общая для всех модераторов.
+
+    Отдельная страница, а не карточка в общей очереди: у `Person` нет вида
+    спорта, и фильтр `sport_id__in` падал бы на нём `FieldError`. Плашки
+    про пустую область здесь нет — она бы соврала: человек не привязан
+    к виду спорта (инвариант № 1).
+
+    Не кэшируется: человека может опубликовать другой модератор, и копия
+    из кэша показала бы уже разобранный черновик.
+    """
+    # Служебная страница, а не объект архива: её адрес ничего не раскрывает,
+    # поэтому 403 честнее 404 — человеку видно, почему его не пускают.
+    if not request.user.is_moderator:
+        raise PermissionDenied
+
+    page_obj, cards = people.people_page(request.user, request)
+
+    context = {
+        "page_obj": page_obj,
+        "cards": cards,
+        # Одна форма на страницу: карточки берут из неё подпись и виджет,
+        # а `id` поля собирают сами с номером человека.
+        "reject_form": QueueRejectForm(),
+        "meta": page_meta(
+            request,
+            title=_("Люди"),
+            noindex=True,
+            nofollow=True,
+        ),
+        "breadcrumbs": [
+            {"url": reverse("core:home"), "label": _("Главная")},
+            {"label": _("Люди")},
+        ],
+    }
+    return render(request, "moderation/people.html", context)
+
+
+def _people_denied():
+    """404 на всё, чего этому человеку не существует.
+
+    Свой человек, удалённый и несуществующий номер отвечают одинаково:
+    иначе по коду ответа можно перебрать номера и узнать, что лежит
+    в архиве (то же правило, что `queue_decide`).
+    """
+    raise Http404("Объект не найден")
+
+
+@post_action("moderation:people")
+def person_decide(request, pk):
+    """Решение по человеку: опубликовать или отклонить с причиной.
+
+    Только POST: решение меняет чужие данные, а ссылка-«одобрить»
+    в адресной строке открывалась бы превью браузера и роботом.
+
+    Аноним возвращается в очередь людей, а не на этот адрес: после входа
+    браузер открыл бы его GET-ом и получил 405 — человек застрял бы
+    в петле входа.
+
+    Объект ищется в `objects`, а не в `public`: удалённый человек должен
+    получить понятный ответ, а решение по удалённому сервис всё равно
+    отклонит.
+
+    `PermissionDenied` из сервиса отдельно не ловим: Django отвечает
+    на него 403, а `transaction.atomic()` откатывает уже начатую запись.
+    """
+    if not request.user.is_moderator:
+        raise PermissionDenied
+
+    # Общая проверка возврата: своя копия правила рядом с `safe_next`
+    # разошлась бы с ней при первой же правке.
+    next_url = safe_next(request, "moderation:people")
+    person_model = apps.get_model("catalog.Person")
+
+    # Блокировка строки: два модератора могут открыть очередь одновременно.
+    # Без неё оба прошли бы проверку «ещё черновик» и второй отменил бы
+    # решение первого.
+    with transaction.atomic():
+        person = person_model.objects.select_for_update().filter(pk=pk).first()
+        if person is None:
+            _people_denied()
+        # У человека нет вида спорта, и `can_moderate` отвечает «можно»
+        # любому модератору. Вызов всё равно нужен: он же отсекает того,
+        # кто перестал быть модератором между открытием страницы и POST.
+        if not request.user.can_moderate(person):
+            _people_denied()
+        # Своего человека решает другой человек. Проверка стоит до
+        # «ещё черновик»: иначе своё уже опубликованное ответило бы
+        # «Уже обработано» и подсказало, что адрес существует.
+        if people.is_own_person(person, request.user):
+            _people_denied()
+
+        # «Всё ещё черновик» проверяет представление, а не сервис:
+        # `reject_object` на опубликованном вернул бы `True` и снова
+        # отклонил — второй модератор отменил бы первого.
+        if not people.is_pending_person(person):
+            messages.info(request, _("Уже обработано"))
+            return redirect(next_url)
+
+        action = request.POST.get("action")
+        if action == "publish":
+            decided = services.publish_object(person, request.user)
+            success = _("Человек опубликован.")
+        elif action == "reject":
+            form = QueueRejectForm(request.POST)
+            if not form.is_valid():
+                messages.error(request, form.errors["reason"][0])
+                return redirect(next_url)
+            decided = services.reject_object(
+                person, request.user, form.cleaned_data["reason"]
+            )
+            success = _("Человек отклонён, автор увидит причину.")
         else:
             return HttpResponseBadRequest(_("Неизвестное действие"))
 

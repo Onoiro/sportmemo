@@ -24,7 +24,9 @@ from apps.photos.models import ProcessingStatus
 from tests.factories import (
     EventFactory,
     ModeratorFactory,
+    PersonFactory,
     PhotoFactory,
+    PhotoPersonFactory,
     TeamFactory,
     UserFactory,
 )
@@ -427,3 +429,134 @@ class TestNoJavaScript:
         assert 'name="action" value="reject"' in html
         assert "<details" in html
         assert 'name="reason"' in html
+
+
+class TestPublishPeople:
+    """Галочка на карточке снимка публикует и людей на нём.
+
+    Люди уходят через тот же сервис, что и сам снимок: журнал решений
+    обязан получить запись на каждого человека, иначе инвариант «всё
+    значимое логируется» держался бы на молчаливой записи статуса.
+    """
+
+    def test_publishes_people_with_photo(self, client, baseball, other_user):
+        moderator = baseball_moderator(baseball)
+        photo = draft_photo(baseball, author=other_user)
+        person = PersonFactory(created_by=other_user)
+        PhotoPersonFactory(photo=photo, person=person)
+        client.force_login(moderator)
+
+        response = client.post(
+            decide_url("photo", photo.pk),
+            {"action": "publish", "publish_people": "1"},
+            follow=True,
+        )
+
+        photo.refresh_from_db()
+        person.refresh_from_db()
+        html = response.content.decode()
+        assert photo.status == Status.PUBLISHED
+        assert person.status == Status.PUBLISHED
+        assert person.moderated_by_id == moderator.pk
+        assert list(actions_for(person).values_list("action", flat=True)) == [
+            ModerationActionType.PUBLISH
+        ]
+        assert "Людей опубликовано: 1." in html
+
+    def test_unchecked_leaves_people_as_drafts(self, client, baseball, other_user):
+        moderator = baseball_moderator(baseball)
+        photo = draft_photo(baseball, author=other_user)
+        person = PersonFactory(created_by=other_user)
+        PhotoPersonFactory(photo=photo, person=person)
+        client.force_login(moderator)
+
+        client.post(decide_url("photo", photo.pk), {"action": "publish"})
+
+        photo.refresh_from_db()
+        person.refresh_from_db()
+        assert photo.status == Status.PUBLISHED
+        assert person.status == Status.DRAFT
+        assert not actions_for(person).exists()
+
+    def test_own_person_is_skipped_and_reported(self, client, baseball, other_user):
+        """Своего человека решает другой — даже через чужое фото."""
+        moderator = baseball_moderator(baseball)
+        photo = draft_photo(baseball, author=other_user)
+        own = PersonFactory(created_by=moderator)
+        foreign = PersonFactory(created_by=other_user)
+        PhotoPersonFactory(photo=photo, person=own)
+        PhotoPersonFactory(photo=photo, person=foreign)
+        client.force_login(moderator)
+
+        response = client.post(
+            decide_url("photo", photo.pk),
+            {"action": "publish", "publish_people": "1"},
+            follow=True,
+        )
+
+        own.refresh_from_db()
+        foreign.refresh_from_db()
+        html = response.content.decode()
+        assert own.status == Status.DRAFT
+        assert foreign.status == Status.PUBLISHED
+        assert not actions_for(own).exists()
+        assert "Людей опубликовано: 1." in html
+        assert "Своих людей публикует другой модератор: 1." in html
+
+    def test_reject_does_not_publish_people(self, client, baseball, other_user):
+        moderator = baseball_moderator(baseball)
+        photo = draft_photo(baseball, author=other_user)
+        person = PersonFactory(created_by=other_user)
+        PhotoPersonFactory(photo=photo, person=person)
+        client.force_login(moderator)
+
+        client.post(
+            decide_url("photo", photo.pk),
+            {"action": "reject", "reason": "не по теме", "publish_people": "1"},
+        )
+
+        photo.refresh_from_db()
+        person.refresh_from_db()
+        assert photo.status == Status.REJECTED
+        assert person.status == Status.DRAFT
+
+    def test_service_false_does_not_publish_people(
+        self, client, baseball, other_user, monkeypatch
+    ):
+        """Побочного эффекта у неудавшегося решения быть не должно."""
+        moderator = baseball_moderator(baseball)
+        photo = draft_photo(baseball, author=other_user)
+        person = PersonFactory(created_by=other_user)
+        PhotoPersonFactory(photo=photo, person=person)
+        client.force_login(moderator)
+        monkeypatch.setattr(
+            "apps.moderation.views.services.publish_object",
+            lambda *args, **kwargs: False,
+        )
+
+        client.post(
+            decide_url("photo", photo.pk),
+            {"action": "publish", "publish_people": "1"},
+        )
+
+        person.refresh_from_db()
+        assert person.status == Status.DRAFT
+        assert not actions_for(person).exists()
+
+    def test_team_with_people_flag_does_not_publish_people(
+        self, client, baseball, other_user
+    ):
+        """Флажок у чужого типа объекта не должен брать людей по номеру."""
+        moderator = baseball_moderator(baseball)
+        team = TeamFactory(sport=baseball)
+        person = PersonFactory(created_by=other_user)
+        PhotoPersonFactory(photo=PhotoFactory(pk=team.pk), person=person)
+        client.force_login(moderator)
+
+        client.post(
+            decide_url("team", team.pk),
+            {"action": "publish", "publish_people": "1"},
+        )
+
+        person.refresh_from_db()
+        assert person.status == Status.DRAFT

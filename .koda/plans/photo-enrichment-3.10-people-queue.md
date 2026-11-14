@@ -1,7 +1,7 @@
 # SportMemo — подэтап 3.10: очередь черновиков людей
 
 Дата создания: 2026-11-14
-Статус: **утверждён** (владелец, 2026-11-14); в работе
+Статус: **выполнен** (0.32.0, 2026-11-14)
 Мастер-план: [`photo-enrichment.md`](photo-enrichment.md) (подэтап 3.10, решения 7, 8)
 Бэклог: [`.koda/backlog.md`](../backlog.md) — задача **P3-26**
 Ветка: `feature/moderation-people` (создаётся на шаге 1)
@@ -214,14 +214,14 @@ nofollow=True)` и `@never_cache`: статус меняет другой мод
 
 ## 3. Шаги
 
-### 1. [ ] Ветка
+### 1. [x] Ветка
 
 - Навыки: koda-coder.
 - Файлы: —
 - Содержание: `git switch -c feature/moderation-people` от `master` (`4c6f0bc`).
 - Критерий: ветка создана, `git status` чист, версия 0.31.0.
 
-### 2. [ ] Модуль правил `apps/moderation/people.py`
+### 2. [x] Модуль правил `apps/moderation/people.py`
 
 - Навыки: koda-coder.
 - Файлы: `apps/moderation/people.py` (новый), `tests/test_moderation_people.py` (новый).
@@ -266,7 +266,7 @@ nofollow=True)` и `@never_cache`: статус меняет другой мод
   `ModerationAction(PUBLISH)` на каждого»; «`draft_people_counts` считает только
   черновики и не делает запроса на пустом списке».
 
-### 3. [ ] Представления и маршруты очереди людей
+### 3. [x] Представления и маршруты очереди людей
 
 - Навыки: koda-coder.
 - Файлы: `apps/moderation/views.py`, `apps/moderation/urls.py`,
@@ -303,7 +303,7 @@ nofollow=True)` и `@never_cache`: статус меняет другой мод
   «уже опубликованный даёт „Уже обработано“»; «GET 405»; «подделанное действие 400»;
   «несуществующий номер 404».
 
-### 4. [ ] Шаблоны очереди людей, меню и подпись статуса в блоке людей
+### 4. [x] Шаблоны очереди людей, меню и подпись статуса в блоке людей
 
 - Навыки: koda-coder.
 - Файлы: `templates/moderation/people.html` (новый),
@@ -339,7 +339,7 @@ nofollow=True)` и `@never_cache`: статус меняет другой мод
   «после отклонения в блоке людей на правке фото видна причина»; «страница
   `noindex`»; `make lint` чист.
 
-### 5. [ ] Чекбокс «Опубликовать и людей на фото»
+### 5. [x] Чекбокс «Опубликовать и людей на фото»
 
 - Навыки: koda-coder.
 - Файлы: `apps/moderation/queue.py`, `apps/moderation/views.py`,
@@ -369,7 +369,7 @@ nofollow=True)` и `@never_cache`: статус меняет другой мод
   (`CaptureQueriesContext`); «страница очереди по-прежнему рендерится» (старые
   тесты зелёные).
 
-### 6. [ ] Локализация
+### 6. [x] Локализация
 
 - Навыки: koda-coder.
 - Файлы: `locale/ru/LC_MESSAGES/django.po`, `locale/en/LC_MESSAGES/django.po`.
@@ -381,7 +381,7 @@ nofollow=True)` и `@never_cache`: статус меняет другой мод
 - Критерий: `fuzzy`-блоков нет, пустых `msgstr` в английском каталоге нет,
   `make lint` чист.
 
-### 7. [ ] Документация, бэклог, версия
+### 7. [x] Документация, бэклог, версия
 
 - Навыки: koda-coder, semver-checker.
 - Файлы: `KODA.md`, `AGENTS.md`, `.koda/backlog.md`,

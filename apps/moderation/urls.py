@@ -23,5 +23,13 @@ urlpatterns = [
         views.report_decide,
         name="report_decide",
     ),
+    # Очередь людей — отдельная страница: у `Person` нет вида спорта,
+    # и общий реестр `QUEUE_MODELS` на нём падал бы `FieldError`.
+    path("moderation/people/", views.people_list, name="people"),
+    path(
+        "moderation/people/<int:pk>/",
+        views.person_decide,
+        name="person_decide",
+    ),
     path("reports/add/", views.report_add, name="report_add"),
 ]

@@ -38,10 +38,38 @@
             {% csrf_token %}
             <input type="hidden" name="action" value="publish">
             <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            {% if card.people_drafts %}
+                {% comment %}
+                По умолчанию включён: модератор уже посмотрел снимок
+                и решает, что он уместен, а имена на нём — часть той же
+                проверки. Без черновиков флажка нет: он обещал бы действие,
+                которого нет.
+                {% endcomment %}
+                <div class="form-check queue-card__people">
+                    <input class="form-check-input" type="checkbox"
+                           name="publish_people" value="1" checked
+                           id="publish-people-{{ card.pk }}">
+                    <label class="form-check-label"
+                           for="publish-people-{{ card.pk }}">
+                        {% blocktranslate count n=card.people_drafts %}Опубликовать человека на фото ({{ n }}){% plural %}Опубликовать людей на фото ({{ n }}){% endblocktranslate %}
+                    </label>
+                </div>
+            {% endif %}
             <button class="btn btn-primary" type="submit">
                 {% trans "Опубликовать" %}
             </button>
         </form>
-        {% include "moderation/partials/reject_form.html" with card=card reject_form=reject_form %}
+        {% comment %}
+        Адрес и `id` поля собираются здесь: форма отклонения общая
+        с очередью людей, и её параметры должны быть видны в одном месте.
+        `pk` сначала превращается в строку: фильтр `add` складывает число
+        с числом и на строке с числом молча вернул бы пустое значение.
+        {% endcomment %}
+        {% url 'moderation:queue_decide' card.kind card.pk as reject_action %}
+        {% with pk_str=card.pk|stringformat:"s" %}
+            {% with reject_field_id="reason-"|add:card.kind|add:"-"|add:pk_str %}
+                {% include "moderation/partials/reject_form.html" with card=card reject_form=reject_form reject_action=reject_action reject_field_id=reject_field_id %}
+            {% endwith %}
+        {% endwith %}
     </div>
 </li>

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load i18n pagination %}
+
+{% block breadcrumbs %}
+    {% include "partials/breadcrumbs.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1 class="page-header__title">{% trans "Люди" %}</h1>
+        <p class="page-header__lead">
+            {% trans "Черновики людей: очередь общая, человек не привязан к виду спорта" %}
+        </p>
+    </header>
+
+    {% comment %}
+    Плашки про пустую область здесь нет: у человека нет вида спорта,
+    и очередь общая для всех модераторов (инвариант № 1). Предупреждение
+    о неназначенных видах спорта на этой странице соврало бы.
+    {% endcomment %}
+    {% if cards %}
+        <ul class="people-queue">
+            {% for card in cards %}
+                {% include "moderation/partials/person_card.html" with card=card reject_form=reject_form %}
+            {% endfor %}
+        </ul>
+        {% if page_obj.has_other_pages %}
+            {% pagination page_obj %}
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-person-badge empty-state__icon" aria-hidden="true"></i>
+            <p class="empty-state__title">{% trans "Очередь пуста" %}</p>
+            <p class="mb-0">{% trans "Все люди разобраны" %}</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

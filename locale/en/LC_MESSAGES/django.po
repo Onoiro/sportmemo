@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14 18:35+0300\n"
+"POT-Creation-Date: 2026-11-14 20:29+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,7 +19,7 @@ msgstr ""
 
 #: apps/accounts/admin.py:37 apps/accounts/views.py:36
 #: apps/accounts/views.py:39 templates/accounts/profile.html:11
-#: templates/partials/navbar.html:96
+#: templates/partials/navbar.html:104
 msgid "Профиль"
 msgstr "Profile"
 
@@ -151,10 +151,11 @@ msgstr "Profile updated"
 #: apps/catalog/views.py:524 apps/catalog/views.py:566
 #: apps/catalog/views.py:597 apps/catalog/views.py:661
 #: apps/catalog/views.py:703 apps/catalog/views.py:730 apps/core/views.py:114
-#: apps/core/views.py:144 apps/core/views.py:192 apps/moderation/views.py:125
-#: apps/moderation/views.py:172 apps/moderation/views.py:314
-#: apps/photos/views.py:171 apps/photos/views.py:245 apps/photos/views.py:378
-#: apps/photos/views.py:423 apps/photos/views.py:514 apps/search/views.py:40
+#: apps/core/views.py:144 apps/core/views.py:192 apps/moderation/views.py:126
+#: apps/moderation/views.py:173 apps/moderation/views.py:330
+#: apps/moderation/views.py:459 apps/photos/views.py:171
+#: apps/photos/views.py:245 apps/photos/views.py:378 apps/photos/views.py:423
+#: apps/photos/views.py:514 apps/search/views.py:40
 #: templates/partials/footer.html:20
 msgid "Главная"
 msgstr "Home"
@@ -729,7 +730,7 @@ msgstr "Edit"
 
 #: apps/catalog/views.py:592 apps/catalog/views.py:598
 #: templates/accounts/profile.html:59 templates/accounts/profile.html:65
-#: templates/catalog/my_teams.html:11 templates/partials/navbar.html:87
+#: templates/catalog/my_teams.html:11 templates/partials/navbar.html:95
 msgid "Мои команды"
 msgstr "My teams"
 
@@ -752,7 +753,7 @@ msgstr "Edit event"
 
 #: apps/catalog/views.py:725 apps/catalog/views.py:731
 #: templates/accounts/profile.html:70 templates/accounts/profile.html:76
-#: templates/catalog/my_events.html:11 templates/partials/navbar.html:90
+#: templates/catalog/my_events.html:11 templates/partials/navbar.html:98
 msgid "Мои события"
 msgstr "My events"
 
@@ -905,7 +906,7 @@ msgstr[1] "%(count)d objects rejected."
 
 #: apps/core/admin_mixins.py:222 templates/admin/moderation/reject_form.html:9
 #: templates/admin/moderation/reject_form.html:14
-#: templates/moderation/partials/reject_form.html:17
+#: templates/moderation/partials/reject_form.html:22
 msgid "Отклонить с причиной"
 msgstr "Reject with a reason"
 
@@ -994,9 +995,10 @@ msgstr "merged with a duplicate"
 msgid "порядок сортировки"
 msgstr "sort order"
 
-#: apps/core/schema.py:150 apps/moderation/queue.py:219
-#: apps/photos/views.py:523 apps/photos/views.py:527
-#: templates/photos/my_photos.html:71 templates/photos/photo_detail.html:37
+#: apps/core/schema.py:150 apps/moderation/people.py:135
+#: apps/moderation/queue.py:234 apps/photos/views.py:523
+#: apps/photos/views.py:527 templates/photos/my_photos.html:71
+#: templates/photos/photo_detail.html:37
 msgid "Фотография"
 msgstr "Photo"
 
@@ -1203,25 +1205,33 @@ msgstr "moderator decision"
 msgid "решения модераторов"
 msgstr "moderator decisions"
 
-#: apps/moderation/queue.py:46 apps/photos/forms.py:250
+#: apps/moderation/people.py:120 apps/moderation/queue.py:241
+msgid "автор неизвестен"
+msgstr "author unknown"
+
+#: apps/moderation/people.py:133
+msgid "снимок не указан"
+msgstr "photo not set"
+
+#: apps/moderation/people.py:137
+msgid "снимок удалён"
+msgstr "photo deleted"
+
+#: apps/moderation/queue.py:47 apps/photos/forms.py:250
 #: apps/search/services.py:153 templates/admin/photos/photo/similar.html:32
 #: templates/photos/photo_detail.html:59
 msgid "Команда"
 msgstr "Team"
 
-#: apps/moderation/queue.py:52 apps/photos/forms.py:260
+#: apps/moderation/queue.py:53 apps/photos/forms.py:260
 #: apps/search/services.py:159 templates/photos/photo_detail.html:69
 msgid "Событие"
 msgstr "Event"
 
-#: apps/moderation/queue.py:58 apps/photos/forms.py:57
+#: apps/moderation/queue.py:59 apps/photos/forms.py:57
 #: templates/admin/photos/photo/similar.html:30
 msgid "Фото"
 msgstr "Photo"
-
-#: apps/moderation/queue.py:226
-msgid "автор неизвестен"
-msgstr "author unknown"
 
 #: apps/moderation/reports.py:130
 msgid "объект недоступен"
@@ -1236,62 +1246,88 @@ msgstr "object deleted"
 msgid "анонимно"
 msgstr "anonymous"
 
-#: apps/moderation/views.py:83 apps/moderation/views.py:102
+#: apps/moderation/views.py:84 apps/moderation/views.py:103
 msgid "Спасибо! Модератор проверит."
 msgstr "Thank you! A moderator will check it."
 
-#: apps/moderation/views.py:88
+#: apps/moderation/views.py:89
 msgid "Жалоба на этот объект уже отправлена."
 msgstr "A report about this object has already been sent."
 
-#: apps/moderation/views.py:120 apps/moderation/views.py:127
+#: apps/moderation/views.py:121 apps/moderation/views.py:128
 #: templates/moderation/report_form.html:11
 #: templates/partials/report_link.html:15
 msgid "Сообщить об ошибке"
 msgstr "Report an error"
 
-#: apps/moderation/views.py:167 apps/moderation/views.py:173
+#: apps/moderation/views.py:168 apps/moderation/views.py:174
 #: templates/moderation/queue.html:11
 msgid "Очередь черновиков"
 msgstr "Draft queue"
 
-#: apps/moderation/views.py:248 apps/moderation/views.py:272
-#: apps/moderation/views.py:391 apps/moderation/views.py:411
+#: apps/moderation/views.py:249 apps/moderation/views.py:290
+#: apps/moderation/views.py:395 apps/moderation/views.py:417
+#: apps/moderation/views.py:536 apps/moderation/views.py:556
 msgid "Уже обработано"
 msgstr "Already handled"
 
-#: apps/moderation/views.py:254
+#: apps/moderation/views.py:255
 #, python-format
 msgid "%(kind)s: опубликовано."
 msgstr "%(kind)s: published."
 
-#: apps/moderation/views.py:263
+#: apps/moderation/views.py:264
+#, python-format
+msgid "Людей опубликовано: %(count)s."
+msgstr "People published: %(count)s."
+
+#: apps/moderation/views.py:270
+#, python-format
+msgid "Своих людей публикует другой модератор: %(count)s."
+msgstr "Another moderator publishes your own people: %(count)s."
+
+#: apps/moderation/views.py:281
 #, python-format
 msgid "%(kind)s: отклонено, автор увидит причину."
 msgstr "%(kind)s: rejected, the author will see the reason."
 
-#: apps/moderation/views.py:267 apps/moderation/views.py:413
+#: apps/moderation/views.py:285 apps/moderation/views.py:412
+#: apps/moderation/views.py:558
 msgid "Неизвестное действие"
 msgstr "Unknown action"
 
-#: apps/moderation/views.py:309 apps/moderation/views.py:315
-#: templates/moderation/report_list.html:11 templates/partials/navbar.html:82
+#: apps/moderation/views.py:325 apps/moderation/views.py:331
+#: apps/search/services.py:115 templates/moderation/people.html:11
+#: templates/partials/navbar.html:84
+msgid "Люди"
+msgstr "People"
+
+#: apps/moderation/views.py:401
+msgid "Человек опубликован."
+msgstr "The person is published."
+
+#: apps/moderation/views.py:410
+msgid "Человек отклонён, автор увидит причину."
+msgstr "The person is rejected, the author will see the reason."
+
+#: apps/moderation/views.py:454 apps/moderation/views.py:460
+#: templates/moderation/report_list.html:11 templates/partials/navbar.html:90
 msgid "Жалобы"
 msgstr "Reports"
 
-#: apps/moderation/views.py:397
+#: apps/moderation/views.py:542
 msgid "Жалоба взята в работу"
 msgstr "The report is taken in work"
 
-#: apps/moderation/views.py:398
+#: apps/moderation/views.py:543
 msgid "Жалоба уже в работе"
 msgstr "The report is already in work"
 
-#: apps/moderation/views.py:407
+#: apps/moderation/views.py:552
 msgid "Жалоба решена"
 msgstr "Report resolved"
 
-#: apps/moderation/views.py:410
+#: apps/moderation/views.py:555
 msgid "Жалоба отклонена"
 msgstr "Report rejected"
 
@@ -1552,22 +1588,20 @@ msgstr "Name visibility"
 #: apps/photos/forms.py:544
 msgid "Фамилию несовершеннолетних не публикуем: выберите видимость имени ниже."
 msgstr ""
-"We do not publish the surnames of minors: choose the name "
-"visibility below."
+"We do not publish the surnames of minors: choose the name visibility below."
 
 #: apps/photos/forms.py:548
 msgid ""
 "«Только имя» — для несовершеннолетних: фамилия останется в базе, но не "
 "появится на сайте."
 msgstr ""
-"“First name only” is for minors: the surname stays in the database "
-"but does not appear on the site."
+"“First name only” is for minors: the surname stays in the database but does "
+"not appear on the site."
 
 #: apps/photos/forms.py:614
 msgid "Человек с таким именем уже есть в архиве. Проверьте список выше."
 msgstr ""
-"A person with this name is already in the archive. Check the list "
-"above."
+"A person with this name is already in the archive. Check the list above."
 
 #: apps/photos/forms.py:626
 #, python-format
@@ -1906,7 +1940,7 @@ msgid "Данные фотографии"
 msgstr "Photo details"
 
 #: apps/photos/views.py:246 apps/photos/views.py:379 apps/photos/views.py:418
-#: apps/photos/views.py:424 templates/partials/navbar.html:93
+#: apps/photos/views.py:424 templates/partials/navbar.html:101
 #: templates/photos/my_photos.html:13 templates/photos/photo_details.html:132
 #: templates/photos/photo_form.html:130
 msgid "Мои фото"
@@ -1921,7 +1955,7 @@ msgid "Этот человек уже отмечен на фото."
 msgstr "This person is already marked on the photo."
 
 #: apps/photos/views.py:295 apps/photos/views.py:338
-#: templates/photos/partials/people.html:51
+#: templates/photos/partials/people.html:60
 #, python-format
 msgid "На одном фото можно отметить не больше %(max)s человек."
 msgstr "You can mark at most %(max)s people on one photo."
@@ -1964,10 +1998,6 @@ msgstr "The photo is already in the list."
 #: apps/photos/views.py:540
 msgid "Фотография из архива SportMemo"
 msgstr "A photo from the SportMemo archive"
-
-#: apps/search/services.py:115
-msgid "Люди"
-msgstr "People"
 
 #: apps/search/services.py:121 templates/catalog/person_detail.html:94
 msgid "Фотографии"
@@ -2116,7 +2146,7 @@ msgstr "Sign in"
 
 #: templates/account/login.html:21
 #: templates/account/password_reset_from_key_done.html:12
-#: templates/partials/navbar.html:108
+#: templates/partials/navbar.html:116
 msgid "Войти"
 msgstr "Log in"
 
@@ -2145,7 +2175,7 @@ msgid "Выйти из аккаунта?"
 msgstr "Do you want to sign out?"
 
 #: templates/account/logout.html:20 templates/accounts/profile.html:82
-#: templates/partials/navbar.html:103
+#: templates/partials/navbar.html:111
 msgid "Выйти"
 msgstr "Log out"
 
@@ -2155,7 +2185,7 @@ msgid "Смена пароля"
 msgstr "Change password"
 
 #: templates/account/password_change.html:20
-#: templates/accounts/profile.html:124 templates/partials/navbar.html:99
+#: templates/accounts/profile.html:124 templates/partials/navbar.html:107
 msgid "Сменить пароль"
 msgstr "Change password"
 
@@ -2377,7 +2407,7 @@ msgid "Выбранные объекты"
 msgstr "Selected objects"
 
 #: templates/admin/moderation/reject_form.html:46
-#: templates/moderation/partials/reject_form.html:31
+#: templates/moderation/partials/reject_form.html:36
 msgid "Отклонить"
 msgstr "Reject"
 
@@ -3050,9 +3080,17 @@ msgstr "Handle the report"
 msgid "Жалоба ждёт решения модератора."
 msgstr "The report is waiting for a moderator."
 
-#: templates/moderation/partials/queue_card.html:43
+#: templates/moderation/partials/person_card.html:64
+#: templates/moderation/partials/queue_card.html:61
 msgid "Опубликовать"
 msgstr "Publish"
+
+#: templates/moderation/partials/queue_card.html:56
+#, python-format
+msgid "Опубликовать человека на фото (%(n)s)"
+msgid_plural "Опубликовать людей на фото (%(n)s)"
+msgstr[0] "Publish the person in the photo (%(n)s)"
+msgstr[1] "Publish the people in the photo (%(n)s)"
 
 #: templates/moderation/partials/report_card.html:47
 msgid "Взять в работу"
@@ -3070,6 +3108,19 @@ msgstr "Resolved"
 msgid "Отклонена"
 msgstr "Rejected"
 
+#: templates/moderation/people.html:13
+msgid "Черновики людей: очередь общая, человек не привязан к виду спорта"
+msgstr ""
+"People drafts: the queue is shared because a person is not tied to a sport"
+
+#: templates/moderation/people.html:35 templates/moderation/queue.html:41
+msgid "Очередь пуста"
+msgstr "The queue is empty"
+
+#: templates/moderation/people.html:36
+msgid "Все люди разобраны"
+msgstr "All people are handled"
+
 #: templates/moderation/queue.html:13
 msgid "Здесь черновики ваших видов спорта: старые сверху"
 msgstr "Drafts of your sports are here, oldest first"
@@ -3085,10 +3136,6 @@ msgid ""
 msgstr ""
 "Ask the archive administrator: they will assign a sport and the queue will "
 "appear."
-
-#: templates/moderation/queue.html:41
-msgid "Очередь пуста"
-msgstr "The queue is empty"
 
 #: templates/moderation/queue.html:42
 msgid "Все черновики разобраны"
@@ -3180,7 +3227,7 @@ msgstr "Switch theme"
 msgid "Меню пользователя"
 msgstr "User menu"
 
-#: templates/partials/navbar.html:76
+#: templates/partials/navbar.html:78
 msgid "Очередь"
 msgstr "Queue"
 
@@ -3263,40 +3310,39 @@ msgstr "Could not load the photos. The link still works as a normal link."
 msgid "Показать ещё"
 msgstr "Show more"
 
-#: templates/photos/partials/people.html:13
+#: templates/photos/partials/people.html:14
 #: templates/photos/photo_detail.html:128
 msgid "Люди на фото"
 msgstr "People in the photo"
 
-#: templates/photos/partials/people.html:23
-#: templates/photos/person_form.html:62
-msgid "не опубликован"
-msgstr "not published"
-
-#: templates/photos/partials/people.html:34
+#: templates/photos/partials/people.html:43
 msgid "Снять"
 msgstr "Remove"
 
-#: templates/photos/partials/people.html:41
+#: templates/photos/partials/people.html:50
 msgid "Пока никто не отмечен."
 msgstr "Nobody is marked yet."
 
-#: templates/photos/partials/people.html:102
+#: templates/photos/partials/people.html:111
 #, python-format
 msgid "Завести нового человека: «%(name)s»"
 msgstr "Create a new person: “%(name)s”"
 
-#: templates/photos/partials/people.html:107
+#: templates/photos/partials/people.html:116
 msgid "Завести нового человека"
 msgstr "Create a new person"
 
-#: templates/photos/partials/people.html:124
+#: templates/photos/partials/people.html:133
 msgid "Добавить"
 msgstr "Add"
 
 #: templates/photos/person_form.html:52
 msgid "Человек с таким именем уже есть в архиве"
 msgstr "A person with this name is already in the archive"
+
+#: templates/photos/person_form.html:62
+msgid "не опубликован"
+msgstr "not published"
 
 #: templates/photos/person_form.html:69
 msgid "Если это разные люди, отметьте подтверждение ниже."

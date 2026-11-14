@@ -764,7 +764,9 @@ class TestPhotoPeoplePage:
 
         html = client.get(_url(EDIT_URL, photo)).content.decode()
 
-        assert "не опубликован" in html
+        # Подпись берётся из статуса: «не опубликован» врало бы для
+        # отклонённого человека, у которого причина решения другая.
+        assert person.get_status_display() in html
         assert person.get_absolute_url() not in html
 
     def test_add_form_is_on_edit_page(self, client, user, baseball):

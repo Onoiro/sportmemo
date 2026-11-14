@@ -511,6 +511,15 @@ html[data-bs-theme="dark"] {
     font-style: italic;
 }
 
+/* Причина отклонения приходит от модератора: длинная строка без пробелов
+   иначе растянет блок шире экрана телефона. */
+.people-list__reason {
+    flex-basis: 100%;
+    color: var(--bs-secondary-color);
+    font-size: 0.875rem;
+    overflow-wrap: anywhere;
+}
+
 .people-list__remove {
     margin-left: auto;
 }
@@ -1484,6 +1493,102 @@ html[data-bs-theme="dark"] {
     font-size: 0.875rem;
 }
 
+/* --- Очередь людей --- */
+
+/* Префикс `.person-card`, а не `.queue-card`: у карточки человека нет
+   картинки на всю ширину и есть подпись видимости имени. Общий набор
+   классов свёл бы два разных экрана в один и заставил бы их меняться
+   вместе при первой же правке одного из них. */
+.people-queue {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+    gap: 1.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.person-card {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--sm-photo-bg, var(--bs-secondary-bg));
+    border: 1px solid var(--sm-photo-border, var(--bs-border-color));
+    border-radius: var(--sm-radius);
+    box-shadow: var(--sm-photo-shadow, none);
+    overflow: hidden;
+}
+
+.person-card__media {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 9rem;
+    background-color: var(--bs-tertiary-bg);
+}
+
+.person-card__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.person-card__placeholder {
+    color: var(--bs-secondary-color);
+    font-size: 2rem;
+}
+
+.person-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.875rem 1rem 0;
+}
+
+.person-card__name {
+    margin: 0;
+    font-weight: 600;
+    color: var(--bs-heading-color);
+    overflow-wrap: anywhere;
+}
+
+/* Подпись видимости — то, что модератор публикует: «только имя» или
+   «скрыто» меняет смысл решения, поэтому она стоит отдельной строкой,
+   а не тонет в серой подписи автора. */
+.person-card__visibility {
+    margin: 0;
+    color: var(--bs-secondary-color);
+    font-size: 0.8125rem;
+    font-style: italic;
+}
+
+.person-card__meta,
+.person-card__author {
+    margin: 0;
+    color: var(--bs-secondary-color);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.person-card__photo {
+    margin: 0;
+    font-size: 0.875rem;
+    overflow-wrap: anywhere;
+}
+
+.person-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding: 0.75rem 1rem 1rem;
+}
+
+.person-card__actions form {
+    margin: 0;
+}
+
 /* --- Жалобы --- */
 
 /* Префикс `.reports-`, а не `.report-`: `.report-shell`, `.report-form`
@@ -2106,6 +2211,23 @@ html[data-bs-theme="dark"] {
     .queue-reject__summary {
         display: block;
         padding: 0.5rem 0;
+    }
+
+    /* Людей решают пальцем с телефона: одна колонка, кнопки на всю ширину
+       и не ниже 44 px — меньше курсорная цель, по которой легко
+       промахнуться. */
+    .people-queue {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .person-card__media {
+        height: 11rem;
+    }
+
+    .person-card__actions .btn {
+        width: 100%;
+        min-height: 44px;
     }
 
     /* Жалобу решают пальцем с телефона: одна колонка, кнопки на всю

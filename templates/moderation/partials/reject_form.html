@@ -1,15 +1,20 @@
 {% load i18n %}
 {% comment %}
-Форма отклонения внутри карточки очереди. Параметры: `card`, `reject_form`.
+Форма отклонения внутри карточки. Параметры: `card`, `reject_form`,
+`reject_action` (адрес решения) и `reject_field_id` (`id` поля причины).
+
+Адрес и `id` приходят снаружи: форма одна на очередь черновиков и очередь
+людей, а `id` поля собирается из типа и номера объекта — экземпляр формы
+на странице один, а карточек двенадцать, и одинаковые `id` увели бы подпись
+в первое поле списка.
 
 `<details>` вместо модального окна Bootstrap: модератор на телефоне может
 оказаться с выключенным JavaScript или на медленной сети, а решение уходит
 обычным POST. Причина пишется рядом с объектом, который человек только что
 посмотрел.
 
-Поле рендерится вручную, а не через `{{ reject_form.reason }}`: экземпляр
-формы на странице один, а карточек двенадцать, и одинаковые `id` увели бы
-подпись в первое поле списка.
+Поле рендерится вручную, а не через `{{ reject_form.reason }}`: виджет
+пришёл бы со своим `id`, и подпись карточки указывала бы на чужое поле.
 {% endcomment %}
 <details class="queue-reject">
     <summary class="queue-reject__summary">
@@ -17,15 +22,15 @@
         {% trans "Отклонить с причиной" %}
     </summary>
     <form class="queue-reject__form" method="post"
-          action="{% url 'moderation:queue_decide' card.kind card.pk %}">
+          action="{{ reject_action }}">
         {% csrf_token %}
         <input type="hidden" name="action" value="reject">
         <input type="hidden" name="next" value="{{ request.get_full_path }}">
-        <label class="form-label" for="reason-{{ card.kind }}-{{ card.pk }}">
+        <label class="form-label" for="{{ reject_field_id }}">
             {{ reject_form.reason.label }}
         </label>
         <textarea class="form-control queue-reject__field"
-                  id="reason-{{ card.kind }}-{{ card.pk }}"
+                  id="{{ reject_field_id }}"
                   name="reason" rows="3" required></textarea>
         <button class="btn btn-outline-danger btn-sm" type="submit">
             {% trans "Отклонить" %}

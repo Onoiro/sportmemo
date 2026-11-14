@@ -65,7 +65,7 @@ stays tidy.
 | `apps/photos` | `Source`, `Photo`, `PhotoPerson`, EXIF parsing (`exif.py`), pure processing functions (`processing.py`), the pipeline (`services.py`), similar photo search by hash (`similar.py`), people on photos (`people.py`), the Celery task (`tasks.py`), public views (`photo_detail`, the `grid` fragment), `photos/urls.py` |
 | `apps/search` | search: the `pg_trgm` extension, search text and query building (`indexing.py`), results and suggestions (`services.py`), the results page (`views.py`, `urls.py`), signals, the `search_reindex` command; it has no models of its own — the index fields live in `catalog` and `photos` |
 | `apps/comments` | `Comment` (generic FK, replies, statuses), `CommentSettings` (premoderation), target allow-list (`targets.py`), form, add view, visible query (`services.py`) |
-| `apps/moderation` | `Report`, `ModerationAction` (moderator decision log), `services.py` (status rule for new objects, decision rights, decisions on objects and reports, `log_action()`), `queue.py` (draft queue rule), `reports.py` (open report rule, scope, cards), report form and page, queue and report handling |
+| `apps/moderation` | `Report`, `ModerationAction` (moderator decision log), `services.py` (status rule for new objects, decision rights, decisions on objects and reports, `log_action()`), `queue.py` (draft queue rule), `reports.py` (open report rule, scope, cards), `people.py` (people draft queue), report form and page, queue and report handling |
 
 ## Development conventions
 
@@ -226,12 +226,13 @@ constructor". Legal pages and SMTP are stage 5.
 
 ## Current state
 
-- Version: 0.31.0; development branch `master`; 1690 tests passing on Python 3.12
+- Version: 0.32.0; development branch `master`; 1764 tests passing on Python 3.12
   and 3.13 (`make test`); linter clean (`make lint`). Version 0.29.1 fixed
   `collectstatic` (the `sourceMappingURL` lines of the vendor Bootstrap files are gone),
   and 0.29.2 removed the word "archive" from the cabinet: the tabs now read "Published"
   and "Not published". In 0.30.0 the author states where the photo comes from
-  (sub-stage 3.8), and in 0.31.0 tags people on the photo (sub-stage 3.9).
+  (sub-stage 3.8), in 0.31.0 tags people on the photo (sub-stage 3.9), and in 0.32.0
+  a moderator publishes them from the queue (sub-stage 3.10).
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is complete: sub-stages 3.1–3.6
   are done, 3.7 (batch upload) is deferred. Sub-stage 3.1 (processing foundation) — EXIF by
@@ -256,8 +257,10 @@ constructor". Legal pages and SMTP are stage 5.
   in the admin and their transfer on merge; `Source` is never created from typed text.
   Sub-stage 3.9 (people on a photo) — the block on the edit page: person search with
   context, `Person` creation with a duplicate check and a name variant in `PersonName`,
-  and tag removal; the rules live in `apps/photos/people.py`. The draft queue for people
-  (3.10, P3-26) is not built yet.
+  and tag removal; the rules live in `apps/photos/people.py`. Sub-stage 3.10 (draft queue
+  for people) — the separate page `/moderation/people/` with its rules in
+  `apps/moderation/people.py`, plus the "Publish and people on the photo" checkbox on the
+  photo card in the draft queue.
 - Stage 4 is complete: sub-stages 4.0–4.6 are done, master plan
   [`plans/moderation-ui.md`](.koda/plans/moderation-ui.md). Decisions are made by
   `apps/moderation/services.py`: five functions change the object state, three change the
@@ -328,6 +331,12 @@ Components and pages. The rules for visibility, privacy and their reasoning live
   and the decision on one object (POST only). They require a login and the moderator role,
   they are `noindex`, and `robots.txt` has `Disallow: /moderation/`. Twelve cards per page,
   oldest first; the link sits in the user menu for moderators only.
+- `/moderation/people/` and `/moderation/people/<pk>/` (3.10) are the draft queue for people
+  and the decision on one person (POST only). The queue is shared by all moderators: `Person`
+  has no sport, so the page has no scope notice. Twelve cards per page, oldest first,
+  `noindex, nofollow`, `never_cache`. The photo card in the draft queue carries the
+  "Publish and people on the photo (N)" checkbox — checked by default and shown only when
+  there are drafts.
 - `/moderation/reports/` and `/moderation/reports/<pk>/` (4.6) are report handling and the
   decision on one report (POST only). They show open reports (`new`, `in_review`) of the
   moderator's sports, newest first, twenty per page; resolved and rejected reports stay in
@@ -537,9 +546,11 @@ guessed but asks for a clarification. Candidates come from the team roster of th
 first and from the rest after; the label "Иванов Сергей, 1971, Русстар" is built in
 `apps/photos/people.py` and the template prints it ready. A person can be created on a
 separate page `/photos/<pk>/people/new/` with a duplicate check, a `name_visibility` choice
-and a name variant from the typed text. **The 3.9↔3.10 gap is known and honest:** a person
-created by an ordinary author stays a draft until a moderator publishes it in the admin,
-because the people queue does not exist yet (P3-26).
+and a name variant from the typed text. **A moderator publishes the draft:** the people
+queue `/moderation/people/` shows the drafts, and the photo card in `/moderation/queue/`
+carries the "Publish and people on the photo (N)" checkbox — checked by default, because
+the names on the photo are part of the same check. A rejected person is shown to the author
+in the people block with the status and the reason.
 
 **Admin.** Moderation (publish / hide / reject / soft-delete / restore) is a list action; every
 decision is written to `ModerationAction`. Merging duplicates is the "Merge duplicates into one
@@ -721,9 +732,10 @@ with three outcomes.
   and "Алексей Петров" never find each other in search or in trigrams. An empty value and a
   value equal to the full name are not written: a junk variant would block merging.
 - **A created person gets `initial_status_for(user)` and `created_by=user`.** A trusted
-  author publishes at once, everyone else waits for a moderator; the people queue is
-  sub-stage 3.10 (P3-26), so until then publication happens in the admin. In the interface a
-  draft is labelled "not published" and printed without a link.
+  author publishes at once, everyone else waits for a moderator: the people queue is
+  `/moderation/people/` (3.10). In the interface a draft is labelled with its status
+  (`get_status_display`) and printed without a link; a rejected person shows the reason
+  next to the name.
 - **A photo tag is not a content entity.** `PhotoPerson` is removed physically: it has no
   `deleted_at`, and soft delete in this project covers objects with `deleted_at`
   (invariant 9). "Who removed it and when" stays in `HistoricalRecords`.
@@ -1064,6 +1076,35 @@ with three outcomes.
   is more honest than "all handled": otherwise the person never asks the administrator.
 - **The queue forms work without JavaScript.** "Reject" opens a `<details>` element with a reason
   field instead of a Bootstrap modal: a moderator on a phone may be on a slow network.
+- **The people queue is separate — `apps/moderation/people.py`.** `Person` has no sport, and
+  the shared `QUEUE_MODELS` registry fails on it with `FieldError`; a "model without a sport"
+  flag would bring two different cards and a second set of conditions into the shared queue.
+  The "waits for a decision" rule lives in `_pending_qs()` and serves both the list and the
+  action: if they diverged, a person would be visible in the queue but impossible to decide.
+- **People are visible to every moderator.** Invariant 1: a person may play several sports,
+  and there is no scope for them and cannot be. The `moderated_sport_ids()` filter does not
+  apply here, and the page has no "no sports are assigned to you" notice — it would lie.
+- **Another moderator decides on your own person.** `is_own_person()` keeps it out of the list
+  and returns 404 in the action; the check runs **before** "still a draft", otherwise your own
+  already published person would answer "Already handled" and hint that the address exists.
+  The list exclusion is written as `Q(created_by__isnull=True) | ~Q(...)`:
+  `exclude(created_by=user)` would drop people without an author too.
+- **Publishing people together with the photo is a checkbox, checked by default.**
+  `publish_people_for_photo()` loops over `publish_object()` so that every person gets a
+  `ModerationAction(PUBLISH)` row: invariant 6 rests on the service, not on a silent status
+  write. The loop skips your own people — otherwise the "another moderator decides" rule
+  could be bypassed through someone else's photo. People are not touched when the photo
+  decision failed or the photo was rejected.
+- **The person card prints `public_name`, not `display_name`.** A service page is no reason to
+  reveal a hidden surname: the visibility label (`get_name_visibility_display()`) is built in
+  `people.py` and the template compares nothing.
+- **The people block on the photo edit page prints the status and the rejection reason.** The
+  literal "not published" would lie about a rejected person, and the author needs to read the
+  reason. The template compares no statuses: it prints `get_status_display()` and
+  `moderation_reason`.
+- **The query count does not grow with the page size.** Photos and teams are loaded in a batch,
+  and `draft_people_counts()` counts the drafts for the photo cards in one query per page: a
+  `Count` per card would add a query for every photo.
 - **The report rule lives in `apps/moderation/reports.py`**, not in a view: `open_reports()` for
   the list and `is_open()` for one object are the single point, otherwise a report becomes
   visible in the list but impossible to decide. A second "is the report open" rule in a view

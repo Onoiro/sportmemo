@@ -23,6 +23,7 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.core.models import Status
 from apps.core.shortcuts import paginate
+from apps.moderation import people
 
 # Порция очереди. Меньше, чем в галерее: каждая карточка фото — ещё одна
 # конвертация `django-imagekit`, а модератор смотрит очередь с телефона.
@@ -168,8 +169,17 @@ def queue_page(user, request):
         for obj in objects:
             loaded[(kind, obj.pk)] = obj
 
+    # Счётчик черновиков людей — одним запросом на страницу: запрос
+    # на карточку рос бы вместе с порцией, а чекбокс нужен только у фото.
+    photo_ids = [pk for kind, pk in loaded if kind == "photo"]
+    people_drafts = people.draft_people_counts(photo_ids)
+
     cards = [
-        build_card(loaded[(kind, pk)], QUEUE_MODELS[kind])
+        build_card(
+            loaded[(kind, pk)],
+            QUEUE_MODELS[kind],
+            people_drafts.get(pk, 0),
+        )
         for _created_at, kind, pk in page_obj.object_list
         if (kind, pk) in loaded
     ]
@@ -192,9 +202,13 @@ class QueueCard:
     author: str
     created_at: datetime
     image_url: str | None
+    # Черновики людей на снимке. Ноль у команды и события и у фото,
+    # где людей ещё не отметили: чекбокс без числа обещал бы действие,
+    # которого нет.
+    people_drafts: int = 0
 
 
-def build_card(obj, spec):
+def build_card(obj, spec, people_drafts=0):
     """Карточка объекта очереди."""
     return QueueCard(
         kind=spec.key,
@@ -205,6 +219,7 @@ def build_card(obj, spec):
         author=_author(obj, spec),
         created_at=obj.created_at,
         image_url=_image_url(obj, spec),
+        people_drafts=people_drafts,
     )
 
 
