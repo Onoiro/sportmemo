@@ -1,0 +1,123 @@
+{% load i18n %}
+{% comment %}
+Люди на фото — часть правки данных о снимке, а не публичной страницы
+(инвариант «кнопок модерации на публичных страницах нет»). Партиал стоит
+после формы данных: вложенные формы недопустимы, а «Добавить» не должно
+отправлять ещё и метаданные снимка.
+
+Черновик человека выводится без ссылки: правило «ссылка на неопубликованную
+сущность не создаётся нигде» остаётся. Подпись честная — до 3.10 такого
+человека публикует модератор в админке.
+{% endcomment %}
+<section class="people-block" id="photo-people">
+    <h2 class="people-block__title h5">{% trans "Люди на фото" %}</h2>
+
+    {% if people %}
+        <ul class="person-list people-list">
+            {% for link in people %}
+                <li class="person-list__item people-list__item">
+                    {% if link.person.is_published %}
+                        <a class="person-list__name" href="{{ link.person.get_absolute_url }}">{{ link.person.public_name }}</a>
+                    {% else %}
+                        <span class="person-list__name">{{ link.person.public_name }}</span>
+                        <span class="people-list__draft">{% trans "не опубликован" %}</span>
+                    {% endif %}
+                    <span class="person-list__role">{{ link.get_role_display }}</span>
+                    {% if link.position %}
+                        <span class="person-list__position">{{ link.position }}</span>
+                    {% endif %}
+                    <form class="people-list__remove" method="post"
+                          action="{% url 'photos:photo_person_remove' photo.pk link.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ edit_url }}">
+                        <button class="btn btn-sm btn-outline-secondary" type="submit">
+                            {% trans "Снять" %}
+                        </button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="people-block__empty">{% trans "Пока никто не отмечен." %}</p>
+    {% endif %}
+
+    {% if people_limit_reached %}
+        {% comment %}
+        Форма заменяется подписью: сервис отказал бы в добавлении, и поле
+        ввода вело бы человека в тупик. Число берётся из константы сервиса.
+        {% endcomment %}
+        <p class="people-block__limit">
+            {% blocktranslate with max=people_max %}На одном фото можно отметить не больше {{ max }} человек.{% endblocktranslate %}
+        </p>
+    {% else %}
+        <form class="people-form" method="post"
+              action="{% url 'photos:photo_person_add' photo.pk %}" novalidate>
+            {% csrf_token %}
+            {% comment %}
+            Адрес возврата — эта же страница: без него человек после отметки
+            улетел бы в кабинет и терял место, где остановился.
+            {% endcomment %}
+            <input type="hidden" name="next" value="{{ edit_url }}">
+
+            {% if people_form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">{{ people_form.non_field_errors }}</div>
+            {% endif %}
+
+            {% for field in people_form %}
+                <div class="people-form__field">
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
+
+            {% if people_form.ambiguous %}
+                {% comment %}
+                Два тёзки не угадываются: человек выбирает по подписи с годом
+                и командой. Список выводится после поля, потому что ошибка
+                стоит там же.
+                {% endcomment %}
+                <ul class="people-form__ambiguous">
+                    {% for option in people_form.ambiguous %}
+                        <li>{{ option.label }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% if people_form.unresolved %}
+                {% comment %}
+                Текст ошибки экранируется, ссылку в него не вставить. Поэтому
+                выход из тупика «не нашли» стоит рядом, с уже подставленным
+                текстом: разбирать его на имя и фамилию не пытаемся.
+                {% endcomment %}
+                <a class="people-form__link"
+                   href="{% url 'photos:photo_person_create' photo.pk %}?name={{ people_form.unresolved|urlencode }}">
+                    {% blocktranslate with name=people_form.unresolved %}Завести нового человека: «{{ name }}»{% endblocktranslate %}
+                </a>
+            {% else %}
+                <a class="people-form__link"
+                   href="{% url 'photos:photo_person_create' photo.pk %}">
+                    {% trans "Завести нового человека" %}
+                </a>
+            {% endif %}
+
+            <datalist id="person-options">
+                {% comment %}
+                Значение — то, что резолв поймёт; подпись с годом и командой
+                показывает контекст. Иначе подсказка предлагала бы строку,
+                которую сервер потом не найдёт.
+                {% endcomment %}
+                {% for option in people_form.suggestions %}
+                    <option value="{{ option.person.public_name }}" label="{{ option.label }}">{{ option.label }}</option>
+                {% endfor %}
+            </datalist>
+
+            <div class="people-form__actions">
+                <button class="btn btn-primary" type="submit">{% trans "Добавить" %}</button>
+            </div>
+        </form>
+    {% endif %}
+</section>

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14 01:41+0300\n"
+"POT-Creation-Date: 2026-11-14 18:35+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -155,8 +155,8 @@ msgstr "Профиль обновлён"
 #: apps/catalog/views.py:703 apps/catalog/views.py:730 apps/core/views.py:114
 #: apps/core/views.py:144 apps/core/views.py:192 apps/moderation/views.py:125
 #: apps/moderation/views.py:172 apps/moderation/views.py:314
-#: apps/photos/views.py:166 apps/photos/views.py:221 apps/photos/views.py:262
-#: apps/photos/views.py:353 apps/search/views.py:40
+#: apps/photos/views.py:171 apps/photos/views.py:245 apps/photos/views.py:378
+#: apps/photos/views.py:423 apps/photos/views.py:514 apps/search/views.py:40
 #: templates/partials/footer.html:20
 msgid "Главная"
 msgstr "Главная"
@@ -712,7 +712,7 @@ msgstr "Новая команда"
 msgid "Создать"
 msgstr "Создать"
 
-#: apps/catalog/views.py:547 apps/catalog/views.py:684 apps/photos/views.py:199
+#: apps/catalog/views.py:547 apps/catalog/views.py:684 apps/photos/views.py:204
 msgid "Изменения сохранены."
 msgstr "Изменения сохранены."
 
@@ -721,7 +721,7 @@ msgid "Редактирование команды"
 msgstr "Редактирование команды"
 
 #: apps/catalog/views.py:557 apps/catalog/views.py:694
-#: templates/accounts/profile.html:102 templates/photos/photo_details.html:129
+#: templates/accounts/profile.html:102 templates/photos/photo_details.html:130
 msgid "Сохранить"
 msgstr "Сохранить"
 
@@ -1009,7 +1009,7 @@ msgid "порядок сортировки"
 msgstr "порядок сортировки"
 
 #: apps/core/schema.py:150 apps/moderation/queue.py:219
-#: apps/photos/views.py:362 apps/photos/views.py:366
+#: apps/photos/views.py:523 apps/photos/views.py:527
 #: templates/photos/my_photos.html:71 templates/photos/photo_detail.html:37
 msgid "Фотография"
 msgstr "Фотография"
@@ -1036,7 +1036,7 @@ msgstr ""
 "нарушении прав."
 
 #: apps/core/views.py:138 apps/core/views.py:145 apps/core/views.py:193
-#: apps/photos/views.py:356 templates/core/home.html:61
+#: apps/photos/views.py:517 templates/core/home.html:61
 #: templates/core/year_list.html:11 templates/partials/footer.html:14
 #: templates/partials/navbar.html:20
 msgid "Годы"
@@ -1046,7 +1046,7 @@ msgstr "Годы"
 msgid "Хронология архива SportMemo: годы и фотографии каждого года."
 msgstr "Хронология архива SportMemo: годы и фотографии каждого года."
 
-#: apps/core/views.py:187 apps/core/views.py:194 apps/photos/views.py:359
+#: apps/core/views.py:187 apps/core/views.py:194 apps/photos/views.py:520
 #: templates/core/year_detail.html:12
 #, python-format
 msgid "%(year)s год"
@@ -1507,7 +1507,80 @@ msgstr "Не удалось найти «%(name)s». Проверьте назв
 msgid "Дата съёмки не совпадает с годом %(year)s."
 msgstr "Дата съёмки не совпадает с годом %(year)s."
 
-#: apps/photos/forms.py:439
+#: apps/photos/forms.py:445
+msgid "Кто на фото"
+msgstr "Кто на фото"
+
+#: apps/photos/forms.py:448
+msgid "Начните вводить имя — появятся люди из архива."
+msgstr "Начните вводить имя — появятся люди из архива."
+
+#: apps/photos/forms.py:451 apps/photos/forms.py:518
+#: templates/accounts/profile.html:29
+msgid "Роль"
+msgstr "Роль"
+
+#: apps/photos/forms.py:456 apps/photos/forms.py:523
+msgid "Позиция в кадре"
+msgstr "Позиция в кадре"
+
+#: apps/photos/forms.py:459 apps/photos/forms.py:526
+msgid "Например: «слева второй». Необязательно."
+msgstr "Например: «слева второй». Необязательно."
+
+#: apps/photos/forms.py:488
+msgid "Не нашли такого человека в архиве."
+msgstr "Не нашли такого человека в архиве."
+
+#: apps/photos/forms.py:491
+msgid "Уточните, кто из них на фото."
+msgstr "Уточните, кто из них на фото."
+
+#: apps/photos/forms.py:512
+msgid "Как записано в альбоме"
+msgstr "Как записано в альбоме"
+
+#: apps/photos/forms.py:515
+msgid "Другое написание имени, если оно есть. Необязательно."
+msgstr "Другое написание имени, если оно есть. Необязательно."
+
+#: apps/photos/forms.py:529
+msgid "Я проверил(а), это другой человек"
+msgstr "Я проверил(а), это другой человек"
+
+#: apps/photos/forms.py:537
+msgid "Фамилия"
+msgstr "Фамилия"
+
+#: apps/photos/forms.py:538
+msgid "Имя"
+msgstr "Имя"
+
+#: apps/photos/forms.py:539
+msgid "Отчество"
+msgstr "Отчество"
+
+#: apps/photos/forms.py:540
+msgid "Видимость имени"
+msgstr "Видимость имени"
+
+#: apps/photos/forms.py:544
+msgid "Фамилию несовершеннолетних не публикуем: выберите видимость имени ниже."
+msgstr "Фамилию несовершеннолетних не публикуем: выберите видимость имени ниже."
+
+#: apps/photos/forms.py:548
+msgid ""
+"«Только имя» — для несовершеннолетних: фамилия останется в базе, но не "
+"появится на сайте."
+msgstr ""
+"«Только имя» — для несовершеннолетних: фамилия останется в базе, но не "
+"появится на сайте."
+
+#: apps/photos/forms.py:614
+msgid "Человек с таким именем уже есть в архиве. Проверьте список выше."
+msgstr "Человек с таким именем уже есть в архиве. Проверьте список выше."
+
+#: apps/photos/forms.py:626
 #, python-format
 msgid "Изображение слишком большое: больше %(mpix)s Мпикс."
 msgstr "Изображение слишком большое: больше %(mpix)s Мпикс."
@@ -1821,7 +1894,7 @@ msgstr "Хранилище недоступно, попробуйте позже
 msgid "Ошибка обработки: %(error)s"
 msgstr "Ошибка обработки: %(error)s"
 
-#: apps/photos/views.py:148
+#: apps/photos/views.py:153
 msgid ""
 "Файл сохранён, фотография обрабатывается. Заполните данные о снимке — их "
 "можно изменить позже."
@@ -1829,43 +1902,76 @@ msgstr ""
 "Файл сохранён, фотография обрабатывается. Заполните данные о снимке — их "
 "можно изменить позже."
 
-#: apps/photos/views.py:161 apps/photos/views.py:167
+#: apps/photos/views.py:166 apps/photos/views.py:172
 #: templates/photos/photo_form.html:11
 msgid "Загрузка фото"
 msgstr "Загрузка фото"
 
-#: apps/photos/views.py:196
+#: apps/photos/views.py:201
 msgid "Изменения сохранены. Фото остаётся опубликованным."
 msgstr "Изменения сохранены. Фото остаётся опубликованным."
 
-#: apps/photos/views.py:216 apps/photos/views.py:223
+#: apps/photos/views.py:240 apps/photos/views.py:247 apps/photos/views.py:382
 #: templates/photos/photo_details.html:11
 msgid "Данные фотографии"
 msgstr "Данные фотографии"
 
-#: apps/photos/views.py:222 apps/photos/views.py:257 apps/photos/views.py:263
-#: templates/partials/navbar.html:93 templates/photos/my_photos.html:13
-#: templates/photos/photo_details.html:131 templates/photos/photo_form.html:130
+#: apps/photos/views.py:246 apps/photos/views.py:379 apps/photos/views.py:418
+#: apps/photos/views.py:424 templates/partials/navbar.html:93
+#: templates/photos/my_photos.html:13 templates/photos/photo_details.html:132
+#: templates/photos/photo_form.html:130
 msgid "Мои фото"
 msgstr "Мои фото"
 
-#: apps/photos/views.py:302
+#: apps/photos/views.py:289
+msgid "Человек отмечен на фото."
+msgstr "Человек отмечен на фото."
+
+#: apps/photos/views.py:291
+msgid "Этот человек уже отмечен на фото."
+msgstr "Этот человек уже отмечен на фото."
+
+#: apps/photos/views.py:295 apps/photos/views.py:338
+#: templates/photos/partials/people.html:51
+#, python-format
+msgid "На одном фото можно отметить не больше %(max)s человек."
+msgstr "На одном фото можно отметить не больше %(max)s человек."
+
+#: apps/photos/views.py:311
+msgid "Отметка снята."
+msgstr "Отметка снята."
+
+#: apps/photos/views.py:313
+msgid "Отметки уже нет."
+msgstr "Отметки уже нет."
+
+#: apps/photos/views.py:357
+#, python-format
+msgid "Человек добавлен на фото: %(name)s."
+msgstr "Человек добавлен на фото: %(name)s."
+
+#: apps/photos/views.py:373 apps/photos/views.py:384
+#: templates/photos/person_form.html:11
+msgid "Новый человек"
+msgstr "Новый человек"
+
+#: apps/photos/views.py:463
 msgid "Фото убрано из списка. Вернуть его можно на вкладке «Убранные»."
 msgstr "Фото убрано из списка. Вернуть его можно на вкладке «Убранные»."
 
-#: apps/photos/views.py:305
+#: apps/photos/views.py:466
 msgid "Фото уже убрано из списка."
 msgstr "Фото уже убрано из списка."
 
-#: apps/photos/views.py:314
+#: apps/photos/views.py:475
 msgid "Фото возвращено в список."
 msgstr "Фото возвращено в список."
 
-#: apps/photos/views.py:316
+#: apps/photos/views.py:477
 msgid "Фото уже в списке."
 msgstr "Фото уже в списке."
 
-#: apps/photos/views.py:379
+#: apps/photos/views.py:540
 msgid "Фотография из архива SportMemo"
 msgstr "Фотография из архива SportMemo"
 
@@ -2115,6 +2221,7 @@ msgstr "Сохранить пароль"
 #: templates/admin/moderation/reject_form.html:47
 #: templates/catalog/event_form.html:101 templates/catalog/team_form.html:102
 #: templates/moderation/report_form.html:58
+#: templates/photos/person_form.html:101
 msgid "Отмена"
 msgstr "Отмена"
 
@@ -2176,10 +2283,6 @@ msgstr "Email"
 #: templates/accounts/profile.html:21
 msgid "Дата регистрации"
 msgstr "Дата регистрации"
-
-#: templates/accounts/profile.html:29
-msgid "Роль"
-msgstr "Роль"
 
 #: templates/accounts/profile.html:36
 msgid "Мой профиль в архиве"
@@ -2403,6 +2506,7 @@ msgid "Событие опубликовано: изменения появят�
 msgstr "Событие опубликовано: изменения появятся на сайте сразу."
 
 #: templates/catalog/event_form.html:18 templates/catalog/team_form.html:18
+#: templates/photos/person_form.html:13
 msgid ""
 "Появится на сайте после проверки модератором или сразу, если вы доверенный "
 "автор."
@@ -2445,7 +2549,7 @@ msgstr[2] "Найдено %(counter)s событий"
 msgstr[3] "Найдено %(counter)s событий"
 
 #: templates/catalog/event_list.html:19 templates/catalog/my_events.html:52
-#: templates/photos/photo_details.html:82
+#: templates/photos/photo_details.html:83
 msgid "Создать событие"
 msgstr "Создать событие"
 
@@ -2516,7 +2620,7 @@ msgstr ""
 "или после проверки модератором."
 
 #: templates/catalog/my_teams.html:52 templates/catalog/team_list.html:19
-#: templates/photos/photo_details.html:66
+#: templates/photos/photo_details.html:67
 msgid "Создать команду"
 msgstr "Создать команду"
 
@@ -3170,6 +3274,49 @@ msgstr "Не удалось загрузить фотографии. Ссылк�
 msgid "Показать ещё"
 msgstr "Показать ещё"
 
+#: templates/photos/partials/people.html:13
+#: templates/photos/photo_detail.html:128
+msgid "Люди на фото"
+msgstr "Люди на фото"
+
+#: templates/photos/partials/people.html:23
+#: templates/photos/person_form.html:62
+msgid "не опубликован"
+msgstr "не опубликован"
+
+#: templates/photos/partials/people.html:34
+msgid "Снять"
+msgstr "Снять"
+
+#: templates/photos/partials/people.html:41
+msgid "Пока никто не отмечен."
+msgstr "Пока никто не отмечен."
+
+#: templates/photos/partials/people.html:102
+#, python-format
+msgid "Завести нового человека: «%(name)s»"
+msgstr "Завести нового человека: «%(name)s»"
+
+#: templates/photos/partials/people.html:107
+msgid "Завести нового человека"
+msgstr "Завести нового человека"
+
+#: templates/photos/partials/people.html:124
+msgid "Добавить"
+msgstr "Добавить"
+
+#: templates/photos/person_form.html:52
+msgid "Человек с таким именем уже есть в архиве"
+msgstr "Человек с таким именем уже есть в архиве"
+
+#: templates/photos/person_form.html:69
+msgid "Если это разные люди, отметьте подтверждение ниже."
+msgstr "Если это разные люди, отметьте подтверждение ниже."
+
+#: templates/photos/person_form.html:98
+msgid "Завести и отметить"
+msgstr "Завести и отметить"
+
 #: templates/photos/photo_detail.html:78
 msgid "Просмотров"
 msgstr "Просмотров"
@@ -3198,10 +3345,6 @@ msgstr "Откуда"
 msgid "Предоставил(а)"
 msgstr "Предоставил(а)"
 
-#: templates/photos/photo_detail.html:128
-msgid "Люди на фото"
-msgstr "Люди на фото"
-
 #: templates/photos/photo_details.html:13
 msgid ""
 "Все поля необязательные: заполните то, что знаете. Вернуться можно в любой "
@@ -3210,16 +3353,16 @@ msgstr ""
 "Все поля необязательные: заполните то, что знаете. Вернуться можно в любой "
 "момент."
 
-#: templates/photos/photo_details.html:103
+#: templates/photos/photo_details.html:104
 msgid "Год взят из файла — проверьте, пожалуйста."
 msgstr "Год взят из файла — проверьте, пожалуйста."
 
-#: templates/photos/photo_details.html:117
+#: templates/photos/photo_details.html:118
 #, python-format
 msgid "Создать команду «%(name)s»"
 msgstr "Создать команду «%(name)s»"
 
-#: templates/photos/photo_details.html:122
+#: templates/photos/photo_details.html:123
 #, python-format
 msgid "Создать событие «%(name)s»"
 msgstr "Создать событие «%(name)s»"

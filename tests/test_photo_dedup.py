@@ -13,7 +13,8 @@ from apps.core.models import Sport, Status
 from apps.core.shortcuts import photos_count
 from apps.moderation.models import ModerationAction, ModerationActionType
 from apps.photos import similar
-from apps.photos.models import Photo, PhotoPerson, SourceOrigin
+from apps.photos.models import Photo, PhotoPerson, PhotoPersonRole, SourceOrigin
+from apps.photos.people import add_person
 from apps.photos.processing import PHASH_HEX_LENGTH, hamming_distance
 from apps.photos.processing import perceptual_hash as image_hash
 from apps.photos.similar import (
@@ -35,6 +36,7 @@ from tests.factories import (
     ReportFactory,
     SourceFactory,
     TeamFactory,
+    UserFactory,
 )
 
 pytestmark = pytest.mark.django_db
@@ -385,6 +387,32 @@ class TestPhotoMergeRelations:
         links = PhotoPerson.objects.filter(photo=canon, person=person)
         assert links.count() == 1
         assert links.get().note == "канон"
+
+    def test_link_created_from_form_moves_to_canonical(self, baseball):
+        """Отметка из формы ведёт себя как любая другая: переносится.
+
+        Роль, позиция и автор переносятся вместе со связью — иначе после
+        слияния фото человек оказался бы на каноне без контекста.
+        """
+        author = UserFactory()
+        canon = PhotoFactory(sport=baseball)
+        source = PhotoFactory(sport=baseball, uploaded_by=author)
+        person = PersonFactory(status=Status.PUBLISHED)
+        link = add_person(
+            source,
+            person,
+            user=author,
+            role=PhotoPersonRole.COACH,
+            position="слева второй",
+        )
+
+        source.merge_into(canon)
+
+        link.refresh_from_db()
+        assert link.photo == canon
+        assert link.role == PhotoPersonRole.COACH
+        assert link.position == "слева второй"
+        assert link.added_by == author
 
     def test_comments_move_to_canonical(self, baseball):
         canon = PhotoFactory(sport=baseball)

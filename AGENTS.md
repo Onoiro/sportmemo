@@ -62,7 +62,7 @@ stays tidy.
 | `apps/core` | abstract models (`TimeStampedModel`, `SlugModel`, `StatusModel`, `SoftDeleteModel`, `MergeableModel`), `Sport`, admin mixins (`ModerationActionsMixin`, `MergeActionsMixin`, `BaseHistoryAdmin`), `/healthz/`, the `seed_demo` command, public query helpers (`shortcuts.py`), public views (home page, years, `robots.txt`), the `uslug` URL converter (`converters.py`), the pagination tag, `core/urls.py`, shared form helpers (`forms.py`: `BootstrapFormMixin`), SEO meta tags (`seo.py`), sitemap (`sitemaps.py`), Schema.org markup (`schema.py`) |
 | `apps/accounts` | custom `User` (email as `USERNAME_FIELD`), consents, roles, link to `Person` |
 | `apps/catalog` | `Team`, `TeamMembership` (with `years_label`), `Person`, `PersonName`, `Event`, `EventTeam`, `Event.date_label`, `roster.py` (roster filter by year), `forms.py` (`TeamForm`), `emails.py` (moderator notification), list views and team, event and person detail pages, team create and edit views |
-| `apps/photos` | `Source`, `Photo`, `PhotoPerson`, EXIF parsing (`exif.py`), pure processing functions (`processing.py`), the pipeline (`services.py`), similar photo search by hash (`similar.py`), the Celery task (`tasks.py`), public views (`photo_detail`, the `grid` fragment), `photos/urls.py` |
+| `apps/photos` | `Source`, `Photo`, `PhotoPerson`, EXIF parsing (`exif.py`), pure processing functions (`processing.py`), the pipeline (`services.py`), similar photo search by hash (`similar.py`), people on photos (`people.py`), the Celery task (`tasks.py`), public views (`photo_detail`, the `grid` fragment), `photos/urls.py` |
 | `apps/search` | search: the `pg_trgm` extension, search text and query building (`indexing.py`), results and suggestions (`services.py`), the results page (`views.py`, `urls.py`), signals, the `search_reindex` command; it has no models of its own — the index fields live in `catalog` and `photos` |
 | `apps/comments` | `Comment` (generic FK, replies, statuses), `CommentSettings` (premoderation), target allow-list (`targets.py`), form, add view, visible query (`services.py`) |
 | `apps/moderation` | `Report`, `ModerationAction` (moderator decision log), `services.py` (status rule for new objects, decision rights, decisions on objects and reports, `log_action()`), `queue.py` (draft queue rule), `reports.py` (open report rule, scope, cards), report form and page, queue and report handling |
@@ -226,12 +226,12 @@ constructor". Legal pages and SMTP are stage 5.
 
 ## Current state
 
-- Version: 0.30.0; development branch `master`; 1627 tests passing on Python 3.12
+- Version: 0.31.0; development branch `master`; 1690 tests passing on Python 3.12
   and 3.13 (`make test`); linter clean (`make lint`). Version 0.29.1 fixed
   `collectstatic` (the `sourceMappingURL` lines of the vendor Bootstrap files are gone),
   and 0.29.2 removed the word "archive" from the cabinet: the tabs now read "Published"
   and "Not published". In 0.30.0 the author states where the photo comes from
-  (sub-stage 3.8).
+  (sub-stage 3.8), and in 0.31.0 tags people on the photo (sub-stage 3.9).
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is complete: sub-stages 3.1–3.6
   are done, 3.7 (batch upload) is deferred. Sub-stage 3.1 (processing foundation) — EXIF by
@@ -254,6 +254,10 @@ constructor". Legal pages and SMTP are stage 5.
   (simplified source) — `source_origin` and `source_note` on a photo, the display rule
   `source_display()`, the `recent_source()` hint from the author's latest photo, the fields
   in the admin and their transfer on merge; `Source` is never created from typed text.
+  Sub-stage 3.9 (people on a photo) — the block on the edit page: person search with
+  context, `Person` creation with a duplicate check and a name variant in `PersonName`,
+  and tag removal; the rules live in `apps/photos/people.py`. The draft queue for people
+  (3.10, P3-26) is not built yet.
 - Stage 4 is complete: sub-stages 4.0–4.6 are done, master plan
   [`plans/moderation-ui.md`](.koda/plans/moderation-ui.md). Decisions are made by
   `apps/moderation/services.py`: five functions change the object state, three change the
@@ -524,6 +528,18 @@ fields. `source_note` is always shown, not only when "not my archive" is chosen:
 choice needs JavaScript, and without it the hint would change for some people only. The hint
 for an album of sixty shots comes from `recent_source()` — the latest photo of the same author
 with a filled origin; a filled field is never overwritten.
+**People on a photo** (3.9): below the details form on `/photos/<pk>/edit/` sits the
+"People on the photo" block — the list of tagged people and the add form. The block lives
+**after** `</form>`: editing details and editing people are two independent POSTs, and nested
+forms are not allowed. A person is typed as text with a `<datalist>` hint, and the server
+resolves it through `resolve_person()`; an ambiguous name (two "Иванов Сергей") is not
+guessed but asks for a clarification. Candidates come from the team roster of that year
+first and from the rest after; the label "Иванов Сергей, 1971, Русстар" is built in
+`apps/photos/people.py` and the template prints it ready. A person can be created on a
+separate page `/photos/<pk>/people/new/` with a duplicate check, a `name_visibility` choice
+and a name variant from the typed text. **The 3.9↔3.10 gap is known and honest:** a person
+created by an ordinary author stays a draft until a moderator publishes it in the admin,
+because the people queue does not exist yet (P3-26).
 
 **Admin.** Moderation (publish / hide / reject / soft-delete / restore) is a list action; every
 decision is written to `ModerationAction`. Merging duplicates is the "Merge duplicates into one
@@ -688,6 +704,29 @@ with three outcomes.
   that would be a leak. The hint for a new photo comes from `recent_source()` — the latest
   photo of the same author, not of the current user: a moderator edits someone else's photo
   and must not get their own source.
+- **People are added to a photo only on `/photos/<pk>/edit/`.** The right is checked by
+  `can_edit_photo(user, photo)` and the object comes from `_get_editable_photo_or_404`:
+  strangers get **404, not 403**, and nobody edits a deleted photo. The public photo page
+  keeps the plain list of people and no buttons, so the invariant "no moderation buttons on
+  public pages" holds. A wrapper next to `can_edit_photo` would be a second rule that people
+  forget to update, so there is none.
+- **Person search for tagging goes by `first_name` always, and by last name, middle name and
+  name variants only with `name_visibility=full`.** `display_name` is never searched and a
+  hidden name is excluded from the queryset entirely. The rule lives in `_visible_persons()`
+  and `_match_q()` (`apps/photos/people.py`) and is shared by the `<datalist>` hint and the
+  resolution: if they diverged, the hint would offer a person the resolution cannot find.
+  Comparison is `icontains`, not trigrams: the form must work on SQLite too.
+- **`PersonName` is filled when a person is created from the form.** The "as written in the
+  album" field (`alias`) becomes an `alt_spelling` name variant, otherwise "Алеша Петров"
+  and "Алексей Петров" never find each other in search or in trigrams. An empty value and a
+  value equal to the full name are not written: a junk variant would block merging.
+- **A created person gets `initial_status_for(user)` and `created_by=user`.** A trusted
+  author publishes at once, everyone else waits for a moderator; the people queue is
+  sub-stage 3.10 (P3-26), so until then publication happens in the admin. In the interface a
+  draft is labelled "not published" and printed without a link.
+- **A photo tag is not a content entity.** `PhotoPerson` is removed physically: it has no
+  `deleted_at`, and soft delete in this project covers objects with `deleted_at`
+  (invariant 9). "Who removed it and when" stays in `HistoricalRecords`.
 - **EXIF is stored by allow-list** (`apps/photos/exif.py`); the GPS IFD is never read.
   `Artist` and `Copyright` stay as a hint for the moderator. The year from `DateTimeOriginal`
   is a form value only, never written to the database on its own.

@@ -12,17 +12,17 @@ import logging
 import warnings
 
 from django import forms
-from django.db.models import Q
+from django.db.models import Case, Q, Value, When
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from PIL import Image, UnidentifiedImageError
 
-from apps.catalog.models import Event, Team
+from apps.catalog.models import Event, Person, Team
 from apps.core.forms import BootstrapFormMixin
 from apps.core.models import Status
-from apps.photos import services
+from apps.photos import people, services
 from apps.photos.exif import extract_exif
-from apps.photos.models import Photo, SourceOrigin
+from apps.photos.models import Photo, PhotoPersonRole, SourceOrigin
 from apps.photos.processing import (
     ALLOWED_UPLOAD_FORMATS,
     MAX_SIDE_PX,
@@ -427,6 +427,193 @@ class PhotoDetailsForm(BootstrapFormMixin, forms.ModelForm):
                 "taken_date",
                 _("Дата съёмки не совпадает с годом %(year)s.") % {"year": year},
             )
+
+
+class PhotoPersonForm(BootstrapFormMixin, forms.Form):
+    """Отметить человека на фото: имя с подсказкой, роль, позиция.
+
+    Ввод устроен как у команды и события: поле с нативным `<datalist>`,
+    а сервер резолвит введённое. Без JavaScript остаётся обычный текст,
+    и второй реализации ввода не появляется.
+
+    Резолв идёт через `people.resolve_person()`, а подсказки — через
+    `people.person_options()`: одна выборка на оба пути, иначе подсказка
+    предложит человека, которого резолв потом не найдёт.
+    """
+
+    person_name = forms.CharField(
+        label=_("Кто на фото"),
+        max_length=200,
+        widget=forms.TextInput(attrs={"list": "person-options", "autocomplete": "off"}),
+        help_text=_("Начните вводить имя — появятся люди из архива."),
+    )
+    role = forms.ChoiceField(
+        label=_("Роль"),
+        choices=PhotoPersonRole.choices,
+        initial=PhotoPersonRole.PLAYER,
+    )
+    position = forms.CharField(
+        label=_("Позиция в кадре"),
+        max_length=100,
+        required=False,
+        help_text=_("Например: «слева второй». Необязательно."),
+    )
+
+    def __init__(self, *args, photo, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.photo = photo
+        self.user = user
+        # Ненайденное имя шаблон выводит ссылкой «Завести нового»:
+        # в текст ошибки ссылку не вставить, он экранируется.
+        self.unresolved = ""
+        self.ambiguous = []
+
+    @property
+    def suggestions(self):
+        """Подсказки `<datalist>`: те же кандидаты, что найдёт резолв."""
+        return people.person_options(self.photo, self.user)
+
+    def clean_person_name(self):
+        """Резолв введённого имени в человека.
+
+        Одно совпадение — человек найден; ни одного — ссылка на создание;
+        несколько — список для уточнения. Угадывать нельзя: фото не на том
+        человеке хуже пустой отметки, а снять её потом легко, только если
+        заметил.
+        """
+        value = self.cleaned_data["person_name"]
+        options = people.resolve_person(self.photo, self.user, value)
+        if not options:
+            self.unresolved = value
+            raise forms.ValidationError(_("Не нашли такого человека в архиве."))
+        if len(options) > 1:
+            self.ambiguous = options
+            raise forms.ValidationError(_("Уточните, кто из них на фото."))
+        self.cleaned_data["person"] = options[0].person
+        return value
+
+
+class PersonCreateForm(BootstrapFormMixin, forms.ModelForm):
+    """Завести нового человека из правки фото.
+
+    Отдельная страница, а не `<details>`: список похожих людей сдвигал бы
+    форму данных о снимке. Вид спорта в форму не входит — человек не привязан
+    к виду спорта (инвариант № 1); статус и автора ставит сервис.
+
+    `name_visibility` обязателен: фамилия несовершеннолетнего не публикуется,
+    и выбор делается при создании, а не потом в админке (инвариант № 8).
+
+    Сохранение не здесь: человека, вариант имени и отметку пишет
+    `people.create_person_for_photo()` одной транзакцией. `save(commit=False)`
+    отдаёт несохранённый объект, который представление передаёт сервису.
+    """
+
+    alias = forms.CharField(
+        label=_("Как записано в альбоме"),
+        max_length=200,
+        required=False,
+        help_text=_("Другое написание имени, если оно есть. Необязательно."),
+    )
+    role = forms.ChoiceField(
+        label=_("Роль"),
+        choices=PhotoPersonRole.choices,
+        initial=PhotoPersonRole.PLAYER,
+    )
+    position = forms.CharField(
+        label=_("Позиция в кадре"),
+        max_length=100,
+        required=False,
+        help_text=_("Например: «слева второй». Необязательно."),
+    )
+    confirm_duplicate = forms.BooleanField(
+        label=_("Я проверил(а), это другой человек"),
+        required=False,
+    )
+
+    class Meta:
+        model = Person
+        fields = ["last_name", "first_name", "middle_name", "name_visibility"]
+        labels = {
+            "last_name": _("Фамилия"),
+            "first_name": _("Имя"),
+            "middle_name": _("Отчество"),
+            "name_visibility": _("Видимость имени"),
+        }
+        help_texts = {
+            "last_name": _(
+                "Фамилию несовершеннолетних не публикуем: выберите "
+                "видимость имени ниже."
+            ),
+            "name_visibility": _(
+                "«Только имя» — для несовершеннолетних: фамилия останется "
+                "в базе, но не появится на сайте."
+            ),
+        }
+        widgets = {
+            "last_name": forms.TextInput(attrs={"autocomplete": "off"}),
+            "first_name": forms.TextInput(attrs={"autocomplete": "off"}),
+            "middle_name": forms.TextInput(attrs={"autocomplete": "off"}),
+        }
+
+    def __init__(self, *args, photo, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.photo = photo
+        self.user = user
+        self.duplicates = self.find_duplicates()
+
+    def _current(self, field_name) -> str:
+        """Значение поля до отправки: для поиска похожих при открытии."""
+        if self.is_bound:
+            return self.data.get(self.add_prefix(field_name), "") or ""
+        return (
+            self.initial.get(field_name) or getattr(self.instance, field_name, "") or ""
+        )
+
+    def find_duplicates(self, first_name=None, last_name=None):
+        """Люди с теми же именем и фамилией, кроме слитых.
+
+        То же решение, что у `TeamForm.find_duplicates()`: однофамильцев
+        в бейсболе много, и жёстко блокировать нельзя. Черновики других
+        авторов тоже показываем — иначе за время модерации появятся
+        три записи одного человека.
+        """
+        first = first_name if first_name is not None else self._current("first_name")
+        last = last_name if last_name is not None else self._current("last_name")
+        first = first.strip()
+        last = last.strip()
+        if not first and not last:
+            return Person.objects.none()
+
+        queryset = Person.objects.filter(
+            first_name__iexact=first,
+            last_name__iexact=last,
+            deleted_at__isnull=True,
+            merged_into__isnull=True,
+        )
+        if self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        # Опубликованные — первыми: на них можно дать ссылку, а черновик
+        # показываем только подписью и статусом.
+        return queryset.order_by(
+            Case(When(status=Status.PUBLISHED, then=Value(0)), default=Value(1)),
+            "last_name",
+            "first_name",
+        )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        first_name = cleaned_data.get("first_name")
+        last_name = cleaned_data.get("last_name")
+        if not first_name and not last_name:
+            return cleaned_data
+
+        self.duplicates = self.find_duplicates(first_name, last_name)
+        if self.duplicates and not cleaned_data.get("confirm_duplicate"):
+            self.add_error(
+                "first_name",
+                _("Человек с таким именем уже есть в архиве. Проверьте список выше."),
+            )
+        return cleaned_data
 
 
 def _pixels_message():

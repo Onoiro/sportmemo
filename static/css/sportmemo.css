@@ -479,6 +479,72 @@ html[data-bs-theme="dark"] {
     font-size: 0.875rem;
 }
 
+/* --- Люди на фото в правке снимка --- */
+
+/* Блок стоит рядом с формой данных, а не внутри неё: две независимые
+   POST-формы не должны вкладываться друг в друга. */
+.people-block {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background-color: var(--sm-photo-bg, var(--bs-secondary-bg));
+    border: 1px solid var(--sm-photo-border, var(--bs-border-color));
+    border-radius: var(--sm-radius);
+}
+
+.people-block__title {
+    margin-bottom: 0.75rem;
+}
+
+.people-block__empty,
+.people-block__limit {
+    margin: 0 0 1rem;
+    color: var(--bs-secondary-color);
+}
+
+.people-list__item {
+    align-items: center;
+}
+
+.people-list__draft {
+    color: var(--bs-secondary-color);
+    font-size: 0.875rem;
+    font-style: italic;
+}
+
+.people-list__remove {
+    margin-left: auto;
+}
+
+.people-form {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--bs-border-color);
+}
+
+.people-form__field {
+    margin-bottom: 1rem;
+}
+
+.people-form__ambiguous {
+    margin: 0 0 1rem;
+    padding-left: 1.25rem;
+    color: var(--bs-secondary-color);
+    font-size: 0.9375rem;
+}
+
+.people-form__link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9375rem;
+}
+
+.people-form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
 /* --- Карточки сущностей: команды и события --- */
 
 .entity-grid {
@@ -958,7 +1024,8 @@ html[data-bs-theme="dark"] {
 }
 
 .team-form__checkbox,
-.event-form__checkbox {
+.event-form__checkbox,
+.photo-form__checkbox {
     margin-bottom: 1rem;
 }
 
@@ -1070,6 +1137,15 @@ html[data-bs-theme="dark"] {
     color: var(--bs-danger-text-emphasis, var(--bs-body-color));
     font-size: 0.875rem;
     overflow-wrap: anywhere;
+}
+
+/* Форма данных и блок людей стоят друг под другом в одной колонке:
+   оба адресуются отдельными POST, но относятся к одному снимку. */
+.photo-details__column {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
 }
 
 /* Своё имя у формы второго шага по той же причине, что у `.photo-form`:

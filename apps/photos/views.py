@@ -28,10 +28,15 @@ from apps.core.shortcuts import (
     visible_photos,
 )
 from apps.moderation.services import initial_status_for
-from apps.photos import cabinet, services
+from apps.photos import cabinet, people, services
 from apps.photos.exif import taken_year
-from apps.photos.forms import PhotoDetailsForm, PhotoFileForm
-from apps.photos.models import Photo
+from apps.photos.forms import (
+    PersonCreateForm,
+    PhotoDetailsForm,
+    PhotoFileForm,
+    PhotoPersonForm,
+)
+from apps.photos.models import Photo, PhotoPerson
 from apps.photos.source import source_display
 from apps.photos.tasks import enqueue_photo_processing
 
@@ -205,9 +210,28 @@ def photo_edit(request, pk):
             initial=_photo_edit_initial(request, photo),
         )
 
-    context = {
+    context = _photo_edit_context(request, photo, form)
+    return render(request, "photos/photo_details.html", context)
+
+
+def _photo_edit_context(request, photo, form, people_form=None):
+    """Контекст страницы правки: данные о снимке и блок людей.
+
+    Одна сборка на три пути — GET правки, неудачный POST данных и
+    неудачный POST добавления человека. Разойдись они, ошибка поля
+    на одной ветке отдавалась бы сообщением, а форма теряла бы ввод.
+
+    Связи людей предвыбираются здесь, а не в `_get_editable_photo_or_404`:
+    её зовут и POST-действия, которым список не нужен.
+    """
+    photo = Photo.public.prefetch_related("photo_persons__person").get(pk=photo.pk)
+    return {
         "photo": photo,
         "form": form,
+        "people": photo.photo_persons.all(),
+        "people_form": people_form or PhotoPersonForm(photo=photo, user=request.user),
+        "people_limit_reached": people.people_limit_reached(photo),
+        "people_max": people.MAX_PHOTO_PEOPLE,
         # Адрес возврата из форм команды и события: после создания записи
         # человек вернётся сюда же, на второй шаг.
         "edit_url": reverse("photos:photo_edit", args=[photo.pk]),
@@ -223,7 +247,144 @@ def photo_edit(request, pk):
             {"label": _("Данные фотографии")},
         ],
     }
-    return render(request, "photos/photo_details.html", context)
+
+
+@post_action("photos:my_photos")
+def photo_person_add(request, pk):
+    """Отметить человека на фото: только POST с правки.
+
+    Невалидная форма возвращает ту же страницу с кодом 400, а не редирект:
+    человек должен увидеть, что именно не так с введённым именем. Данные
+    о снимке при этом не теряются — они лежат в базе, а не в этой форме.
+    """
+    photo = _get_editable_photo_or_404(request, pk)
+    form = PhotoPersonForm(request.POST, photo=photo, user=request.user)
+    if not form.is_valid():
+        context = _photo_edit_context(
+            request,
+            photo,
+            PhotoDetailsForm(
+                instance=photo,
+                user=request.user,
+                initial=_photo_edit_initial(request, photo),
+            ),
+            people_form=form,
+        )
+        return render(request, "photos/photo_details.html", context, status=400)
+
+    data = form.cleaned_data
+    # Уже отмеченный человек проверяется до предела: сообщение «уже
+    # отмечен» полезнее, чем «предел», когда на фото просто нажали дважды.
+    already = photo.photo_persons.filter(person=data["person"]).exists()
+    link = None
+    if not already:
+        link = people.add_person(
+            photo,
+            data["person"],
+            user=request.user,
+            role=data["role"],
+            position=data["position"],
+        )
+    if link is not None:
+        messages.success(request, _("Человек отмечен на фото."))
+    elif already:
+        messages.info(request, _("Этот человек уже отмечен на фото."))
+    else:
+        messages.error(
+            request,
+            _("На одном фото можно отметить не больше %(max)s человек.")
+            % {"max": people.MAX_PHOTO_PEOPLE},
+        )
+    return redirect(safe_next(request, "photos:my_photos"))
+
+
+@post_action("photos:my_photos")
+def photo_person_remove(request, pk, link_pk):
+    """Снять отметку с фото: только POST с правки.
+
+    Связь ищется вместе с фото, а не по одному номеру: номер угадывается
+    по порядку, и по чужому можно было бы снять отметку с другого снимка.
+    """
+    photo = _get_editable_photo_or_404(request, pk)
+    link = PhotoPerson.objects.filter(pk=link_pk, photo=photo).first()
+    if link is not None and people.remove_person(photo, link):
+        messages.success(request, _("Отметка снята."))
+    else:
+        messages.info(request, _("Отметки уже нет."))
+    return redirect(safe_next(request, "photos:my_photos"))
+
+
+@login_required
+@never_cache
+@require_http_methods(["GET", "POST"])
+def photo_person_create(request, pk):
+    """Завести человека прямо из правки фото.
+
+    Отдельная страница, а не `<details>`: список похожих людей сдвигал бы
+    форму данных о снимке. Текст, который автор не нашёл в поиске, приходит
+    из `?name=` в поле «как записано в альбоме»: разбирать строку на имя
+    и фамилию не пытаемся, порядок слов в альбомах разный.
+
+    Сохраняет не форма: человека, вариант имени и отметку пишет
+    `people.create_person_for_photo()` одной транзакцией.
+    """
+    photo = _get_editable_photo_or_404(request, pk)
+
+    # Предел проверяется до формы: сервис поднял бы `ValueError`, а это
+    # 500-я страница вместо понятного «на фото уже 30 человек».
+    if request.method == "POST" and people.people_limit_reached(photo):
+        messages.error(
+            request,
+            _("На одном фото можно отметить не больше %(max)s человек.")
+            % {"max": people.MAX_PHOTO_PEOPLE},
+        )
+        return redirect("photos:photo_edit", pk=photo.pk)
+
+    if request.method == "POST":
+        form = PersonCreateForm(request.POST, photo=photo, user=request.user)
+        if form.is_valid():
+            data = form.cleaned_data
+            person = people.create_person_for_photo(
+                photo,
+                form.save(commit=False),
+                user=request.user,
+                role=data["role"],
+                position=data["position"],
+                alias=data["alias"],
+            )
+            messages.success(
+                request,
+                _("Человек добавлен на фото: %(name)s.") % {"name": person.public_name},
+            )
+            return redirect("photos:photo_edit", pk=photo.pk)
+    else:
+        form = PersonCreateForm(
+            photo=photo,
+            user=request.user,
+            initial={"alias": request.GET.get("name", "")[:200]},
+        )
+
+    context = {
+        "form": form,
+        "photo": photo,
+        "duplicates": form.duplicates,
+        "meta": page_meta(
+            request,
+            title=_("Новый человек"),
+            noindex=True,
+            nofollow=True,
+        ),
+        "breadcrumbs": [
+            {"url": reverse("core:home"), "label": _("Главная")},
+            {"url": reverse("photos:my_photos"), "label": _("Мои фото")},
+            {
+                "url": reverse("photos:photo_edit", args=[photo.pk]),
+                "label": _("Данные фотографии"),
+            },
+            {"label": _("Новый человек")},
+        ],
+    }
+    return render(request, "photos/person_form.html", context)
 
 
 @login_required
