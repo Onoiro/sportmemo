@@ -119,6 +119,7 @@ class PhotoAdmin(MergeActionsMixin, ModerationActionsMixin, BaseHistoryAdmin):
         "status",
         "processing_status",
         "rights_confirmed",
+        "source_origin",
         "year",
         "deleted_at",
     )
@@ -151,7 +152,20 @@ class PhotoAdmin(MergeActionsMixin, ModerationActionsMixin, BaseHistoryAdmin):
     date_hierarchy = "created_at"
     fieldsets = (
         (None, {"fields": ("sport", "title", "caption", "original")}),
-        (_("Привязка"), {"fields": ("source", "event", "team", "year", "taken_date")}),
+        (
+            _("Привязка"),
+            {
+                "fields": (
+                    "source",
+                    "source_origin",
+                    "source_note",
+                    "event",
+                    "team",
+                    "year",
+                    "taken_date",
+                )
+            },
+        ),
         (
             _("Производные"),
             {

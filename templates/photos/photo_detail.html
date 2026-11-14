@@ -97,6 +97,27 @@
                         {% endif %}
                     </dl>
                 </section>
+            {% elif source_display %}
+                {% comment %}
+                Упрощённый блок: у автора два простых ответа, подробный
+                справочник `Source` заводит модератор. Подписи готовит
+                `apps/photos/source.py`, шаблон ничего не сравнивает.
+                {% endcomment %}
+                <section class="photo-detail__section">
+                    <h2 class="photo-detail__section-title h5">{% trans "Источник" %}</h2>
+                    <dl class="photo-detail__facts">
+                        <dt>{% trans "Откуда" %}</dt>
+                        <dd>{{ source_display.origin_label }}</dd>
+                        {% if source_display.holder %}
+                            <dt>{% trans "Предоставил(а)" %}</dt>
+                            <dd>{{ source_display.holder }}</dd>
+                        {% endif %}
+                        {% if source_display.note %}
+                            <dt>{% trans "Уточнение" %}</dt>
+                            <dd>{{ source_display.note }}</dd>
+                        {% endif %}
+                    </dl>
+                </section>
             {% endif %}
 
             {% if photo_persons %}

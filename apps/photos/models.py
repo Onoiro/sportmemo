@@ -67,6 +67,22 @@ class SourceKind(models.TextChoices):
     OTHER = "other", _("другое")
 
 
+class SourceOrigin(models.TextChoices):
+    """Происхождение снимка — простой ответ автора.
+
+    Не то же, что `SourceKind`: тот описывает вид носителя в справочнике
+    модератора, а здесь человек говорит, откуда у него файл. Пустая строка
+    («не указано») отличается от «не знаю»: первое значит, что человек
+    ещё не возвращался к фото, второе — осознанный ответ.
+    """
+
+    PERSONAL = "personal", _("из моего личного архива")
+    OTHER_ARCHIVE = "other_archive", _("из архива другого человека")
+    PRESS = "press", _("газета, журнал, книга")
+    INTERNET = "internet", _("из интернета")
+    UNKNOWN = "unknown", _("не знаю")
+
+
 class Source(TimeStampedModel, SoftDeleteModel):
     """Источник: откуда фото родом.
 
@@ -159,6 +175,15 @@ class Photo(TimeStampedModel, StatusModel, SoftDeleteModel, MergeableModel):
         on_delete=models.SET_NULL,
         related_name="photos",
     )
+    source_origin = models.CharField(
+        _("происхождение снимка"),
+        max_length=20,
+        choices=SourceOrigin.choices,
+        blank=True,
+        default="",
+        db_index=True,
+    )
+    source_note = models.CharField(_("уточнение"), max_length=200, blank=True)
     event = models.ForeignKey(
         "catalog.Event",
         verbose_name=_("событие"),
@@ -463,7 +488,15 @@ class Photo(TimeStampedModel, StatusModel, SoftDeleteModel, MergeableModel):
         Person.objects.filter(avatar_id=self.pk).update(avatar_id=target.pk)
 
         filled = []
-        for field in ("source_id", "year", "team_id", "event_id", "taken_date"):
+        for field in (
+            "source_id",
+            "source_origin",
+            "source_note",
+            "year",
+            "team_id",
+            "event_id",
+            "taken_date",
+        ):
             value = getattr(self, field)
             if value and not getattr(target, field):
                 setattr(target, field, value)

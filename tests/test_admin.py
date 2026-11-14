@@ -10,6 +10,7 @@ from django.utils import timezone
 from apps.catalog.models import Team
 from apps.core.models import Status
 from apps.moderation.models import ModerationAction, ModerationActionType
+from apps.photos.models import Photo
 from tests.factories import (
     ModeratorFactory,
     PhotoFactory,
@@ -54,6 +55,27 @@ class TestAdminRegistration:
         model_admin = admin.site._registry[ModerationAction]
 
         assert not model_admin.has_add_permission(None)
+
+
+class TestPhotoAdminSourceFields:
+    """Модератор должен видеть происхождение снимка в карточке и фильтре."""
+
+    def test_source_fields_are_in_the_binding_block(self):
+        model_admin = admin.site._registry[Photo]
+        binding = next(
+            fields
+            for name, fields in model_admin.fieldsets
+            if name and str(name) == "Привязка"
+        )
+
+        assert "source" in binding["fields"]
+        assert "source_origin" in binding["fields"]
+        assert "source_note" in binding["fields"]
+
+    def test_source_origin_is_filterable(self):
+        model_admin = admin.site._registry[Photo]
+
+        assert "source_origin" in model_admin.list_filter
 
 
 class TestModerationActions:

@@ -226,11 +226,12 @@ constructor". Legal pages and SMTP are stage 5.
 
 ## Current state
 
-- Version: 0.29.2; development branch `master`; 1594 tests passing on Python 3.12
+- Version: 0.30.0; development branch `master`; 1627 tests passing on Python 3.12
   and 3.13 (`make test`); linter clean (`make lint`). Version 0.29.1 fixed
   `collectstatic` (the `sourceMappingURL` lines of the vendor Bootstrap files are gone),
   and 0.29.2 removed the word "archive" from the cabinet: the tabs now read "Published"
-  and "Not published".
+  and "Not published". In 0.30.0 the author states where the photo comes from
+  (sub-stage 3.8).
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is complete: sub-stages 3.1–3.6
   are done, 3.7 (batch upload) is deferred. Sub-stage 3.1 (processing foundation) — EXIF by
@@ -249,7 +250,10 @@ constructor". Legal pages and SMTP are stage 5.
   hashes are recomputed with `photos_backfill --rehash`. Sub-stage 3.6 (duplicate merge) —
   `Photo` inherits `MergeableModel`, `duplicate_of` became `merged_into` through two
   migrations, a merge moves relations and views, an old link returns 301 to the canonical
-  photo, and the "Merge into this photo" button sits in the candidate row.
+  photo, and the "Merge into this photo" button sits in the candidate row. Sub-stage 3.8
+  (simplified source) — `source_origin` and `source_note` on a photo, the display rule
+  `source_display()`, the `recent_source()` hint from the author's latest photo, the fields
+  in the admin and their transfer on merge; `Source` is never created from typed text.
 - Stage 4 is complete: sub-stages 4.0–4.6 are done, master plan
   [`plans/moderation-ui.md`](.koda/plans/moderation-ui.md). Decisions are made by
   `apps/moderation/services.py`: five functions change the object state, three change the
@@ -512,7 +516,14 @@ clears the field and the `objectURL`. **The EXIF year hint comes from the server
 removed from the vendor directory). A failed name resolution leads to the "Create team “…”"
 link (`?name=` in `team_create` prefills the form): the error text is escaped, so a link
 cannot go inside it, and `PhotoDetailsForm.unresolved` hands the unresolved names to the
-template.
+template. **The author is asked about the photo source** (3.8): two fields at the end of the
+step 2 form — "Where the photo comes from" (`source_origin`, five choices plus the empty
+"not specified") and "Clarification" (`source_note`). The source sits last: it is an extra
+question, not the main one, and it never becomes required — the form gains no new required
+fields. `source_note` is always shown, not only when "not my archive" is chosen: hiding it by
+choice needs JavaScript, and without it the hint would change for some people only. The hint
+for an album of sixty shots comes from `recent_source()` — the latest photo of the same author
+with a filled origin; a filled field is never overwritten.
 
 **Admin.** Moderation (publish / hide / reject / soft-delete / restore) is a list action; every
 decision is written to `ModerationAction`. Merging duplicates is the "Merge duplicates into one
@@ -662,6 +673,21 @@ with three outcomes.
 - **`Photo.rights_confirmed` does not affect visibility.** The author is responsible for
   rights, not the server (decision 2.1); the field is a historical flag for the admin. A photo
   is visible by `published` status and the absence of `deleted_at`.
+- **The photo source is asked from the author with two simple fields.**
+  `Photo.source_origin` (five choices; an empty string means "not specified", which is a
+  separate state from `unknown`) and `Photo.source_note` (a clarification). `Source` is the
+  moderator's reference list: it is **never created automatically** from the text the author
+  typed. Otherwise the list would become a dump with one record per photo, and "Советский
+  спорт" and "советский спорт 1994" would be two records. The display rule is
+  `source_display()` in `apps/photos/source.py`: the template prints ready strings, and a
+  linked `Source` gives `None` (the detailed block is printed by the template itself).
+- **The personal archive owner's name is not copied into text.** With
+  `source_origin=personal` the caption comes from `photo.uploaded_by.display_name`; after
+  account anonymisation (P5-12) `uploaded_by` is empty and the neutral "From the author's
+  personal archive" is shown. A name stored in `source_note` would outlive the account, and
+  that would be a leak. The hint for a new photo comes from `recent_source()` — the latest
+  photo of the same author, not of the current user: a moderator edits someone else's photo
+  and must not get their own source.
 - **EXIF is stored by allow-list** (`apps/photos/exif.py`); the GPS IFD is never read.
   `Artist` and `Copyright` stay as a hint for the moderator. The year from `DateTimeOriginal`
   is a form value only, never written to the database on its own.

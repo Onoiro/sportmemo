@@ -13,7 +13,7 @@ from apps.core.models import Sport, Status
 from apps.core.shortcuts import photos_count
 from apps.moderation.models import ModerationAction, ModerationActionType
 from apps.photos import similar
-from apps.photos.models import Photo, PhotoPerson
+from apps.photos.models import Photo, PhotoPerson, SourceOrigin
 from apps.photos.processing import PHASH_HEX_LENGTH, hamming_distance
 from apps.photos.processing import perceptual_hash as image_hash
 from apps.photos.similar import (
@@ -473,6 +473,35 @@ class TestPhotoMergeRelations:
         canon.refresh_from_db()
         assert canon.year == 1980
         assert canon.team == canon_team
+
+    def test_source_origin_moves_to_empty_canonical(self, baseball):
+        canon = PhotoFactory(sport=baseball)
+        source = PhotoFactory(sport=baseball)
+        source.source_origin = SourceOrigin.PERSONAL
+        source.source_note = "архив И. Иванова"
+        source.save()
+
+        source.merge_into(canon)
+
+        canon.refresh_from_db()
+        assert canon.source_origin == SourceOrigin.PERSONAL
+        assert canon.source_note == "архив И. Иванова"
+
+    def test_filled_canonical_source_origin_is_kept(self, baseball):
+        canon = PhotoFactory(sport=baseball)
+        canon.source_origin = SourceOrigin.PRESS
+        canon.source_note = "Советский спорт, 1994"
+        canon.save()
+        source = PhotoFactory(sport=baseball)
+        source.source_origin = SourceOrigin.INTERNET
+        source.source_note = "найдено в сети"
+        source.save()
+
+        source.merge_into(canon)
+
+        canon.refresh_from_db()
+        assert canon.source_origin == SourceOrigin.PRESS
+        assert canon.source_note == "Советский спорт, 1994"
 
     def test_canonical_text_is_kept(self, baseball):
         canon = PhotoFactory(sport=baseball, title="Канон", caption="Подпись канона")

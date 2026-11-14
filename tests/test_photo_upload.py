@@ -14,7 +14,7 @@ from apps.core.models import Status
 from apps.core.shortcuts import PHOTO_PAGE_SIZE, default_sport, visible_photos
 from apps.photos import services
 from apps.photos.forms import PhotoDetailsForm, PhotoFileForm
-from apps.photos.models import Photo, ProcessingStatus
+from apps.photos.models import Photo, ProcessingStatus, Source, SourceOrigin
 from apps.photos.processing import (
     MAX_SIDE_PX,
     MAX_UPLOAD_BYTES,
@@ -551,6 +551,126 @@ class TestPhotoDetailsForm:
 
         assert form.is_valid(), form.errors
         assert form.unresolved == {}
+
+
+class TestSourceFields:
+    """Источник снимка: два простых вопроса автора, справочник не растёт."""
+
+    @pytest.mark.django_db
+    def test_form_saves_origin_and_note(self, user, baseball):
+        photo = _draft(user, baseball)
+        form = _details_form(
+            user,
+            photo,
+            source_origin=SourceOrigin.PERSONAL,
+            source_note="архив И. Иванова",
+        )
+
+        assert form.is_valid(), form.errors
+        form.save()
+
+        photo.refresh_from_db()
+        assert photo.source_origin == SourceOrigin.PERSONAL
+        assert photo.source_note == "архив И. Иванова"
+
+    @pytest.mark.django_db
+    def test_free_text_does_not_create_a_source(self, user, baseball):
+        """Свободный текст остаётся текстом: справочник заводит модератор."""
+        photo = _draft(user, baseball)
+        form = _details_form(
+            user,
+            photo,
+            source_origin=SourceOrigin.OTHER_ARCHIVE,
+            source_note="Советский спорт, 1994",
+        )
+
+        assert form.is_valid(), form.errors
+        form.save()
+
+        assert Source.objects.count() == 0
+
+    @pytest.mark.django_db
+    def test_empty_choice_keeps_empty_string(self, user, baseball):
+        """Пустое и «не знаю» — разные ответы: первое значит «не заполнял»."""
+        photo = _draft(user, baseball, source_origin=SourceOrigin.PRESS)
+        form = _details_form(user, photo, source_origin="")
+
+        assert form.is_valid(), form.errors
+        form.save()
+
+        photo.refresh_from_db()
+        assert photo.source_origin == ""
+        assert photo.source_origin != SourceOrigin.UNKNOWN
+
+    @pytest.mark.django_db
+    def test_hint_comes_from_last_photo_of_the_same_author(self, user, baseball):
+        PhotoFactory(
+            uploaded_by=user,
+            source_origin=SourceOrigin.PRESS,
+            source_note="Советский спорт, 1994",
+        )
+        photo = _draft(user, baseball)
+
+        assert services.recent_source(photo) == {
+            "source_origin": SourceOrigin.PRESS,
+            "source_note": "Советский спорт, 1994",
+        }
+
+    @pytest.mark.django_db
+    def test_filled_photo_gets_no_hint(self, user, baseball):
+        PhotoFactory(uploaded_by=user, source_origin=SourceOrigin.PRESS)
+        photo = _draft(user, baseball, source_origin=SourceOrigin.INTERNET)
+
+        assert services.recent_source(photo) == {}
+
+    @pytest.mark.django_db
+    def test_source_hint_comes_from_photo_author_not_from_editor(
+        self, client, user, moderator, baseball
+    ):
+        """Модератор правит чужое фото и не подставляет свой архив."""
+        PhotoFactory(uploaded_by=moderator, source_origin=SourceOrigin.PERSONAL)
+        photo = _draft(user, baseball)
+        client.force_login(moderator)
+
+        response = client.get(f"/photos/{photo.pk}/edit/")
+
+        assert response.status_code == 200
+        assert services.recent_source(photo) == {}
+        html = response.content.decode()
+        assert f'value="{SourceOrigin.PERSONAL}" selected' not in html
+
+    @pytest.mark.django_db
+    def test_hint_is_prefilled_on_the_details_page(self, client, user, baseball):
+        client.force_login(user)
+        client.post(UPLOAD_URL, {"original": make_upload()})
+        first = Photo.objects.get()
+        first.source_origin = SourceOrigin.PRESS
+        first.source_note = "Советский спорт, 1994"
+        first.save(update_fields=["source_origin", "source_note"])
+        client.post(UPLOAD_URL, {"original": make_upload()})
+        second = Photo.objects.exclude(pk=first.pk).get()
+
+        html = client.get(f"/photos/{second.pk}/edit/").content.decode()
+
+        assert f'value="{SourceOrigin.PRESS}" selected' in html
+        assert 'value="Советский спорт, 1994"' in html
+
+    @pytest.mark.django_db
+    def test_both_fields_are_rendered(self, user, baseball):
+        form = PhotoDetailsForm(instance=_draft(user, baseball), user=user)
+
+        assert "source_origin" in form.fields
+        assert "source_note" in form.fields
+        assert "Откуда снимок" in str(form.fields["source_origin"].label)
+        assert "Уточнение" in str(form.fields["source_note"].label)
+
+    @pytest.mark.django_db
+    def test_source_question_comes_last(self, user, baseball):
+        """Источник — дополнительный вопрос, а не главный."""
+        form = PhotoDetailsForm(instance=_draft(user, baseball), user=user)
+
+        names = list(form.fields)
+        assert names[-2:] == ["source_origin", "source_note"]
 
 
 UPLOAD_URL = "/photos/upload/"

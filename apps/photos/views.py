@@ -32,6 +32,7 @@ from apps.photos import cabinet, services
 from apps.photos.exif import taken_year
 from apps.photos.forms import PhotoDetailsForm, PhotoFileForm
 from apps.photos.models import Photo
+from apps.photos.source import source_display
 from apps.photos.tasks import enqueue_photo_processing
 
 
@@ -66,10 +67,14 @@ def _create_photo(form, user, sport):
 
 
 def _photo_edit_initial(request, photo):
-    """Начальные значения второго шага: год из EXIF и вернувшиеся привязки.
+    """Начальные значения второго шага: год из EXIF, источник, привязки.
 
     Год из файла — только подсказка (решение 2.6 мастер-плана): он попадает
     в поле, а не в базу, и человек его подтверждает или исправляет.
+
+    Источник подсказывается из последнего фото того же автора: альбом
+    оцифровывают десятками снимков, и отвечать про него каждый раз — лишняя
+    работа. Автор берётся у фото, поэтому модератор не подставит свой.
 
     `?team=` и `?event=` приходят из формы создания команды или события:
     человек заводит запись прямо перед загрузкой фото в неё и не должен
@@ -81,6 +86,8 @@ def _photo_edit_initial(request, photo):
         year = taken_year(photo.exif or {})
         if year is not None:
             initial["year"] = year
+
+    initial.update(services.recent_source(photo))
 
     for param, model, field in (
         ("team", Team, "team_name"),
@@ -329,8 +336,10 @@ def photo_detail(request, pk):
 
     # Хелпер отдаёт объект без предвыборки связей — перечитываем один раз
     # с `select_related`, чтобы шаблон не делал запрос на каждый источник.
+    # `uploaded_by` нужен блоку происхождения: имя владельца личного архива
+    # выводится из автора, а не хранится текстом.
     photo = (
-        Photo.public.select_related("source", "team", "event")
+        Photo.public.select_related("source", "team", "event", "uploaded_by")
         .prefetch_related("photo_persons__person")
         .get(pk=photo.pk)
     )
@@ -358,6 +367,10 @@ def photo_detail(request, pk):
     context = {
         "photo": photo,
         "photo_persons": photo.photo_persons.all(),
+        # Упрощённое происхождение считает модуль, а не шаблон: порядок
+        # проверок (привязанный `Source` побеждает, пустое — «не указано»)
+        # должен жить в одном месте.
+        "source_display": source_display(photo),
         "meta": page_meta(
             request,
             title=title,

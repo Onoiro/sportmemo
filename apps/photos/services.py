@@ -98,6 +98,36 @@ def upload_limit_reached(user) -> bool:
     return uploads_today(user) >= DAILY_UPLOAD_LIMIT
 
 
+def recent_source(photo) -> dict:
+    """Происхождение из последнего фото того же автора или пустой словарь.
+
+    Человек, оцифровывающий альбом на шестьдесят снимков, отвечает про
+    источник один раз, а дальше подтверждает подсказку. Автор берётся
+    у фото, а не у текущего пользователя: модератор правит чужое фото
+    и не должен подставлять свой источник.
+
+    Заполненное не перетирается: у фото уже есть `Source` или ответ автора —
+    подсказки нет, иначе форма молча меняла бы то, что человек выбрал.
+    Анонимизированный автор (`uploaded_by=None`) подсказки не даёт: чужие
+    альбомы не сливаются в один.
+    """
+    if photo.uploaded_by_id is None:
+        return {}
+    if photo.source_id or photo.source_origin:
+        return {}
+    last = (
+        Photo.objects.filter(uploaded_by_id=photo.uploaded_by_id)
+        .exclude(source_origin="")
+        .exclude(pk=photo.pk)
+        .order_by("-created_at")
+        .only("source_origin", "source_note")
+        .first()
+    )
+    if last is None:
+        return {}
+    return {"source_origin": last.source_origin, "source_note": last.source_note}
+
+
 def resolve_by_name(model, value, queryset, label):
     """Найти объект по названию, введённому человеком текстом.
 

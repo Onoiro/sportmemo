@@ -4,7 +4,15 @@ import pytest
 from django.core.exceptions import ValidationError
 
 from apps.core.models import Status
-from apps.photos.models import Photo, PhotoPerson, ProcessingStatus, Source, SourceKind
+from apps.photos.models import (
+    Photo,
+    PhotoPerson,
+    ProcessingStatus,
+    Source,
+    SourceKind,
+    SourceOrigin,
+)
+from tests.factories import PhotoFactory, SourceFactory, UserFactory
 from tests.utils import make_image_file
 
 pytestmark = pytest.mark.django_db
@@ -216,6 +224,104 @@ class TestPhotoPerson:
         link = PhotoPerson.objects.create(photo=photo, person=person)
 
         assert str(person) in str(link)
+
+
+class TestSourceOriginFields:
+    def test_defaults_are_empty(self, baseball):
+        photo = Photo.objects.create(sport=baseball)
+
+        assert photo.source_origin == ""
+        assert photo.source_note == ""
+
+    def test_origin_and_note_are_stored(self, baseball):
+        photo = Photo.objects.create(
+            sport=baseball,
+            source_origin=SourceOrigin.PRESS,
+            source_note="Советский спорт, 1994",
+        )
+
+        photo.refresh_from_db()
+        assert photo.source_origin == SourceOrigin.PRESS
+        assert photo.source_note == "Советский спорт, 1994"
+
+    def test_empty_is_not_unknown(self, baseball):
+        """«Не указано» и «не знаю» — разные ответы: по пустому полю
+        видно, что человек ещё не возвращался к фото.
+        """
+        empty = Photo.objects.create(sport=baseball)
+        unknown = Photo.objects.create(sport=baseball, source_origin="unknown")
+
+        assert empty.source_origin == ""
+        assert unknown.source_origin == SourceOrigin.UNKNOWN
+
+    def test_history_keeps_new_fields(self, baseball):
+        photo = Photo.objects.create(
+            sport=baseball, source_origin=SourceOrigin.PERSONAL
+        )
+
+        assert photo.history.first().source_origin == SourceOrigin.PERSONAL
+
+
+class TestPhotoDetailSource:
+    """Страница фото печатает готовый блок происхождения или ничего."""
+
+    def test_personal_origin_shows_author_name(self, client, user):
+        author = UserFactory(display_name="Сергей Иванов")
+        photo = PhotoFactory(
+            uploaded_by=author,
+            source_origin=SourceOrigin.PERSONAL,
+            source_note="архив тренера",
+        )
+
+        html = client.get(photo.get_absolute_url()).content.decode()
+
+        assert "из моего личного архива" in html
+        assert "Сергей Иванов" in html
+        assert "архив тренера" in html
+
+    def test_bound_source_wins_over_origin(self, client):
+        """Подробный блок справочника и упрощённый рядом — два ответа
+        на один вопрос, и человек не поймёт, какой из них правда.
+        """
+        photo = PhotoFactory(
+            source=SourceFactory(publication="Советский спорт"),
+            source_origin=SourceOrigin.INTERNET,
+        )
+
+        html = client.get(photo.get_absolute_url()).content.decode()
+
+        assert "Советский спорт" in html
+        assert "из интернета" not in html
+
+    def test_empty_origin_hides_the_block(self, client):
+        photo = PhotoFactory(source_origin="")
+
+        html = client.get(photo.get_absolute_url()).content.decode()
+
+        assert "Откуда" not in html
+        assert "Предоставил(а)" not in html
+
+    def test_note_without_holder_for_press(self, client):
+        photo = PhotoFactory(
+            source_origin=SourceOrigin.PRESS,
+            source_note="Советский спорт, 1994",
+        )
+
+        html = client.get(photo.get_absolute_url()).content.decode()
+
+        assert "газета, журнал, книга" in html
+        assert "Советский спорт, 1994" in html
+        assert "Предоставил(а)" not in html
+
+    def test_edit_page_shows_both_fields(self, client, user):
+        photo = PhotoFactory(uploaded_by=user, status=Status.DRAFT)
+        client.force_login(user)
+
+        html = client.get(f"/photos/{photo.pk}/edit/").content.decode()
+
+        assert 'name="source_origin"' in html
+        assert 'name="source_note"' in html
+        assert "Откуда у вас этот снимок" in html
 
 
 class TestPhotoMergeOnTeamMerge:

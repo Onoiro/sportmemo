@@ -160,14 +160,14 @@ def recent_source(photo) -> dict:
 
 ## 3. Шаги
 
-### 1. [ ] Ветка
+### 1. [x] Ветка
 
 - Навыки: koda-coder.
 - Файлы: —
 - Содержание: `git switch -c feature/photo-source-origin` от `master` (0.29.2).
 - Критерий: ветка создана, `git status` чист.
 
-### 2. [ ] Модель: `SourceOrigin` и два поля
+### 2. [x] Модель: `SourceOrigin` и два поля
 
 - Навыки: koda-coder.
 - Файлы: `apps/photos/models.py`, `apps/photos/migrations/0007_photo_source_origin.py`,
@@ -186,7 +186,7 @@ def recent_source(photo) -> dict:
   `HistoricalPhoto` получила оба поля автоматически (`makemigrations` не тянет
   лишнего); `Photo.objects.create(...)` без новых полей работает (defaults).
 
-### 3. [ ] Правило вывода: `apps/photos/source.py`
+### 3. [x] Правило вывода: `apps/photos/source.py`
 
 - Навыки: koda-coder.
 - Файлы: `apps/photos/source.py` (новый), `tests/test_photo_source.py` (новый).
@@ -205,7 +205,7 @@ def recent_source(photo) -> dict:
   `None`»; «`personal` без `uploaded_by` → нейтральная подпись»; «`press` +
   уточнение → подпись и уточнение, `holder` пуст».
 
-### 4. [ ] Форма и `initial`
+### 4. [x] Форма и `initial`
 
 - Навыки: koda-coder.
 - Файлы: `apps/photos/forms.py`, `apps/photos/services.py`,
@@ -229,7 +229,7 @@ def recent_source(photo) -> dict:
   того же автора»; «подсказка не подставляется, если поле уже заполнено»;
   «подсказка модератору не берётся из его собственных фото» (автор чужой).
 
-### 5. [ ] Вывод на страницах
+### 5. [x] Вывод на страницах
 
 - Навыки: koda-coder.
 - Файлы: `templates/photos/photo_detail.html`,
@@ -250,7 +250,7 @@ def recent_source(photo) -> dict:
   упрощённый»; «при пустом источнике блока нет вовсе»; «уточнение выводится,
   если заполнено»; «на странице правки видны оба поля».
 
-### 6. [ ] Админка и слияние
+### 6. [x] Админка и слияние
 
 - Навыки: koda-coder.
 - Файлы: `apps/photos/admin.py`, `apps/photos/models.py`,
@@ -264,7 +264,7 @@ def recent_source(photo) -> dict:
 - Критерий: тесты — «поля есть в админке фото»; «слияние переносит `source_origin`
   и `source_note` в пустого канона»; «заполненный канон не перетирается».
 
-### 7. [ ] Тесты подэтапа (сводка)
+### 7. [x] Тесты подэтапа (сводка)
 
 - Навыки: koda-coder.
 - Файлы: `tests/test_photo_source.py`, `tests/test_photo_upload.py`,
@@ -279,7 +279,7 @@ def recent_source(photo) -> dict:
     и его отсутствие, слияние, админка.
 - Критерий: `make test` зелёный, число тестов выросло.
 
-### 8. [ ] Локализация
+### 8. [x] Локализация
 
 - Навыки: koda-coder.
 - Файлы: `locale/ru/LC_MESSAGES/django.po`, `locale/en/LC_MESSAGES/django.po`.
@@ -289,7 +289,7 @@ def recent_source(photo) -> dict:
 - Критерий: `fuzzy`-блоков нет, пустых `msgstr` в английском каталоге нет,
   `make lint` чист.
 
-### 9. [ ] Документация, бэклог, версия
+### 9. [x] Документация, бэклог, версия
 
 - Навыки: koda-coder, semver-checker.
 - Файлы: `KODA.md`, `AGENTS.md`, `.koda/backlog.md`,

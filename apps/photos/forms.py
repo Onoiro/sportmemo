@@ -22,7 +22,7 @@ from apps.core.forms import BootstrapFormMixin
 from apps.core.models import Status
 from apps.photos import services
 from apps.photos.exif import extract_exif
-from apps.photos.models import Photo
+from apps.photos.models import Photo, SourceOrigin
 from apps.photos.processing import (
     ALLOWED_UPLOAD_FORMATS,
     MAX_SIDE_PX,
@@ -236,8 +236,10 @@ class PhotoDetailsForm(BootstrapFormMixin, forms.ModelForm):
     формой разошлись бы в правилах доступа. Все поля необязательные —
     черновик нельзя блокировать, человек вернётся и дополнит позже.
 
-    Источник (`Source`) в форму не входит: его заводит модератор, а выбор
-    из списка источников в форме из одного поля стал бы справочником.
+    `Source` — справочник модератора, автор отвечает двумя простыми
+    вопросами: откуда снимок и чем это уточнить. Автоматически `Source`
+    не создаётся никогда: свободный текст остаётся текстом, иначе в базе
+    завелись бы сотни записей «архив Иванова».
 
     Команда и событие вводятся текстом: подсказку даёт нативное `<datalist>`,
     а сервер резолвит введённое в объект. Без JavaScript поле работает как
@@ -261,22 +263,52 @@ class PhotoDetailsForm(BootstrapFormMixin, forms.ModelForm):
         widget=forms.TextInput(attrs={"list": "event-options", "autocomplete": "off"}),
         help_text=_("Начните вводить — появятся события из архива."),
     )
+    source_origin = forms.ChoiceField(
+        label=_("Откуда снимок"),
+        choices=[("", _("не указано")), *SourceOrigin.choices],
+        required=False,
+        help_text=_("Откуда у вас этот снимок. Необязательно."),
+    )
+
+    # Объявленные поля идут первыми, а источник — дополнительный вопрос,
+    # а не главный: порядок задан явно, чтобы он не зависел от того,
+    # где объявлено поле.
+    field_order = [
+        "team_name",
+        "event_name",
+        "title",
+        "caption",
+        "year",
+        "taken_date",
+        "source_origin",
+        "source_note",
+    ]
 
     class Meta:
         model = Photo
         # `team` и `event` сюда не входят: они приходят названием и ставятся
         # в объект в `save()` после резолва.
-        fields = ["title", "caption", "year", "taken_date"]
+        fields = [
+            "title",
+            "caption",
+            "year",
+            "taken_date",
+            "source_origin",
+            "source_note",
+        ]
         labels = {
             "title": _("Заголовок"),
             "caption": _("Подпись"),
             "year": _("Год"),
             "taken_date": _("Дата съёмки"),
+            "source_origin": _("Откуда снимок"),
+            "source_note": _("Уточнение"),
         }
         help_texts = {
             "title": _("Одна строка о снимке. Можно оставить пустым."),
             "caption": _("Кто на фото, что происходит, чем снимок важен."),
             "year": _("Если знаете. Год из файла — только подсказка."),
+            "source_note": _("Например: архив И. Иванова или Советский спорт, 1994."),
         }
         widgets = {
             "caption": forms.Textarea(attrs={"rows": 4}),
