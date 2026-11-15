@@ -226,13 +226,15 @@ constructor". Legal pages and SMTP are stage 5.
 
 ## Current state
 
-- Version: 0.32.0; development branch `master`; 1764 tests passing on Python 3.12
+- Version: 0.33.0; development branch `master`; 1785 tests passing on Python 3.12
   and 3.13 (`make test`); linter clean (`make lint`). Version 0.29.1 fixed
   `collectstatic` (the `sourceMappingURL` lines of the vendor Bootstrap files are gone),
   and 0.29.2 removed the word "archive" from the cabinet: the tabs now read "Published"
   and "Not published". In 0.30.0 the author states where the photo comes from
   (sub-stage 3.8), in 0.31.0 tags people on the photo (sub-stage 3.9), and in 0.32.0
-  a moderator publishes them from the queue (sub-stage 3.10).
+  a moderator publishes them from the queue (sub-stage 3.10). Version 0.33.0
+  (sub-stage 5.1) sets mail up on the real domain, and a report author now gets
+  a letter with the decision text.
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is complete: sub-stages 3.1–3.6
   are done, 3.7 (batch upload) is deferred. Sub-stage 3.1 (processing foundation) — EXIF by
@@ -271,14 +273,17 @@ constructor". Legal pages and SMTP are stage 5.
   in `apps/moderation/reports.py`. Known leftovers that move into stage 5: the account
   deletion policy (P5-12) and the S3 storage decision (R-1, Russian S3 chosen) — P5-13.
   Re-cropping an uploaded photo (P3-18) stays a stage 3 task.
-- Stage 5 is in progress: sub-stage 5.0 (master plan and documentation) is closed, the next
-  one is 5.1 (mail and domain). The master plan
+- Stage 5 is in progress: sub-stages 5.0 (master plan and documentation) and 5.1
+  (mail and domain) are closed, the next one is 5.2 (storage). The master plan
   [`plans/mobile-legal-deploy.md`](.koda/plans/mobile-legal-deploy.md) records the owner's
   decisions of 2026-11-02: mail is VK WorkSpace for receiving and Yandex Cloud Postbox for
   sending, `From: info@sportmemo.ru`, production stays on the current VPS (port 8005),
   staging is a second VPS in the Netherlands with synthetic data only, S3 is Yandex Object
   Storage, watermarks and the download log (P5-4) are cancelled, and legal texts are
-  Russian only.
+  Russian only. Sub-stage 5.1: mail leaves from `SportMemo <info@sportmemo.ru>` through
+  Postbox, incoming mail arrives in VK WorkSpace, a report author gets a letter with the
+  decision text, `manage.py mail_check` checks mail with one command, and report decisions
+  in the admin go through the service.
 
 ### Public UI
 
@@ -669,6 +674,32 @@ with ready fields, and targets are loaded in batches by `content_type_id`, so
 the query count does not grow with the page. There is one POST address with an
 `action` field (`take` / `resolve` / `reject`): a report decision is one event
 with three outcomes.
+
+**Mail (5.1).** Receiving and sending are split: VK WorkSpace takes incoming
+mail (MX on `emx.mail.ru`, mailbox `info@sportmemo.ru`), Yandex Cloud Postbox
+sends it (`postbox.cloud.yandex.net:465`, `EMAIL_USE_SSL=True`). Postbox takes
+no incoming mail at all — its instructions have no MX records. So
+`DEFAULT_FROM_EMAIL` and the reply address are the same: `SportMemo
+<info@sportmemo.ru>`; the `noreply@` mailbox does not exist, and a reply to any
+letter reaches a live mailbox. **A report author learns the decision by
+letter:** `notify_reporter_decision()` (`apps/moderation/emails.py`) takes the
+decision text and the object title, `enqueue_report_decision_email()` queues the
+task, and the call from `resolve_report` / `reject_report` goes through
+`transaction.on_commit` — `report_decide` holds `select_for_update`, and an SMTP
+connection must not hold the row lock. An anonymous report and an inactive
+account get no letter: after anonymisation (5.6) the address becomes
+`deleted-…@invalid`. **A line for anonymous users** sits on the report form and
+in the message after sending: they can only be answered at
+`settings.SPORTMEMO_CONTACT_EMAIL` (`CONTACT_EMAIL` in env). **Mail check is
+`manage.py mail_check`:** it prints the settings (the password is never printed)
+and sends a test letter to a given address; an error becomes `CommandError`, not
+a traceback. **A live send in dev needs an explicit `EMAIL_BACKEND`:** with
+`DEBUG=True` the default backend is console, so `mail_check` prints console and
+the letter goes to the terminal. The line
+`EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend` in `.env` turns on
+real SMTP; staging and production do not need it — with `DEBUG=False` SMTP is
+chosen automatically. The DNS zone and its gotchas are in the README section
+"Mail and domain".
 
 ### Code rules
 
@@ -1156,4 +1187,43 @@ with three outcomes.
   neighbouring project on another port erases our session — it does not find the key in its own
   database and clears the cookie (`Max-Age=0`). On the server the name stays default: the site is
   alone there, and renaming would sign everyone out. Both values can be overridden by env.
+- **Two rules for mail errors stand next to each other and differ on purpose.**
+  `send_user_email()` (`apps/core/emails.py`) **does not swallow** an error: a letter to a person
+  is the only channel that tells them the decision, and losing it silently is worse than sending
+  it twice; the Celery task retries. `notify_moderators()` in the same module **swallows** the
+  error and returns 0: a mail failure must not cancel a user action — the object is already
+  created, and a moderator will see it in the queue. Merging them into one function would lose
+  the difference that explains what happens when SMTP fails.
+- **The letter to the report author is queued only by the service, through
+  `transaction.on_commit` and a background task.** `resolve_report` and `reject_report`
+  (`apps/moderation/services.py`) call `enqueue_report_decision_email()` in `on_commit`:
+  `report_decide` holds `select_for_update` inside `transaction.atomic()`, and an SMTP connection
+  takes seconds — the row lock must not be held that long. `on_commit` gives the reverse too: a
+  rollback leaves no letter about a decision that did not happen. The only queue point is
+  `enqueue_report_decision_email()`: a view that does not decide how to queue the task does not
+  create a second sending path.
+- **The letter goes only to an active user with a non-empty email.** The check
+  `reporter and is_active and email` lives in `notify_reporter_decision()`, not in the task: it is
+  about data, not about the queue. After account anonymisation (5.6) the address becomes
+  `deleted-…@invalid`, and naive code would send into nowhere on every decision; an anonymous
+  report has no address, so 0 is returned.
+- **Report decisions go only through `services.resolve_report` / `reject_report`, the admin
+  included.** The admin action "Decide with text" opens a page with the decision field, and
+  `status`, `resolution`, `resolved_by` and `resolved_at` are read-only in the report form. While
+  the admin changed the status through `queryset.update()`, it skipped the `ModerationAction`
+  log, checked no moderator scope and sent no letter — three defects from one cause.
+- **`DEFAULT_FROM_EMAIL` is `SportMemo <info@sportmemo.ru>`.** The `noreply@` mailbox does not
+  exist, so a reply would bounce. `SERVER_EMAIL` equals the same address; the project has no
+  second one. `SPORTMEMO_CONTACT_EMAIL` comes from `CONTACT_EMAIL` and in 5.5 becomes the
+  `LEGAL_CONTACT_EMAIL` of the personal-data operator — no second setting for the same address.
+- **`EMAIL_HOST_USER` is an API key identifier, not a mailbox address.** `EMAIL_HOST_PASSWORD` is
+  the secret part of the key, not the VK mailbox password. Both mix-ups give
+  `535 Authentication failed` with no hint. Credentials live in `.env` only; `.env.example`, the
+  README and plans carry variable names and where the values come from. `EMAIL_TIMEOUT=10` is set
+  explicitly: without it `smtplib` waits up to the system timeout and holds a worker for minutes.
+- **Exactly one SPF record per domain, and DKIM selector names come from the console.** Two TXT
+  records with `v=spf1` give `PermError` and break SPF for the whole domain: look at the existing
+  record before editing the zone, and add Postbox inside `include:`. DKIM-CNAME names come only
+  from the Postbox console — guessing selectors is pointless; the check is the `Success` status
+  and the headers of a real letter (`spf=pass`, `dkim=pass`, `dmarc=pass`).
 

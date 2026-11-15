@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14 20:29+0300\n"
+"POT-Creation-Date: 2026-11-15 18:56+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -151,9 +151,9 @@ msgstr "Profile updated"
 #: apps/catalog/views.py:524 apps/catalog/views.py:566
 #: apps/catalog/views.py:597 apps/catalog/views.py:661
 #: apps/catalog/views.py:703 apps/catalog/views.py:730 apps/core/views.py:114
-#: apps/core/views.py:144 apps/core/views.py:192 apps/moderation/views.py:126
-#: apps/moderation/views.py:173 apps/moderation/views.py:330
-#: apps/moderation/views.py:459 apps/photos/views.py:171
+#: apps/core/views.py:144 apps/core/views.py:192 apps/moderation/views.py:142
+#: apps/moderation/views.py:189 apps/moderation/views.py:346
+#: apps/moderation/views.py:475 apps/photos/views.py:171
 #: apps/photos/views.py:245 apps/photos/views.py:378 apps/photos/views.py:423
 #: apps/photos/views.py:514 apps/search/views.py:40
 #: templates/partials/footer.html:20
@@ -759,6 +759,7 @@ msgstr "My events"
 
 #: apps/comments/admin.py:40
 #: templates/moderation/email/new_report_notification.txt:5
+#: templates/moderation/email/report_decision.txt:3
 #: templates/moderation/report_form.html:19
 msgid "Объект"
 msgstr "Object"
@@ -939,6 +940,82 @@ msgstr[1] "%(count)d objects merged into “%(target)s”."
 msgid "Слияние дубликатов"
 msgstr "Duplicate merge"
 
+#: apps/core/management/commands/mail_check.py:17
+msgid "Показать настройки почты и отправить тестовое письмо"
+msgstr "Show mail settings and send a test email"
+
+#: apps/core/management/commands/mail_check.py:23
+msgid "Адрес, на который отправить тестовое письмо"
+msgstr "Address to send the test email to"
+
+#: apps/core/management/commands/mail_check.py:34
+msgid "Бэкенд"
+msgstr "Backend"
+
+#: apps/core/management/commands/mail_check.py:35
+msgid "Сервер"
+msgstr "Host"
+
+#: apps/core/management/commands/mail_check.py:36
+msgid "Порт"
+msgstr "Port"
+
+#: apps/core/management/commands/mail_check.py:37
+msgid "SSL"
+msgstr "SSL"
+
+#: apps/core/management/commands/mail_check.py:38
+msgid "Таймаут, с"
+msgstr "Timeout, s"
+
+#: apps/core/management/commands/mail_check.py:39
+msgid "Отправитель"
+msgstr "Sender"
+
+#: apps/core/management/commands/mail_check.py:40
+msgid "Пользователь SMTP"
+msgstr "SMTP user"
+
+#: apps/core/management/commands/mail_check.py:46
+msgid "задан"
+msgstr "set"
+
+#: apps/core/management/commands/mail_check.py:46
+#: apps/core/management/commands/mail_check.py:80
+msgid "не задан"
+msgstr "not set"
+
+#: apps/core/management/commands/mail_check.py:51
+#, python-format
+msgid "Это проверка настроек почты SportMemo. Если письмо дошло, отправка работает.\n\nКонтакт для обращений: %(email)s."
+msgstr "This is a check of the SportMemo mail settings. If you got this email, sending works.\n\nContact address: %(email)s."
+
+#: apps/core/management/commands/mail_check.py:57
+msgid "Проверка почты SportMemo"
+msgstr "SportMemo mail check"
+
+#: apps/core/management/commands/mail_check.py:67
+#, python-format
+msgid "Не удалось отправить письмо: %(error)s"
+msgstr "Could not send the email: %(error)s"
+
+#: apps/core/management/commands/mail_check.py:70
+msgid "Почта не отправила письмо: проверьте настройки"
+msgstr "The mail backend did not send the email: check the settings"
+
+#: apps/core/management/commands/mail_check.py:72
+#, python-format
+msgid "Письмо отправлено на %(email)s"
+msgstr "Email sent to %(email)s"
+
+#: apps/core/management/commands/mail_check.py:78
+msgid "да"
+msgstr "yes"
+
+#: apps/core/management/commands/mail_check.py:78
+msgid "нет"
+msgstr "no"
+
 #: apps/core/models.py:16
 msgid "создано"
 msgstr "created"
@@ -1045,28 +1122,43 @@ msgstr "%(year)s"
 msgid "Фотографии %(year)s года в архиве SportMemo."
 msgstr "Photos from %(year)s in the SportMemo archive."
 
-#: apps/moderation/admin.py:38
-msgid "Отметить решёнными"
-msgstr "Mark as resolved"
+#: apps/moderation/admin.py:47 apps/moderation/admin.py:157
+#: templates/admin/moderation/report_decide.html:9
+#: templates/admin/moderation/report_decide.html:14
+#: templates/moderation/partials/report_resolution_form.html:17
+msgid "Решить с текстом"
+msgstr "Resolve with a text"
 
-#: apps/moderation/admin.py:45
+#: apps/moderation/admin.py:117
 #, python-format
-msgid "Решено жалоб: %(count)d"
-msgstr "Reports resolved: %(count)d"
+msgid "%(count)d жалоба разобрана."
+msgid_plural "%(count)d жалоб разобрано."
+msgstr[0] "%(count)d report resolved."
+msgstr[1] "%(count)d reports resolved."
 
-#: apps/moderation/admin.py:47
-msgid "Отклонить жалобы"
-msgstr "Reject reports"
-
-#: apps/moderation/admin.py:54
+#: apps/moderation/admin.py:128
 #, python-format
-msgid "Отклонено жалоб: %(count)d"
-msgstr "Reports rejected: %(count)d"
+msgid "%(count)d жалоба уже была разобрана."
+msgid_plural "%(count)d жалоб уже были разобраны."
+msgstr[0] "%(count)d report was already resolved."
+msgstr[1] "%(count)d reports were already resolved."
 
-#: apps/moderation/emails.py:40
+#: apps/moderation/admin.py:139
+#, python-format
+msgid "%(count)d жалоба пропущена: нет области модерации."
+msgid_plural "%(count)d жалоб пропущено: нет области модерации."
+msgstr[0] "%(count)d report skipped: not in your moderation scope."
+msgstr[1] "%(count)d reports skipped: not in your moderation scope."
+
+#: apps/moderation/emails.py:44
 #, python-format
 msgid "Жалоба на объект: %(reason)s"
 msgstr "Report about an object: %(reason)s"
+
+#: apps/moderation/emails.py:80
+#, python-format
+msgid "Решение по вашей жалобе: %(reason)s"
+msgstr "Decision on your report: %(reason)s"
 
 #: apps/moderation/forms.py:23
 msgid "Причина отклонения"
@@ -1076,7 +1168,7 @@ msgstr "Rejection reason"
 msgid "Опишите причину: автор её увидит."
 msgstr "Describe the reason: the author will see it."
 
-#: apps/moderation/forms.py:56
+#: apps/moderation/forms.py:56 templates/moderation/email/report_decision.txt:4
 msgid "Решение"
 msgstr "Decision"
 
@@ -1246,88 +1338,93 @@ msgstr "object deleted"
 msgid "анонимно"
 msgstr "anonymous"
 
-#: apps/moderation/views.py:84 apps/moderation/views.py:103
+#: apps/moderation/views.py:85 apps/moderation/views.py:104
 msgid "Спасибо! Модератор проверит."
 msgstr "Thank you! A moderator will check it."
 
-#: apps/moderation/views.py:89
+#: apps/moderation/views.py:90
 msgid "Жалоба на этот объект уже отправлена."
 msgstr "A report about this object has already been sent."
 
-#: apps/moderation/views.py:121 apps/moderation/views.py:128
+#: apps/moderation/views.py:112
+#, python-format
+msgid "Если жалоба о приватности или правах, ответить вам мы сможем только по адресу %(email)s."
+msgstr "If the report is about privacy or rights, we can answer you only at %(email)s."
+
+#: apps/moderation/views.py:137 apps/moderation/views.py:144
 #: templates/moderation/report_form.html:11
 #: templates/partials/report_link.html:15
 msgid "Сообщить об ошибке"
 msgstr "Report an error"
 
-#: apps/moderation/views.py:168 apps/moderation/views.py:174
+#: apps/moderation/views.py:184 apps/moderation/views.py:190
 #: templates/moderation/queue.html:11
 msgid "Очередь черновиков"
 msgstr "Draft queue"
 
-#: apps/moderation/views.py:249 apps/moderation/views.py:290
-#: apps/moderation/views.py:395 apps/moderation/views.py:417
-#: apps/moderation/views.py:536 apps/moderation/views.py:556
+#: apps/moderation/views.py:265 apps/moderation/views.py:306
+#: apps/moderation/views.py:411 apps/moderation/views.py:433
+#: apps/moderation/views.py:552 apps/moderation/views.py:572
 msgid "Уже обработано"
 msgstr "Already handled"
 
-#: apps/moderation/views.py:255
+#: apps/moderation/views.py:271
 #, python-format
 msgid "%(kind)s: опубликовано."
 msgstr "%(kind)s: published."
 
-#: apps/moderation/views.py:264
+#: apps/moderation/views.py:280
 #, python-format
 msgid "Людей опубликовано: %(count)s."
 msgstr "People published: %(count)s."
 
-#: apps/moderation/views.py:270
+#: apps/moderation/views.py:286
 #, python-format
 msgid "Своих людей публикует другой модератор: %(count)s."
 msgstr "Another moderator publishes your own people: %(count)s."
 
-#: apps/moderation/views.py:281
+#: apps/moderation/views.py:297
 #, python-format
 msgid "%(kind)s: отклонено, автор увидит причину."
 msgstr "%(kind)s: rejected, the author will see the reason."
 
-#: apps/moderation/views.py:285 apps/moderation/views.py:412
-#: apps/moderation/views.py:558
+#: apps/moderation/views.py:301 apps/moderation/views.py:428
+#: apps/moderation/views.py:574
 msgid "Неизвестное действие"
 msgstr "Unknown action"
 
-#: apps/moderation/views.py:325 apps/moderation/views.py:331
+#: apps/moderation/views.py:341 apps/moderation/views.py:347
 #: apps/search/services.py:115 templates/moderation/people.html:11
 #: templates/partials/navbar.html:84
 msgid "Люди"
 msgstr "People"
 
-#: apps/moderation/views.py:401
+#: apps/moderation/views.py:417
 msgid "Человек опубликован."
 msgstr "The person is published."
 
-#: apps/moderation/views.py:410
+#: apps/moderation/views.py:426
 msgid "Человек отклонён, автор увидит причину."
 msgstr "The person is rejected, the author will see the reason."
 
-#: apps/moderation/views.py:454 apps/moderation/views.py:460
+#: apps/moderation/views.py:470 apps/moderation/views.py:476
 #: templates/moderation/report_list.html:11 templates/partials/navbar.html:90
 msgid "Жалобы"
 msgstr "Reports"
 
-#: apps/moderation/views.py:542
+#: apps/moderation/views.py:558
 msgid "Жалоба взята в работу"
 msgstr "The report is taken in work"
 
-#: apps/moderation/views.py:543
+#: apps/moderation/views.py:559
 msgid "Жалоба уже в работе"
 msgstr "The report is already in work"
 
-#: apps/moderation/views.py:552
+#: apps/moderation/views.py:568
 msgid "Жалоба решена"
 msgstr "Report resolved"
 
-#: apps/moderation/views.py:555
+#: apps/moderation/views.py:571
 msgid "Жалоба отклонена"
 msgstr "Report rejected"
 
@@ -2240,6 +2337,7 @@ msgstr "Save password"
 #: templates/account/password_reset_from_key.html:34
 #: templates/admin/core/merge_form.html:47
 #: templates/admin/moderation/reject_form.html:47
+#: templates/admin/moderation/report_decide.html:52
 #: templates/catalog/event_form.html:101 templates/catalog/team_form.html:102
 #: templates/moderation/report_form.html:58
 #: templates/photos/person_form.html:101
@@ -2354,6 +2452,7 @@ msgstr "Change email address"
 
 #: templates/admin/core/merge_form.html:6
 #: templates/admin/moderation/reject_form.html:6
+#: templates/admin/moderation/report_decide.html:6
 #: templates/admin/photos/photo/similar.html:6
 msgid "Home"
 msgstr "Home"
@@ -2374,6 +2473,7 @@ msgstr "Objects to merge"
 
 #: templates/admin/core/merge_form.html:25
 #: templates/admin/moderation/reject_form.html:25
+#: templates/admin/moderation/report_decide.html:25
 msgid "Ничего не выбрано"
 msgstr "Nothing selected"
 
@@ -2410,6 +2510,25 @@ msgstr "Selected objects"
 #: templates/moderation/partials/reject_form.html:36
 msgid "Отклонить"
 msgstr "Reject"
+
+#: templates/admin/moderation/report_decide.html:17
+#, python-format
+msgid "Жалоб к разбору: %(count)s. Текст решения уйдёт заявителю, поэтому напишите его так, чтобы можно было прочитать без пояснений."
+msgstr "Reports to decide: %(count)s. The decision text goes to the reporter, so write it so that it can be read without extra explanations."
+
+#: templates/admin/moderation/report_decide.html:20
+msgid "Выбранные жалобы"
+msgstr "Selected reports"
+
+#: templates/admin/moderation/report_decide.html:47
+#: templates/moderation/partials/report_resolution_form.html:35
+msgid "Решена"
+msgstr "Resolved"
+
+#: templates/admin/moderation/report_decide.html:50
+#: templates/moderation/partials/report_resolution_form.html:39
+msgid "Отклонена"
+msgstr "Rejected"
 
 #: templates/admin/photos/photo/similar.html:18
 msgid "Сравнение по перцептивному хешу. Совпадение — подсказка, решать вам."
@@ -3080,6 +3199,14 @@ msgstr "Handle the report"
 msgid "Жалоба ждёт решения модератора."
 msgstr "The report is waiting for a moderator."
 
+#: templates/moderation/email/report_decision.txt:1
+msgid "Решение по вашей жалобе"
+msgstr "Decision on your report"
+
+#: templates/moderation/email/report_decision.txt:6
+msgid "Если остались вопросы, напишите на"
+msgstr "If you have questions, write to"
+
 #: templates/moderation/partials/person_card.html:64
 #: templates/moderation/partials/queue_card.html:61
 msgid "Опубликовать"
@@ -3096,17 +3223,9 @@ msgstr[1] "Publish the people in the photo (%(n)s)"
 msgid "Взять в работу"
 msgstr "Take in work"
 
-#: templates/moderation/partials/report_resolution_form.html:17
-msgid "Решить с текстом"
-msgstr "Resolve with a text"
-
-#: templates/moderation/partials/report_resolution_form.html:32
-msgid "Решена"
-msgstr "Resolved"
-
-#: templates/moderation/partials/report_resolution_form.html:36
-msgid "Отклонена"
-msgstr "Rejected"
+#: templates/moderation/partials/report_resolution_form.html:30
+msgid "Текст решения уйдёт заявителю. Напишите так, чтобы его можно было прочитать без пояснений."
+msgstr "The decision text goes to the reporter. Write it so that it can be read without extra explanations."
 
 #: templates/moderation/people.html:13
 msgid "Черновики людей: очередь общая, человек не привязан к виду спорта"
@@ -3155,6 +3274,10 @@ msgid ""
 msgstr ""
 "A report does not need registration. If you are logged in, the moderator "
 "will see who sent it."
+
+#: templates/moderation/report_form.html:63
+msgid "Если вы не вошли, ответить вам мы не сможем — напишите на"
+msgstr "If you are not signed in, we cannot answer you — write to"
 
 #: templates/moderation/report_list.html:13
 msgid "Открытые жалобы ваших видов спорта: свежие сверху"
@@ -3500,6 +3623,16 @@ msgstr "Showing the first %(shown)s of %(total)s"
 #: templates/search/partials/suggestions.html:12
 msgid "Возможно, вы искали"
 msgstr "Did you mean"
+
+#~ msgid "Отметить решёнными"
+#~ msgstr "Mark as resolved"
+
+#~ msgid "Отклонить жалобы"
+#~ msgstr "Reject reports"
+
+#, python-format
+#~ msgid "Отклонено жалоб: %(count)d"
+#~ msgstr "Reports rejected: %(count)d"
 
 #~ msgid "В архиве"
 #~ msgstr "In the archive"

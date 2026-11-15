@@ -183,6 +183,43 @@
 `templates/moderation/report_add.html`, `locale/ru`, `locale/en`,
 `tests/test_report_email.py`. Semver: **minor**.
 
+**Сделано (2026-11-15, 0.33.0, 1785 тестов).** План подэтапа —
+[`mobile-legal-deploy-5.1-email-domain.md`](mobile-legal-deploy-5.1-email-domain.md),
+все шаги закрыты.
+
+- Почта: приём — VK WorkSpace (MX `10 emx.mail.ru.`), отправка — Yandex Cloud
+  Postbox (`postbox.cloud.yandex.net:465`, `EMAIL_USE_SSL=True`, AUTH по API-ключу
+  сервисного аккаунта `postbox-user`). `DEFAULT_FROM_EMAIL` и `SERVER_EMAIL` —
+  `SportMemo <info@sportmemo.ru>`; `EMAIL_TIMEOUT=10`; `SPORTMEMO_CONTACT_EMAIL`
+  берётся из `CONTACT_EMAIL`. Зона: одна SPF (внутри неё оба `include:`),
+  DMARC `p=none`, DKIM VK на `mailru._domainkey`.
+- Письмо заявителю: `notify_reporter_decision()` в `apps/moderation/emails.py`,
+  задача `send_report_decision_email_task` (3 попытки, дальше лог),
+  `enqueue_report_decision_email()` как единственная точка постановки, вызов
+  из `resolve_report` / `reject_report` через `transaction.on_commit`.
+- Админка: два пакетных действия заменены одним «Решить с текстом»
+  (страница `decide_view`), `status`, `resolution`, `resolved_by`, `resolved_at`
+  стали только для чтения.
+- Интерфейс: предупреждение рядом с полем решения, строка анонимам с адресом
+  `info@sportmemo.ru` на форме жалобы и в сообщении после отправки.
+- Проверка: `manage.py mail_check` печатает настройки без пароля и по адресу
+  отправляет тестовое письмо; ошибка даёт `CommandError`. В dev живая отправка
+  требует явного `EMAIL_BACKEND` (при `DEBUG=True` по умолчанию console) —
+  правило записано в `.env.example`, README и `KODA.md` / `AGENTS.md`.
+- Документация: README, раздел «Почта и домен» (схема двух сервисов, таблица
+  записей зоны с проверкой через `dig`, го́тчи SPF/DKIM/R01, что чем является
+  в env); `KODA.md` и `AGENTS.md` получили правила почты.
+
+**Живая отправка проверена 2026-11-15.** Письмо ушло через реальный Postbox,
+пришло во «Входящие» (не в спам), заголовки: `spf=pass`, `dkim=pass
+header.i=@sportmemo.ru`, `From: SportMemo <info@sportmemo.ru>`. Ответ на письмо
+дошёл до `info@sportmemo.ru` в VK WorkSpace — схема «`From` = `Reply-To` =
+`info@`» работает. Срок действия API-ключа — бессрочный (в консоли прочерк),
+напоминание не нужно. Замеры записаны в раздел 9 плана подэтапа. Открытым
+остаётся только `dmarc=pass` отдельной строкой: `mxfront` пишет итог SPF и DKIM,
+а при `p=none` и проходящих SPF+DKIM DMARC выводится из них; явная проверка —
+на стейдже (5.3), блокером не является.
+
 ### 5.2 Хранилище: приватные оригиналы, публичные производные
 
 **Цель.** Превью имеют стабильный адрес и кешируются; оригинал не отдаётся никому.

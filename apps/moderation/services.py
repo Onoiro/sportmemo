@@ -15,6 +15,7 @@
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.utils import timezone
 
 from apps.core.models import Status
@@ -23,6 +24,7 @@ from apps.moderation.models import (
     ModerationActionType,
     ReportStatus,
 )
+from apps.moderation.tasks import enqueue_report_decision_email
 
 
 def log_action(obj, moderator, action, reason=""):
@@ -198,6 +200,10 @@ def resolve_report(report, user, resolution) -> bool:
         ]
     )
     log_action(report, user, ModerationActionType.REPORT_RESOLVED, resolution)
+    # Письмо ставится после коммита: `report_decide` держит
+    # `select_for_update`, а SMTP-соединение занимает секунды. Откат
+    # транзакции не должен оставить письмо о решении, которого нет.
+    transaction.on_commit(lambda: enqueue_report_decision_email(report))
     return True
 
 
@@ -222,4 +228,7 @@ def reject_report(report, user, resolution) -> bool:
         ]
     )
     log_action(report, user, ModerationActionType.REPORT_REJECTED, resolution)
+    # Отклонение жалобы — тоже решение: заявитель должен узнать причину,
+    # поэтому письмо ставится здесь так же, как у `resolve_report`.
+    transaction.on_commit(lambda: enqueue_report_decision_email(report))
     return True

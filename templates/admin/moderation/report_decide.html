@@ -1,0 +1,56 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate "Home" %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="../">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; {% translate "Решить с текстом" %}
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>{% translate "Решить с текстом" %}</h1>
+
+<p>
+    {% blocktranslate with count=reports|length %}Жалоб к разбору: {{ count }}. Текст решения уйдёт заявителю, поэтому напишите его так, чтобы можно было прочитать без пояснений.{% endblocktranslate %}
+</p>
+
+<h2>{% translate "Выбранные жалобы" %}</h2>
+<ul>
+    {% for report in reports %}
+    <li>{{ report }} <span class="help">(#{{ report.pk }})</span></li>
+    {% empty %}
+    <li>{% translate "Ничего не выбрано" %}</li>
+    {% endfor %}
+</ul>
+
+{% if reports %}
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="ids" value="{{ ids }}">
+
+    <fieldset class="module aligned">
+        {% for field in form %}
+        <div class="form-row">
+            {{ field.errors }}
+            <label for="{{ field.id_for_label }}"{% if field.field.required %} class="required"{% endif %}>{{ field.label }}:</label>
+            {{ field }}
+            {% if field.help_text %}<p class="help">{{ field.help_text }}</p>{% endif %}
+        </div>
+        {% endfor %}
+    </fieldset>
+
+    <div class="submit-row">
+        <button type="submit" name="action" value="resolve" class="default">
+            {% translate "Решена" %}
+        </button>
+        <button type="submit" name="action" value="reject" class="button">
+            {% translate "Отклонена" %}
+        </button>
+        <a href="../" class="button cancel-link">{% translate "Отмена" %}</a>
+    </div>
+</form>
+{% endif %}
+{% endblock %}

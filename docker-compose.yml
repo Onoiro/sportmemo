@@ -83,7 +83,12 @@ services:
       EMAIL_PORT: ${EMAIL_PORT:-465}
       EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
       EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
-      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-noreply@sportmemo.ru}
+      # Без явной передачи работает только дефолт из settings.py, и смена
+      # порта на 587 в .env дала бы молчаливый сбой: SSL и TLS несовместимы.
+      EMAIL_USE_SSL: ${EMAIL_USE_SSL:-True}
+      EMAIL_TIMEOUT: ${EMAIL_TIMEOUT:-10}
+      DEFAULT_FROM_EMAIL: "${DEFAULT_FROM_EMAIL:-SportMemo <info@sportmemo.ru>}"
+      CONTACT_EMAIL: ${CONTACT_EMAIL:-info@sportmemo.ru}
     ports:
       - "8000:8000"
     volumes:

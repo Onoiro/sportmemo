@@ -274,8 +274,17 @@ EMAIL_PORT = env.int("EMAIL_PORT", default=465)
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_SSL = env("EMAIL_USE_SSL")
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@sportmemo.ru")
+# Без таймаута smtplib ждёт соединения до системного предела (минуты).
+# Недоступный Postbox держал бы воркер gunicorn и задачу Celery, а на проде
+# это кончилось бы 504 у человека.
+EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", default=10)
+# Отображаемое имя, а не голый адрес: в списке писем человек видит
+# отправителя. Ящика noreply@ не существует, ответы идут в info@.
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="SportMemo <info@sportmemo.ru>")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
+# Контакт для обращений. В 5.5 из этой же переменной возьмётся
+# LEGAL_CONTACT_EMAIL оператора ПДн: второй адрес не заводим.
+SPORTMEMO_CONTACT_EMAIL = env("CONTACT_EMAIL", default="info@sportmemo.ru")
 
 # --- Celery ---
 CELERY_BROKER_URL = env("REDIS_URL", default="redis://localhost:6379/0")

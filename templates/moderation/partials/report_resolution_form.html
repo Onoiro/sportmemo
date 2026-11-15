@@ -26,6 +26,9 @@
         <textarea class="form-control reports-resolve__field"
                   id="resolution-{{ card.report_id }}"
                   name="resolution" rows="3" required></textarea>
+        <div class="form-text">
+            {% trans "Текст решения уйдёт заявителю. Напишите так, чтобы его можно было прочитать без пояснений." %}
+        </div>
         <div class="reports-resolve__actions">
             <button class="btn btn-success btn-sm" type="submit"
                     name="action" value="resolve">

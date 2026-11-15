@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14 20:29+0300\n"
+"POT-Creation-Date: 2026-11-15 18:56+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -153,9 +153,9 @@ msgstr "Профиль обновлён"
 #: apps/catalog/views.py:524 apps/catalog/views.py:566
 #: apps/catalog/views.py:597 apps/catalog/views.py:661
 #: apps/catalog/views.py:703 apps/catalog/views.py:730 apps/core/views.py:114
-#: apps/core/views.py:144 apps/core/views.py:192 apps/moderation/views.py:126
-#: apps/moderation/views.py:173 apps/moderation/views.py:330
-#: apps/moderation/views.py:459 apps/photos/views.py:171
+#: apps/core/views.py:144 apps/core/views.py:192 apps/moderation/views.py:142
+#: apps/moderation/views.py:189 apps/moderation/views.py:346
+#: apps/moderation/views.py:475 apps/photos/views.py:171
 #: apps/photos/views.py:245 apps/photos/views.py:378 apps/photos/views.py:423
 #: apps/photos/views.py:514 apps/search/views.py:40
 #: templates/partials/footer.html:20
@@ -761,6 +761,7 @@ msgstr "Мои события"
 
 #: apps/comments/admin.py:40
 #: templates/moderation/email/new_report_notification.txt:5
+#: templates/moderation/email/report_decision.txt:3
 #: templates/moderation/report_form.html:19
 msgid "Объект"
 msgstr "Объект"
@@ -953,6 +954,82 @@ msgstr[3] "%(count)d объектов слито в «%(target)s»."
 msgid "Слияние дубликатов"
 msgstr "Слияние дубликатов"
 
+#: apps/core/management/commands/mail_check.py:17
+msgid "Показать настройки почты и отправить тестовое письмо"
+msgstr "Показать настройки почты и отправить тестовое письмо"
+
+#: apps/core/management/commands/mail_check.py:23
+msgid "Адрес, на который отправить тестовое письмо"
+msgstr "Адрес, на который отправить тестовое письмо"
+
+#: apps/core/management/commands/mail_check.py:34
+msgid "Бэкенд"
+msgstr "Бэкенд"
+
+#: apps/core/management/commands/mail_check.py:35
+msgid "Сервер"
+msgstr "Сервер"
+
+#: apps/core/management/commands/mail_check.py:36
+msgid "Порт"
+msgstr "Порт"
+
+#: apps/core/management/commands/mail_check.py:37
+msgid "SSL"
+msgstr "SSL"
+
+#: apps/core/management/commands/mail_check.py:38
+msgid "Таймаут, с"
+msgstr "Таймаут, с"
+
+#: apps/core/management/commands/mail_check.py:39
+msgid "Отправитель"
+msgstr "Отправитель"
+
+#: apps/core/management/commands/mail_check.py:40
+msgid "Пользователь SMTP"
+msgstr "Пользователь SMTP"
+
+#: apps/core/management/commands/mail_check.py:46
+msgid "задан"
+msgstr "задан"
+
+#: apps/core/management/commands/mail_check.py:46
+#: apps/core/management/commands/mail_check.py:80
+msgid "не задан"
+msgstr "не задан"
+
+#: apps/core/management/commands/mail_check.py:51
+#, python-format
+msgid "Это проверка настроек почты SportMemo. Если письмо дошло, отправка работает.\n\nКонтакт для обращений: %(email)s."
+msgstr "Это проверка настроек почты SportMemo. Если письмо дошло, отправка работает.\n\nКонтакт для обращений: %(email)s."
+
+#: apps/core/management/commands/mail_check.py:57
+msgid "Проверка почты SportMemo"
+msgstr "Проверка почты SportMemo"
+
+#: apps/core/management/commands/mail_check.py:67
+#, python-format
+msgid "Не удалось отправить письмо: %(error)s"
+msgstr "Не удалось отправить письмо: %(error)s"
+
+#: apps/core/management/commands/mail_check.py:70
+msgid "Почта не отправила письмо: проверьте настройки"
+msgstr "Почта не отправила письмо: проверьте настройки"
+
+#: apps/core/management/commands/mail_check.py:72
+#, python-format
+msgid "Письмо отправлено на %(email)s"
+msgstr "Письмо отправлено на %(email)s"
+
+#: apps/core/management/commands/mail_check.py:78
+msgid "да"
+msgstr "да"
+
+#: apps/core/management/commands/mail_check.py:78
+msgid "нет"
+msgstr "нет"
+
 #: apps/core/models.py:16
 msgid "создано"
 msgstr "создано"
@@ -1059,28 +1136,49 @@ msgstr "%(year)s год"
 msgid "Фотографии %(year)s года в архиве SportMemo."
 msgstr "Фотографии %(year)s года в архиве SportMemo."
 
-#: apps/moderation/admin.py:38
-msgid "Отметить решёнными"
-msgstr "Отметить решёнными"
+#: apps/moderation/admin.py:47 apps/moderation/admin.py:157
+#: templates/admin/moderation/report_decide.html:9
+#: templates/admin/moderation/report_decide.html:14
+#: templates/moderation/partials/report_resolution_form.html:17
+msgid "Решить с текстом"
+msgstr "Решить с текстом"
 
-#: apps/moderation/admin.py:45
+#: apps/moderation/admin.py:117
 #, python-format
-msgid "Решено жалоб: %(count)d"
-msgstr "Решено жалоб: %(count)d"
+msgid "%(count)d жалоба разобрана."
+msgid_plural "%(count)d жалоб разобрано."
+msgstr[0] "%(count)d жалоба разобрана."
+msgstr[1] "%(count)d жалобы разобраны."
+msgstr[2] "%(count)d жалоб разобрано."
+msgstr[3] "%(count)d жалоб разобрано."
 
-#: apps/moderation/admin.py:47
-msgid "Отклонить жалобы"
-msgstr "Отклонить жалобы"
-
-#: apps/moderation/admin.py:54
+#: apps/moderation/admin.py:128
 #, python-format
-msgid "Отклонено жалоб: %(count)d"
-msgstr "Отклонено жалоб: %(count)d"
+msgid "%(count)d жалоба уже была разобрана."
+msgid_plural "%(count)d жалоб уже были разобраны."
+msgstr[0] "%(count)d жалоба уже была разобрана."
+msgstr[1] "%(count)d жалобы уже были разобраны."
+msgstr[2] "%(count)d жалоб уже было разобрано."
+msgstr[3] "%(count)d жалоб уже было разобрано."
 
-#: apps/moderation/emails.py:40
+#: apps/moderation/admin.py:139
+#, python-format
+msgid "%(count)d жалоба пропущена: нет области модерации."
+msgid_plural "%(count)d жалоб пропущено: нет области модерации."
+msgstr[0] "%(count)d жалоба пропущена: нет области модерации."
+msgstr[1] "%(count)d жалобы пропущено: нет области модерации."
+msgstr[2] "%(count)d жалоб пропущено: нет области модерации."
+msgstr[3] "%(count)d жалоб пропущено: нет области модерации."
+
+#: apps/moderation/emails.py:44
 #, python-format
 msgid "Жалоба на объект: %(reason)s"
 msgstr "Жалоба на объект: %(reason)s"
+
+#: apps/moderation/emails.py:80
+#, python-format
+msgid "Решение по вашей жалобе: %(reason)s"
+msgstr "Решение по вашей жалобе: %(reason)s"
 
 #: apps/moderation/forms.py:23
 msgid "Причина отклонения"
@@ -1090,7 +1188,7 @@ msgstr "Причина отклонения"
 msgid "Опишите причину: автор её увидит."
 msgstr "Опишите причину: автор её увидит."
 
-#: apps/moderation/forms.py:56
+#: apps/moderation/forms.py:56 templates/moderation/email/report_decision.txt:4
 msgid "Решение"
 msgstr "Решение"
 
@@ -1260,88 +1358,93 @@ msgstr "объект удалён"
 msgid "анонимно"
 msgstr "анонимно"
 
-#: apps/moderation/views.py:84 apps/moderation/views.py:103
+#: apps/moderation/views.py:85 apps/moderation/views.py:104
 msgid "Спасибо! Модератор проверит."
 msgstr "Спасибо! Модератор проверит."
 
-#: apps/moderation/views.py:89
+#: apps/moderation/views.py:90
 msgid "Жалоба на этот объект уже отправлена."
 msgstr "Жалоба на этот объект уже отправлена."
 
-#: apps/moderation/views.py:121 apps/moderation/views.py:128
+#: apps/moderation/views.py:112
+#, python-format
+msgid "Если жалоба о приватности или правах, ответить вам мы сможем только по адресу %(email)s."
+msgstr "Если жалоба о приватности или правах, ответить вам мы сможем только по адресу %(email)s."
+
+#: apps/moderation/views.py:137 apps/moderation/views.py:144
 #: templates/moderation/report_form.html:11
 #: templates/partials/report_link.html:15
 msgid "Сообщить об ошибке"
 msgstr "Сообщить об ошибке"
 
-#: apps/moderation/views.py:168 apps/moderation/views.py:174
+#: apps/moderation/views.py:184 apps/moderation/views.py:190
 #: templates/moderation/queue.html:11
 msgid "Очередь черновиков"
 msgstr "Очередь черновиков"
 
-#: apps/moderation/views.py:249 apps/moderation/views.py:290
-#: apps/moderation/views.py:395 apps/moderation/views.py:417
-#: apps/moderation/views.py:536 apps/moderation/views.py:556
+#: apps/moderation/views.py:265 apps/moderation/views.py:306
+#: apps/moderation/views.py:411 apps/moderation/views.py:433
+#: apps/moderation/views.py:552 apps/moderation/views.py:572
 msgid "Уже обработано"
 msgstr "Уже обработано"
 
-#: apps/moderation/views.py:255
+#: apps/moderation/views.py:271
 #, python-format
 msgid "%(kind)s: опубликовано."
 msgstr "%(kind)s: опубликовано."
 
-#: apps/moderation/views.py:264
+#: apps/moderation/views.py:280
 #, python-format
 msgid "Людей опубликовано: %(count)s."
 msgstr "Людей опубликовано: %(count)s."
 
-#: apps/moderation/views.py:270
+#: apps/moderation/views.py:286
 #, python-format
 msgid "Своих людей публикует другой модератор: %(count)s."
 msgstr "Своих людей публикует другой модератор: %(count)s."
 
-#: apps/moderation/views.py:281
+#: apps/moderation/views.py:297
 #, python-format
 msgid "%(kind)s: отклонено, автор увидит причину."
 msgstr "%(kind)s: отклонено, автор увидит причину."
 
-#: apps/moderation/views.py:285 apps/moderation/views.py:412
-#: apps/moderation/views.py:558
+#: apps/moderation/views.py:301 apps/moderation/views.py:428
+#: apps/moderation/views.py:574
 msgid "Неизвестное действие"
 msgstr "Неизвестное действие"
 
-#: apps/moderation/views.py:325 apps/moderation/views.py:331
+#: apps/moderation/views.py:341 apps/moderation/views.py:347
 #: apps/search/services.py:115 templates/moderation/people.html:11
 #: templates/partials/navbar.html:84
 msgid "Люди"
 msgstr "Люди"
 
-#: apps/moderation/views.py:401
+#: apps/moderation/views.py:417
 msgid "Человек опубликован."
 msgstr "Человек опубликован."
 
-#: apps/moderation/views.py:410
+#: apps/moderation/views.py:426
 msgid "Человек отклонён, автор увидит причину."
 msgstr "Человек отклонён, автор увидит причину."
 
-#: apps/moderation/views.py:454 apps/moderation/views.py:460
+#: apps/moderation/views.py:470 apps/moderation/views.py:476
 #: templates/moderation/report_list.html:11 templates/partials/navbar.html:90
 msgid "Жалобы"
 msgstr "Жалобы"
 
-#: apps/moderation/views.py:542
+#: apps/moderation/views.py:558
 msgid "Жалоба взята в работу"
 msgstr "Жалоба взята в работу"
 
-#: apps/moderation/views.py:543
+#: apps/moderation/views.py:559
 msgid "Жалоба уже в работе"
 msgstr "Жалоба уже в работе"
 
-#: apps/moderation/views.py:552
+#: apps/moderation/views.py:568
 msgid "Жалоба решена"
 msgstr "Жалоба решена"
 
-#: apps/moderation/views.py:555
+#: apps/moderation/views.py:571
 msgid "Жалоба отклонена"
 msgstr "Жалоба отклонена"
 
@@ -2252,6 +2355,7 @@ msgstr "Сохранить пароль"
 #: templates/account/password_reset_from_key.html:34
 #: templates/admin/core/merge_form.html:47
 #: templates/admin/moderation/reject_form.html:47
+#: templates/admin/moderation/report_decide.html:52
 #: templates/catalog/event_form.html:101 templates/catalog/team_form.html:102
 #: templates/moderation/report_form.html:58
 #: templates/photos/person_form.html:101
@@ -2367,6 +2471,7 @@ msgstr "Изменить адрес почты"
 
 #: templates/admin/core/merge_form.html:6
 #: templates/admin/moderation/reject_form.html:6
+#: templates/admin/moderation/report_decide.html:6
 #: templates/admin/photos/photo/similar.html:6
 msgid "Home"
 msgstr "Home"
@@ -2386,6 +2491,7 @@ msgstr "Объекты к слиянию"
 
 #: templates/admin/core/merge_form.html:25
 #: templates/admin/moderation/reject_form.html:25
+#: templates/admin/moderation/report_decide.html:25
 msgid "Ничего не выбрано"
 msgstr "Ничего не выбрано"
 
@@ -2422,6 +2528,25 @@ msgstr "Выбранные объекты"
 #: templates/moderation/partials/reject_form.html:36
 msgid "Отклонить"
 msgstr "Отклонить"
+
+#: templates/admin/moderation/report_decide.html:17
+#, python-format
+msgid "Жалоб к разбору: %(count)s. Текст решения уйдёт заявителю, поэтому напишите его так, чтобы можно было прочитать без пояснений."
+msgstr "Жалоб к разбору: %(count)s. Текст решения уйдёт заявителю, поэтому напишите его так, чтобы можно было прочитать без пояснений."
+
+#: templates/admin/moderation/report_decide.html:20
+msgid "Выбранные жалобы"
+msgstr "Выбранные жалобы"
+
+#: templates/admin/moderation/report_decide.html:47
+#: templates/moderation/partials/report_resolution_form.html:35
+msgid "Решена"
+msgstr "Решена"
+
+#: templates/admin/moderation/report_decide.html:50
+#: templates/moderation/partials/report_resolution_form.html:39
+msgid "Отклонена"
+msgstr "Отклонена"
 
 #: templates/admin/photos/photo/similar.html:18
 msgid "Сравнение по перцептивному хешу. Совпадение — подсказка, решать вам."
@@ -3094,6 +3219,14 @@ msgstr "Разобрать жалобу"
 msgid "Жалоба ждёт решения модератора."
 msgstr "Жалоба ждёт решения модератора."
 
+#: templates/moderation/email/report_decision.txt:1
+msgid "Решение по вашей жалобе"
+msgstr "Решение по вашей жалобе"
+
+#: templates/moderation/email/report_decision.txt:6
+msgid "Если остались вопросы, напишите на"
+msgstr "Если остались вопросы, напишите на"
+
 #: templates/moderation/partials/person_card.html:64
 #: templates/moderation/partials/queue_card.html:61
 msgid "Опубликовать"
@@ -3112,17 +3245,9 @@ msgstr[3] "Опубликовать людей на фото (%(n)s)"
 msgid "Взять в работу"
 msgstr "Взять в работу"
 
-#: templates/moderation/partials/report_resolution_form.html:17
-msgid "Решить с текстом"
-msgstr "Решить с текстом"
-
-#: templates/moderation/partials/report_resolution_form.html:32
-msgid "Решена"
-msgstr "Решена"
-
-#: templates/moderation/partials/report_resolution_form.html:36
-msgid "Отклонена"
-msgstr "Отклонена"
+#: templates/moderation/partials/report_resolution_form.html:30
+msgid "Текст решения уйдёт заявителю. Напишите так, чтобы его можно было прочитать без пояснений."
+msgstr "Текст решения уйдёт заявителю. Напишите так, чтобы его можно было прочитать без пояснений."
 
 #: templates/moderation/people.html:13
 msgid "Черновики людей: очередь общая, человек не привязан к виду спорта"
@@ -3169,6 +3294,10 @@ msgid ""
 "Жалоба не требует регистрации. Если вы вошли, модератор увидит, от кого она."
 msgstr ""
 "Жалоба не требует регистрации. Если вы вошли, модератор увидит, от кого она."
+
+#: templates/moderation/report_form.html:63
+msgid "Если вы не вошли, ответить вам мы не сможем — напишите на"
+msgstr "Если вы не вошли, ответить вам мы не сможем — напишите на"
 
 #: templates/moderation/report_list.html:13
 msgid "Открытые жалобы ваших видов спорта: свежие сверху"
@@ -3520,6 +3649,16 @@ msgstr "Показаны первые %(shown)s из %(total)s"
 #: templates/search/partials/suggestions.html:12
 msgid "Возможно, вы искали"
 msgstr "Возможно, вы искали"
+
+#~ msgid "Отметить решёнными"
+#~ msgstr "Отметить решёнными"
+
+#~ msgid "Отклонить жалобы"
+#~ msgstr "Отклонить жалобы"
+
+#, python-format
+#~ msgid "Отклонено жалоб: %(count)d"
+#~ msgstr "Отклонено жалоб: %(count)d"
 
 #~ msgid "В архиве"
 #~ msgstr "В архиве"

@@ -288,16 +288,20 @@ def send_user_email(subject, template, context, recipient):
 
 ## 5. Шаги
 
-### 1. [ ] Ветка
+### 1. [x] Ветка
 
 1. `git status` — дерево чистое.
 2. `git switch master && git pull --ff-only`.
 3. `git switch -c feature/email-domain`.
 4. Проверка: `git branch --show-current` → `feature/email-domain`.
 
+Сделано 2026-11-15. Ветка `feature/email-domain` создана от `master`
+(`6ea4aee`, два коммита плана поверх `origin/master`). Удалённый `master`
+не впереди локального, обновлять нечего.
+
 Файлы: —
 
-### 2. [ ] Настройки, пример окружения, compose
+### 2. [x] Настройки, пример окружения, compose
 
 1. `config/settings.py`, блок «Почта»: три значения из 2.3
    (`EMAIL_TIMEOUT`, `DEFAULT_FROM_EMAIL`, `SPORTMEMO_CONTACT_EMAIL`).
@@ -342,7 +346,7 @@ def send_user_email(subject, template, context, recipient):
 - `.env.example`
 - `docker-compose.yml`
 
-### 3. [ ] Команда `mail_check`
+### 3. [x] Команда `mail_check`
 
 `apps/core/management/commands/mail_check.py`:
 
@@ -374,7 +378,7 @@ uv run python manage.py mail_check | grep -c "EMAIL_HOST_PASSWORD"  # 0 — па
 Файлы:
 - `apps/core/management/commands/mail_check.py`
 
-### 4. [ ] Хелпер письма человеку
+### 4. [x] Хелпер письма человеку
 
 `apps/core/emails.py` — `send_user_email()` по 2.4. Рядом, в том же модуле,
 остаётся `notify_moderators` без изменений: два разных правила должны стоять
@@ -385,7 +389,7 @@ uv run python manage.py mail_check | grep -c "EMAIL_HOST_PASSWORD"  # 0 — па
 Файлы:
 - `apps/core/emails.py`
 
-### 5. [ ] Письмо заявителю: шаблон и функция
+### 5. [x] Письмо заявителю: шаблон и функция
 
 1. `templates/moderation/email/report_decision.txt` — текст из 2.5:
 
@@ -427,7 +431,7 @@ uv run python manage.py mail_check | grep -c "EMAIL_HOST_PASSWORD"  # 0 — па
 - `apps/moderation/emails.py`
 - `templates/moderation/email/report_decision.txt`
 
-### 6. [ ] Задача Celery и единственная точка постановки
+### 6. [x] Задача Celery и единственная точка постановки
 
 `apps/moderation/tasks.py` — по образцу `apps/photos/tasks.py`: одна точка
 постановки, ретраи, ошибка наружу не выходит.
@@ -468,7 +472,7 @@ SMTP принимается осознанно: два письма лучше, 
 Файлы:
 - `apps/moderation/tasks.py`
 
-### 7. [ ] Сервис: письмо после коммита
+### 7. [x] Сервис: письмо после коммита
 
 `apps/moderation/services.py` — в `resolve_report` и `reject_report` после
 `log_action(...)`:
@@ -491,7 +495,7 @@ transaction.on_commit(
 Файлы:
 - `apps/moderation/services.py`
 
-### 8. [ ] Админка: решение через сервис
+### 8. [x] Админка: решение через сервис
 
 1. `apps/moderation/admin.py`, `ReportAdmin`:
    - `actions = ("action_decide",)`;
@@ -521,7 +525,7 @@ grep -rn "action_resolve\|action_reject_report" apps/ tests/   # пусто
 - `apps/moderation/admin.py`
 - `templates/admin/moderation/report_decide.html`
 
-### 9. [ ] Интерфейс: предупреждение и строка анонимам
+### 9. [x] Интерфейс: предупреждение и строка анонимам
 
 1. `templates/moderation/partials/report_resolution_form.html`: под полем
    решения строка-подсказка `form-text` — «Текст решения уйдёт заявителю.
@@ -550,7 +554,7 @@ grep -n "уйдёт заявителю" templates/moderation/partials/report_res
 - `templates/moderation/report_form.html`
 - `apps/moderation/views.py`
 
-### 10. [ ] Тесты
+### 10. [x] Тесты
 
 `tests/test_report_email.py` (новый) и правка `tests/test_admin.py`.
 Сценарии:
@@ -595,7 +599,7 @@ grep -n "уйдёт заявителю" templates/moderation/partials/report_res
 - `tests/test_report_email.py`
 - `tests/test_admin.py`
 
-### 11. [ ] DNS и README
+### 11. [x] DNS и README
 
 `README.md`, новый раздел «Почта и домен» после «Регистрация и вход»:
 
@@ -618,7 +622,7 @@ grep -n "уйдёт заявителю" templates/moderation/partials/report_res
 Файлы:
 - `README.md`
 
-### 12. [ ] Локализация
+### 12. [x] Локализация
 
 1. `make i18n`.
 2. `locale/ru/LC_MESSAGES/django.po`: снять `fuzzy`, выровнять пустые `msgstr`
@@ -636,7 +640,7 @@ grep -n "уйдёт заявителю" templates/moderation/partials/report_res
 - `locale/ru/LC_MESSAGES/django.po`
 - `locale/en/LC_MESSAGES/django.po`
 
-### 13. [ ] Документация
+### 13. [x] Документация
 
 1. `KODA.md` и `AGENTS.md` (синхронно):
    - «Правила для кода»:
@@ -668,7 +672,7 @@ grep -n "уйдёт заявителю" templates/moderation/partials/report_res
 - `.koda/backlog.md`
 - `.koda/plans/mobile-legal-deploy.md`
 
-### 14. [ ] Проверка и коммит
+### 14. [x] Проверка и коммит
 
 ```bash
 make lint
@@ -713,20 +717,20 @@ Bump version: 0.32.0 → 0.33.0 (minor)
 
 | # | Шаг | Статус |
 |---|---|---|
-| 1 | Ветка | [ ] |
-| 2 | Настройки, пример окружения, compose | [ ] |
-| 3 | Команда `mail_check` | [ ] |
-| 4 | Хелпер письма человеку | [ ] |
-| 5 | Письмо заявителю: шаблон и функция | [ ] |
-| 6 | Задача Celery и точка постановки | [ ] |
-| 7 | Сервис: письмо после коммита | [ ] |
-| 8 | Админка: решение через сервис | [ ] |
-| 9 | Интерфейс: предупреждение и строка анонимам | [ ] |
-| 10 | Тесты | [ ] |
-| 11 | DNS и README | [ ] |
-| 12 | Локализация | [ ] |
-| 13 | Документация | [ ] |
-| 14 | Проверка и коммит | [ ] |
+| 1 | Ветка | [x] |
+| 2 | Настройки, пример окружения, compose | [x] |
+| 3 | Команда `mail_check` | [x] |
+| 4 | Хелпер письма человеку | [x] |
+| 5 | Письмо заявителю: шаблон и функция | [x] |
+| 6 | Задача Celery и точка постановки | [x] |
+| 7 | Сервис: письмо после коммита | [x] |
+| 8 | Админка: решение через сервис | [x] |
+| 9 | Интерфейс: предупреждение и строка анонимам | [x] |
+| 10 | Тесты | [x] |
+| 11 | DNS и README | [x] |
+| 12 | Локализация | [x] |
+| 13 | Документация | [x] |
+| 14 | Проверка и коммит | [x] |
 
 ---
 
@@ -770,11 +774,39 @@ Bump version: 0.32.0 → 0.33.0 (minor)
 
 Заполняется по ходу работы.
 
-1. **Срок действия API-ключа Postbox** — проверить в консоли (предусловие
-   раздела 4). Бессрочно или дата: ______.
-2. **Заголовки тестового письма** (шаг 3): `spf=____`, `dkim=____`,
-   `dmarc=____`, `From: ____`.
-3. **`rua` в DMARC** — нужен ли отчёт о доставке на `info@`. Сейчас `p=none`
+1. **Срок действия API-ключа Postbox — бессрочный.** Проверено в консоли
+   2026-11-15: роль `postbox.sender`, область действия `yc.postbox.send`,
+   в графе «срок действия» стоит прочерк «—», то есть ключ не истекает.
+   Напоминание в 5.10 не нужно.
+2. **Живая отправка проверена 2026-11-15 (dev, реальный Postbox).**
+   `manage.py mail_check` с бэкендом
+   `django.core.mail.backends.smtp.EmailBackend` отправил письмо, оно пришло
+   во «Входящие», не в спам. Заголовки полученного письма:
+
+   ```
+   Authentication-Results: mail-nwsmtp-mxfront-production-main-85;
+     spf=pass (domain of postbox.yandexcloud.net designates 31.44.15.27
+     as permitted sender, rule=[ip4:31.44.15.0/24])
+     smtp.mail=feedback+…@postbox.yandexcloud.net;
+     dkim=pass header.i=@sportmemo.ru
+   From: SportMemo <info@sportmemo.ru>
+   ```
+
+   `spf=pass`, `dkim=pass header.i=@sportmemo.ru`, `From` — `info@`, как
+   задумано. `dmarc=pass` в этом заголовке не печатается отдельной строкой:
+   `mxfront` пишет итог SPF и DKIM, а DMARC при `p=none` и проходящих SPF+DKIM
+   выводится из них. Проверить явно можно на стейдже (5.3), но блокером
+   это не является.
+3. **Ответ на письмо доходит.** Владелец ответил на тестовое письмо, ответ
+   пришёл в `info@sportmemo.ru` (VK WorkSpace). Схема «`From` = `Reply-To` =
+   `info@`» работает.
+4. **`rua` в DMARC** — нужен ли отчёт о доставке на `info@`. Сейчас `p=none`
    без отчётов; включается одной правкой зоны, к запуску не требуется.
-4. **Пересылка `info@` на личную почту владельца** — нужна ли: если да,
-   настраивается в VK WorkSpace и в код не попадает.
+5. **Пересылка `info@` на личную почту владельца** — нужна ли: если да,
+   настраивается в VK WorkSpace и в код не попадает. Для проверки хватило
+   входа в веб-интерфейс, пересылка не настраивалась.
+
+**Живая отправка в dev.** При `DEBUG=True` бэкенд по умолчанию — console, поэтому
+заполнения `.env` недостаточно: нужна строка
+`EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend`. Это записано
+в `.env.example`, README и правилах проекта.

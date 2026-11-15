@@ -443,7 +443,14 @@ class TestAdminSearchAndFilters:
 
 
 class TestReportAdminActions:
-    def test_resolve_report_action(self, admin_client_logged_in, photo, admin_user):
+    """Решение по жалобе из админки идёт через сервис.
+
+    До подэтапа 5.1 два действия списка писали статус через
+    `queryset.update()`: журнал оставался пустым, письмо заявителю
+    не уходило, а область модератора не проверялась вовсе.
+    """
+
+    def test_decide_report_action(self, admin_client_logged_in, photo, admin_user):
         from apps.moderation.models import Report
 
         report = Report.objects.create(
@@ -453,15 +460,44 @@ class TestReportAdminActions:
         )
         url = reverse("admin:moderation_report_changelist")
 
-        admin_client_logged_in.post(
+        response = admin_client_logged_in.post(
             url,
-            {"action": "action_resolve", "_selected_action": [str(report.pk)]},
-            follow=True,
+            {"action": "action_decide", "_selected_action": [str(report.pk)]},
         )
 
+        assert response.status_code == 302
+        assert "ids=" in response.url
+
+        response = admin_client_logged_in.post(
+            reverse("admin:moderation_report_decide"),
+            {
+                "ids": str(report.pk),
+                "action": "resolve",
+                "resolution": "Данные исправлены",
+            },
+        )
+
+        assert response.status_code == 302
         report.refresh_from_db()
         assert report.status == "resolved"
         assert report.resolved_by == admin_user
+        assert report.resolution == "Данные исправлены"
+        # Журнал пишет только сервис, и запись идёт по самой жалобе:
+        # при разборе претензии цель не меняется.
+        action = ModerationAction.objects.get(
+            content_type=ContentType.objects.get_for_model(Report),
+            object_id=report.pk,
+        )
+        assert action.action == ModerationActionType.REPORT_RESOLVED
+        assert action.reason == "Данные исправлены"
+        assert action.moderator == admin_user
+
+    def test_old_bulk_actions_are_gone(self):
+        from apps.moderation.models import Report
+
+        model_admin = admin.site._registry[Report]
+
+        assert model_admin.actions == ("action_decide",)
 
 
 class TestPhotoMergeAction:

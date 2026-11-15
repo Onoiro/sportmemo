@@ -1,6 +1,7 @@
 """Представления модерации: жалоба, очередь черновиков и разбор жалоб."""
 
 from django.apps import apps
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
@@ -101,6 +102,18 @@ def report_add(request):
             )
             notify_moderators_new_report(report, request=request)
             messages.success(request, _("Спасибо! Модератор проверит."))
+            # Анониму ответить некуда: письмо о решении уходит на адрес
+            # аккаунта, а его нет. Адрес подсказываем сразу, пока человек
+            # ещё на сайте, — иначе решение останется ему неизвестным.
+            if report.reporter is None:
+                messages.info(
+                    request,
+                    _(
+                        "Если жалоба о приватности или правах, ответить вам "
+                        "мы сможем только по адресу %(email)s."
+                    )
+                    % {"email": settings.SPORTMEMO_CONTACT_EMAIL},
+                )
             return redirect(next_url)
     else:
         form = ReportForm(
@@ -116,6 +129,9 @@ def report_add(request):
         "target_obj": target_obj,
         "target_key": target_key(target_obj),
         "next_url": next_url,
+        # Адрес обращения берётся из настройки, а не пишется в шаблоне:
+        # в 5.5 тот же адрес станет контактом оператора ПДн.
+        "contact_email": settings.SPORTMEMO_CONTACT_EMAIL,
         "meta": page_meta(
             request,
             title=_("Сообщить об ошибке"),
