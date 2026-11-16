@@ -252,6 +252,42 @@ header.i=@sportmemo.ru`, `From: SportMemo <info@sportmemo.ru>`. Ответ на 
 `apps/photos/processing.py`, `apps/photos/management/commands/photos_backfill.py`,
 `tests/test_photo_storage.py`. Semver: **minor**.
 
+**Сделано (2026-11-16, 0.34.0, 1807 тестов).** План подэтапа —
+[`mobile-legal-deploy-5.2-storage.md`](mobile-legal-deploy-5.2-storage.md),
+все шаги закрыты.
+
+- Два хранилища: алиас `originals` (приватный бакет, `querystring_auth=True`,
+  ссылка живёт час) и `default` (публичное чтение, `querystring_auth=False`).
+  `Photo.original` и `Photo.processed` переехали в `originals`; `display`,
+  `thumbnail`, `preview` и `Team.logo` остались в `default`. Правило одно
+  на модель: бакет выбирает `storage=originals_storage` у поля, а не
+  представление.
+- `storage` у поля — callable (`apps/core/storage.py`), а не экземпляр:
+  `FileField.deconstruct()` кладёт в миграцию ссылку на функцию, экземпляр
+  хранилища сериализовать нельзя.
+- Глобальная `AWS_QUERYSTRING_AUTH` удалена: подпись задаётся `OPTIONS`
+  алиаса. Переменная `S3_QUERYSTRING_AUTH` не заводится намеренно —
+  перепутанное значение сделало бы превью подписанными, а оригиналы
+  публичными.
+- Переменные `MINIO_*` переименованы в `S3_*`, добавлена `S3_PRIVATE_BUCKET`.
+  Переменные самого MinIO (`MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`) не
+  трогались: это имена образа.
+- `CACHES` на Redis при `DEBUG=False` (база `/1`, `TIMEOUT=None`,
+  `socket_connect_timeout=2`), LocMemCache в dev: `make run` не должен
+  требовать Redis. Стратегия превью — `Optimistic`, потерянные превью
+  восстанавливает `manage.py photos_previews` (есть цель
+  `make photos-previews`).
+- Ручная проверка: превью на месте, в HTML страницы фото нет
+  `photos/original/`, нет `X-Amz`, `og:image` ведёт в публичный `media/CACHE`,
+  повторный показ не создаёт файлов, `photos_previews --dry-run` показывает 0.
+- Документация: README, раздел «Хранилище» (таблица бакетов, команды `mc`,
+  честная строка про dev), `KODA.md` / `AGENTS.md` — три правила хранилища,
+  бэклог — `P5-13` закрыт, `P5-15` заведён.
+
+**Известный риск.** Недоступный Redis ломает сохранение фото: `RedisCache`
+в Django 5.2 не умеет глотать ошибки, а `Optimistic` пишет состояние превью
+в кеш. Принят владельцем 2026-11-15, задача `P5-15`.
+
 ### 5.3 Стейдж: репетиция деплоя
 
 **Цель.** Проверить весь путь деплоя на сервере, который не жалко, до того как

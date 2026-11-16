@@ -21,6 +21,7 @@ from apps.core.models import (
     StatusModel,
     TimeStampedModel,
 )
+from apps.core.storage import originals_storage
 
 
 def _upload_path(kind, filename):
@@ -206,7 +207,10 @@ class Photo(TimeStampedModel, StatusModel, SoftDeleteModel, MergeableModel):
     caption = models.TextField(_("подпись"), blank=True)
 
     original = models.ImageField(
-        _("оригинал"), upload_to=photo_original_path, max_length=255
+        _("оригинал"),
+        upload_to=photo_original_path,
+        max_length=255,
+        storage=originals_storage,
     )
     processed = models.ImageField(
         _("обработанная версия"),
@@ -214,6 +218,7 @@ class Photo(TimeStampedModel, StatusModel, SoftDeleteModel, MergeableModel):
         max_length=255,
         null=True,
         blank=True,
+        storage=originals_storage,
     )
     display = models.ImageField(
         _("версия для показа"),

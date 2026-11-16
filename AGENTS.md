@@ -226,7 +226,7 @@ constructor". Legal pages and SMTP are stage 5.
 
 ## Current state
 
-- Version: 0.33.0; development branch `master`; 1785 tests passing on Python 3.12
+- Version: 0.34.0; development branch `master`; 1807 tests passing on Python 3.12
   and 3.13 (`make test`); linter clean (`make lint`). Version 0.29.1 fixed
   `collectstatic` (the `sourceMappingURL` lines of the vendor Bootstrap files are gone),
   and 0.29.2 removed the word "archive" from the cabinet: the tabs now read "Published"
@@ -234,7 +234,9 @@ constructor". Legal pages and SMTP are stage 5.
   (sub-stage 3.8), in 0.31.0 tags people on the photo (sub-stage 3.9), and in 0.32.0
   a moderator publishes them from the queue (sub-stage 3.10). Version 0.33.0
   (sub-stage 5.1) sets mail up on the real domain, and a report author now gets
-  a letter with the decision text.
+  a letter with the decision text. Version 0.34.0 (sub-stage 5.2) splits storage into
+  private originals and public derivatives, moves the cache to Redis, and switches
+  the preview strategy to `Optimistic`.
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is complete: sub-stages 3.1–3.6
   are done, 3.7 (batch upload) is deferred. Sub-stage 3.1 (processing foundation) — EXIF by
@@ -273,8 +275,9 @@ constructor". Legal pages and SMTP are stage 5.
   in `apps/moderation/reports.py`. Known leftovers that move into stage 5: the account
   deletion policy (P5-12) and the S3 storage decision (R-1, Russian S3 chosen) — P5-13.
   Re-cropping an uploaded photo (P3-18) stays a stage 3 task.
-- Stage 5 is in progress: sub-stages 5.0 (master plan and documentation) and 5.1
-  (mail and domain) are closed, the next one is 5.2 (storage). The master plan
+- Stage 5 is in progress: sub-stages 5.0 (master plan and documentation), 5.1
+  (mail and domain) and 5.2 (storage) are closed, the next one is 5.3 (staging).
+  The master plan
   [`plans/mobile-legal-deploy.md`](.koda/plans/mobile-legal-deploy.md) records the owner's
   decisions of 2026-11-02: mail is VK WorkSpace for receiving and Yandex Cloud Postbox for
   sending, `From: info@sportmemo.ru`, production stays on the current VPS (port 8005),
@@ -283,7 +286,12 @@ constructor". Legal pages and SMTP are stage 5.
   Russian only. Sub-stage 5.1: mail leaves from `SportMemo <info@sportmemo.ru>` through
   Postbox, incoming mail arrives in VK WorkSpace, a report author gets a letter with the
   decision text, `manage.py mail_check` checks mail with one command, and report decisions
-  in the admin go through the service.
+  in the admin go through the service. Sub-stage 5.2: `STORAGES` got the `originals` alias
+  (a private bucket with a one-hour signed link), `Photo.original` and `Photo.processed`
+  moved there, while `display` and the previews stayed in the public `default`;
+  `MINIO_*` variables were renamed to `S3_*`, `CACHES` uses Redis when `DEBUG=False`,
+  the preview strategy is `Optimistic`, and `manage.py photos_previews` rebuilds
+  lost previews.
 
 ### Public UI
 
@@ -773,6 +781,18 @@ chosen automatically. The DNS zone and its gotchas are in the README section
 - **EXIF is stored by allow-list** (`apps/photos/exif.py`); the GPS IFD is never read.
   `Artist` and `Copyright` stay as a hint for the moderator. The year from `DateTimeOriginal`
   is a form value only, never written to the database on its own.
+- **`Photo.original` and `Photo.processed` live in `storages["originals"]`**, every other
+  file (display, previews, `Team.logo`) lives in `default`. One rule per model: the bucket is
+  chosen by `storage=originals_storage` on the field, never by a view. A second place that
+  picks a storage would drift from the first, and an original would land in the public bucket.
+- **URL signing is set in the alias `OPTIONS`, not in a global setting.** `default` uses
+  `querystring_auth=False` (a stable address for `og:image` and caches), `originals` uses
+  `querystring_auth=True` with a one-hour lifetime. `AWS_QUERYSTRING_AUTH` is gone on purpose:
+  a wrong value would sign previews and make originals public.
+- **Previews are built when `display` is saved** (`Optimistic`), not by a HEAD request to S3
+  on every view. The trade-off: a lost preview does not come back by itself, `manage.py
+  photos_previews` rebuilds it. The stock `generateimages` does not work here: it calls
+  `generate()` without `force`.
 - **A crop is `crop_data`, not a new file.** Garbage in the data (not a dict, unknown version,
   coordinates outside the image, a crop smaller than 100 px) is treated as "no crop" with a
   log warning: the service must not crash on browser input.

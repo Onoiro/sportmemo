@@ -48,8 +48,10 @@ services:
     container_name: sportmemo_minio
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+      # Переменные образа MinIO, а не наши настройки: их имена не меняются,
+      # значение берётся из наших `S3_*`, чтобы ключи задавались в одном месте.
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-minioadmin}
     ports:
       - "9000:9000"   # S3 API
       - "9001:9001"   # веб-консоль
@@ -73,12 +75,15 @@ services:
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
       DATABASE_URL: postgres://${POSTGRES_USER:-sportmemo}:${POSTGRES_PASSWORD:-sportmemo}@db:5432/${POSTGRES_DB:-sportmemo}
       REDIS_URL: redis://redis:6379/0
+      # Кеш превью: та же база Redis, что у брокера, но другая — `/1`.
+      CACHE_URL: redis://redis:6379/1
       USE_S3: ${USE_S3:-True}
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
-      MINIO_BUCKET: ${MINIO_BUCKET:-sportmemo}
-      MINIO_USE_SSL: "False"
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minioadmin}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-minioadmin}
+      S3_BUCKET: ${S3_BUCKET:-sportmemo}
+      S3_PRIVATE_BUCKET: ${S3_PRIVATE_BUCKET:-sportmemo-private}
+      S3_USE_SSL: "False"
       EMAIL_HOST: ${EMAIL_HOST:-}
       EMAIL_PORT: ${EMAIL_PORT:-465}
       EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}

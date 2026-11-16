@@ -3,7 +3,7 @@ DC := docker compose
 
 .PHONY: help install lint format format-check test test-cov migrate migrations shell superuser \
         run collectstatic messages compile i18n seed-demo seed-demo-flush search-reindex \
-        photos-backfill up down down-clean restart build rebuild logs ps \
+        photos-backfill photos-previews up down down-clean restart build rebuild logs ps \
         plan-list plan-dry plan-step plan-from plan-all
 
 help: ## Показать доступные команды
@@ -70,6 +70,9 @@ search-reindex: ## Пересчитать поисковый индекс арх
 
 photos-backfill: ## Обработать фото без версии для показа и перцептивного хеша
 	$(MANAGE) photos_backfill
+
+photos-previews: ## Пересобрать отсутствующие превью (--all — все)
+	$(MANAGE) photos_previews
 
 # ======================================================================
 # Локализация

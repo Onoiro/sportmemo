@@ -16,7 +16,7 @@ env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
     USE_S3=(bool, False),
-    MINIO_USE_SSL=(bool, False),
+    S3_USE_SSL=(bool, False),
     EMAIL_USE_SSL=(bool, True),
 )
 
@@ -228,14 +228,7 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
-STORAGES = {
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
-    },
-}
-
-# --- Файлы: лимиты и MinIO (S3) ---
+# --- Файлы: лимиты и хранилища (S3) ---
 # Предел распаковки задаёт Pillow, а не форма: файл может прийти мимо формы
 # (админка, команда, воркер), и тогда защита от «бомбы сжатия» нужна в одном
 # месте. 60 Мпикс — 48 МП телефона плюс запас; скан A4 600 dpi даёт 35 Мпикс.
@@ -245,22 +238,88 @@ Image.MAX_IMAGE_PIXELS = 60_000_000
 # файлов в одном запросе и отклоняет запрос целиком.
 DATA_UPLOAD_MAX_NUMBER_FILES = 12
 
+# Два файловых алиаса, а не один: оригинал и превью должны разъехаться
+# по разным бакетам, а правило «что где лежит» задаёт модель, не настройка.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "originals": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    },
+}
+
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 USE_S3 = env("USE_S3")
 if USE_S3:
-    AWS_ACCESS_KEY_ID = env("MINIO_ACCESS_KEY")
-    AWS_SECRET_ACCESS_KEY = env("MINIO_SECRET_KEY")
-    AWS_STORAGE_BUCKET_NAME = env("MINIO_BUCKET", default="sportmemo")
-    AWS_S3_ENDPOINT_URL = env("MINIO_ENDPOINT")
-    AWS_S3_USE_SSL = env("MINIO_USE_SSL")
-    AWS_S3_REGION_NAME = env("MINIO_REGION", default="us-east-1")
-    AWS_S3_FILE_OVERWRITE = False
-    AWS_DEFAULT_ACL = None
-    AWS_QUERYSTRING_AUTH = env.bool("MINIO_QUERYSTRING_AUTH", default=True)
-    AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
-    STORAGES["default"] = {"BACKEND": "storages.backends.s3.S3Storage"}
+    # Ключи `OPTIONS` — имена, которые читает `django-storages`; наши
+    # переменные окружения называются `S3_*`. Общая часть вынесена, чтобы
+    # два бакета не разошлись в способе подключения.
+    _S3_COMMON = {
+        "access_key": env("S3_ACCESS_KEY"),
+        "secret_key": env("S3_SECRET_KEY"),
+        "endpoint_url": env("S3_ENDPOINT"),
+        "region_name": env("S3_REGION", default="us-east-1"),
+        "use_ssl": env("S3_USE_SSL"),
+        "file_overwrite": False,
+        "default_acl": None,
+    }
+    # Публичное чтение и адрес без подписи: подписанная ссылка менялась
+    # при каждом показе, ломала `og:image` и кеш браузера.
+    STORAGES["default"] = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            **_S3_COMMON,
+            "bucket_name": env("S3_BUCKET", default="sportmemo"),
+            "querystring_auth": False,
+            "object_parameters": {"CacheControl": "max-age=86400"},
+        },
+    }
+    # Приватный бакет: ссылка на оригинал подписана и живёт час. Политика
+    # бакета задаётся на бакет, а не на префикс, поэтому это второй бакет,
+    # а не папка внутри первого.
+    STORAGES["originals"] = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            **_S3_COMMON,
+            "bucket_name": env("S3_PRIVATE_BUCKET"),
+            "querystring_auth": True,
+            "querystring_expire": 3600,
+        },
+    }
+
+# --- Кеш и превью ---
+# База `/1`, а не `/0`: нулевая занята брокером Celery. Общая база дала бы
+# `cache.clear()`, стирающий очередь задач.
+CACHE_URL = env("CACHE_URL", default="redis://localhost:6379/1")
+if DEBUG:
+    # `make run` не должен требовать Redis: в dev задачи Celery идут синхронно,
+    # и один воркер, так что LocMem ведёт себя так же.
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        }
+    }
 else:
-    MEDIA_URL = "media/"
-    MEDIA_ROOT = BASE_DIR / "media"
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": CACHE_URL,
+            "KEY_PREFIX": "sportmemo",
+            # Состояние превью не должно истекать: иначе imagekit снова начнёт
+            # проверять существование файла в S3 при каждом показе.
+            "TIMEOUT": None,
+            # Недоступный Redis должен падать быстро, а не держать воркер
+            # gunicorn до системного таймаута сокета.
+            "OPTIONS": {"socket_connect_timeout": 2, "socket_timeout": 2},
+        }
+    }
+
+# Превью строятся по сигналу сохранения источника, а не по требованию:
+# стратегия `JustInTime` делала HEAD в S3 на каждом показе до первого
+# попадания в кеш. Потерянный файл превью восстанавливает `photos_previews`.
+IMAGEKIT_DEFAULT_CACHEFILE_STRATEGY = "imagekit.cachefiles.strategies.Optimistic"
 
 # --- Почта ---
 EMAIL_BACKEND = env(

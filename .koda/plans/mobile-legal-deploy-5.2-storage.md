@@ -273,7 +273,7 @@ else:
 
 ## 5. Шаги
 
-### 1. [ ] Ветка
+### 1. [x] Ветка
 
 1. `git status` — дерево чистое (допускается только файл этого плана, он
    коммитится до шага 1).
@@ -283,7 +283,7 @@ else:
 
 Файлы: —
 
-### 2. [ ] Настройки: два хранилища и переименование `S3_*`
+### 2. [x] Настройки: два хранилища и переименование `S3_*`
 
 1. `config/settings.py`:
    - в объявлении `environ.Env(...)` заменить `MINIO_USE_SSL` на `S3_USE_SSL`;
@@ -312,7 +312,7 @@ else:
 
 Файлы: `config/settings.py`, `apps/core/storage.py`
 
-### 3. [ ] Поля модели: оригиналы в приватное хранилище
+### 3. [x] Поля модели: оригиналы в приватное хранилище
 
 1. `apps/photos/models.py`: `original` и `processed` получают
    `storage=originals_storage`; `display` не трогается (остаётся в `default`).
@@ -335,7 +335,7 @@ else:
 
 Файлы: `apps/photos/models.py`, `apps/photos/migrations/00XX_*.py`
 
-### 4. [ ] Кеш на Redis и стратегия `Optimistic`
+### 4. [x] Кеш на Redis и стратегия `Optimistic`
 
 1. `config/settings.py`: блок `CACHES` по решению 2.6, рядом комментарии
    про `/1` и `TIMEOUT=None`.
@@ -353,7 +353,7 @@ Redis в CI нет.
 
 Файлы: `config/settings.py`
 
-### 5. [ ] Команда `photos_previews`
+### 5. [x] Команда `photos_previews`
 
 1. `apps/photos/management/commands/photos_previews.py`:
    - по умолчанию пересобирает **только отсутствующие** превью
@@ -374,7 +374,7 @@ Redis в CI нет.
 
 Файлы: `apps/photos/management/commands/photos_previews.py`, `Makefile`
 
-### 6. [ ] Тесты
+### 6. [x] Тесты
 
 1. `tests/test_photo_storage.py` — новый файл:
    - `Photo.original` и `Photo.processed` → `storages["originals"]`;
@@ -406,7 +406,7 @@ Redis в CI нет.
 
 Файлы: `tests/test_photo_storage.py`, `tests/test_photo_previews.py`
 
-### 7. [ ] Окружение и compose
+### 7. [x] Окружение и compose
 
 1. `.env.example`: блок MinIO переписать на `S3_*`, добавить
    `S3_PRIVATE_BUCKET=sportmemo-private`, `CACHE_URL=redis://localhost:6379/1`.
@@ -427,7 +427,7 @@ Redis в CI нет.
 
 Файлы: `.env.example`, `docker-compose.yml`
 
-### 8. [ ] Документация и бэклог
+### 8. [x] Документация и бэклог
 
 1. `README.md`, раздел «Хранилище» (рядом с блоком MinIO в «Docker Compose»):
    - таблица «что в каком бакете» из решения 2.1;
@@ -460,7 +460,7 @@ Redis в CI нет.
 
 Файлы: `README.md`, `KODA.md`, `AGENTS.md`, `.koda/backlog.md`
 
-### 9. [ ] Проверка и коммит
+### 9. [x] Проверка и коммит
 
 1. `make lint` — чисто.
 2. `make test` — все тесты зелёные (было 1785, станет больше).
