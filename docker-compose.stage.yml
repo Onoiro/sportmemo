@@ -85,6 +85,11 @@ services:
 
   web:
     build: .
+    # Один образ на оба сервиса. Без общего `image:` compose собирает
+    # `web` и `worker` отдельно, хотя Dockerfile у них один: на диске
+    # 15 ГБ это дало два образа по 1.65 ГБ вместо одного, и сборка
+    # упёрлась в `no space left on device`.
+    image: sportmemo-stage:latest
     # Два воркера, а не четыре из `Dockerfile`: на 1 vCPU лишние только
     # делят память. `--max-requests` прикрывает утечки Django-процессов.
     command: >
@@ -118,7 +123,11 @@ services:
     logging: *stage_logging
 
   worker:
-    build: .
+    # Образ уже собран сервисом `web`: второй `build: .` дал бы вторую
+    # копию тех же 1.65 ГБ. `depends_on` на `web` не ставим: воркер
+    # должен подниматься и без него, а образ к этому моменту готов,
+    # потому что `deploy-stage.sh` собирает всё до запуска.
+    image: sportmemo-stage:latest
     # `--concurrency=1` и перезапуск процесса каждые 50 задач: Pillow
     # течёт на больших снимках, а на 1 vCPU лишние процессы только мешают.
     command: >
