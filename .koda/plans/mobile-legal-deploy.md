@@ -301,7 +301,8 @@ header.i=@sportmemo.ru`, `From: SportMemo <info@sportmemo.ru>`. Ответ на 
   зарегистрируется кто угодно со своим реальным email — это ПДн на зарубежном
   сервере;
 - `Disallow: /` в `robots.txt` на стейдже + `noindex` для всех страниц;
-- **регистрация выключена** (`ACCOUNT_ALLOW_REGISTRATION=False`);
+- **регистрация выключена** (`SIGNUP_OPEN=False` → `AccountAdapter.is_open_for_signup`;
+  настройки `ACCOUNT_ALLOW_REGISTRATION` в allauth 65 **не существует**, см. итог ниже);
 - `docker-compose.stage.yml`, nginx-эталон в репозитории (`docker/nginx/`);
 - правило в документации: **на стейдже только синтетические данные**, реальные
   ПДн не попадают ни при каких обстоятельствах.
@@ -314,15 +315,24 @@ header.i=@sportmemo.ru`, `From: SportMemo <info@sportmemo.ru>`. Ответ на 
 `config/settings.py`, `templates/robots.txt`, `apps/core/views.py`, `README.md`.
 Semver: **patch**.
 
-**Итог 5.3 (2026-11-17, 0.34.1).** Код и документация готовы: самодостаточный
-`docker-compose.stage.yml` с лимитами памяти и без `minio`, nginx-эталон с basic auth,
-`scripts/deploy-stage.sh` и `make stage-deploy`, регистрация закрыта адаптером
-`is_open_for_signup` (настройки `ACCOUNT_ALLOW_REGISTRATION` в allauth 65 нет —
-уточнение к тексту выше), noindex — middleware плюс `Disallow: /`, `collectstatic`
-стал обязательным шагом деплоя. **Ворота не пройдены:** операции на сервере
-(клонирование, `.env`, basic auth, certbot, `seed_demo`, загрузка фото, замеры)
-не выполнялись, поэтому строка «годится ли стейдж» ещё не заполнена. Решение
-принимает владелец по замерам раздела 7 детального плана.
+**Итог 5.3 (2026-11-18, 0.34.2).** Код и документация готовы, **и сайт развёрнут
+на стейдже**. Самодостаточный `docker-compose.stage.yml` с лимитами памяти и без
+`minio`, nginx-эталон с basic auth, `scripts/deploy-stage.sh` и `make stage-deploy`,
+регистрация закрыта адаптером `is_open_for_signup` (настройки
+`ACCOUNT_ALLOW_REGISTRATION` в allauth 65 нет — уточнение к тексту выше), noindex —
+middleware плюс `Disallow: /`, `collectstatic` стал обязательным шагом деплоя.
+
+Что выяснилось на сервере: `web` и `worker` с `build: .` собирали один образ
+дважды (3.3 ГБ вместо 1.65), и первая сборка упала с `no space left on device` —
+исправлено общим `image:`; `docker builder prune -f` не освобождает ничего,
+работает только `-af`; `seed_demo` при `DEBUG=False` требует `--force`.
+
+Замеры 2026-11-18: сборка ~6 мин, простой 294 МБ RAM (из 1963), диск 1.6 ГБ
+свободно (89%), соседние проекты все 200. **Предварительно стейдж годится,**
+узкое место — диск: каждый деплой оставляет ~1.6 ГБ кеша сборки, перед сборкой
+нужен `docker builder prune -af`. Открыто: nginx с basic auth, сертификат,
+загрузка фото владельцем, `mail_check` и `dmarc=pass`, нагрузочный замер.
+Детальный план и таблица замеров — [`mobile-legal-deploy-5.3-stage.md`](mobile-legal-deploy-5.3-stage.md).
 
 ### 5.4 Бэкапы и алерт
 
