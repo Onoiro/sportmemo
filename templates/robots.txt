@@ -1,4 +1,6 @@
-User-agent: *
+{% if disallow_all %}User-agent: *
+Disallow: /
+{% else %}User-agent: *
 Disallow: /admin/
 Disallow: /accounts/
 Disallow: /search/
@@ -11,3 +13,4 @@ Disallow: /reports/add/
 Disallow: /moderation/
 
 Sitemap: {{ sitemap_url }}
+{% endif %}

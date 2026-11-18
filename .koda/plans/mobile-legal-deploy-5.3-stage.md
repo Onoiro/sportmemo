@@ -410,7 +410,7 @@ manage.py shell -c "from django.contrib.sites.models import Site; \
 
 ## 5. Шаги (код и коммиты)
 
-### 1. [ ] Ветка
+### 1. [x] Ветка
 
 1. `git status` — дерево чистое (допускается только файл этого плана, он
    коммитится до шага 1).
@@ -420,7 +420,7 @@ manage.py shell -c "from django.contrib.sites.models import Site; \
 
 Файлы: —
 
-### 2. [ ] Настройки: закрытая регистрация и noindex-режим
+### 2. [x] Настройки: закрытая регистрация и noindex-режим
 
 1. `config/settings.py`, рядом с правилами проекта (блок `SPORTMEMO_*` в конце):
    ```python
@@ -438,7 +438,7 @@ manage.py shell -c "from django.contrib.sites.models import Site; \
 
 Файлы: `config/settings.py`
 
-### 3. [ ] Закрытая регистрация
+### 3. [x] Закрытая регистрация
 
 1. `apps/accounts/adapters.py`:
    ```python
@@ -484,7 +484,7 @@ manage.py shell -c "from django.contrib.sites.models import Site; \
 Файлы: `apps/accounts/adapters.py`, `templates/account/signup_closed.html`,
 `apps/core/context_processors.py`, `templates/account/login.html`
 
-### 4. [ ] Noindex-режим
+### 4. [x] Noindex-режим
 
 1. `apps/core/middleware.py` — новый модуль:
    ```python
@@ -523,7 +523,7 @@ manage.py shell -c "from django.contrib.sites.models import Site; \
 
 Файлы: `apps/core/middleware.py`, `apps/core/views.py`, `templates/robots.txt`
 
-### 5. [ ] Тесты режимов стейджа
+### 5. [x] Тесты режимов стейджа
 
 1. `tests/test_stage_mode.py` — новый файл, два класса:
    - `TestClosedSignup`:
@@ -544,7 +544,7 @@ manage.py shell -c "from django.contrib.sites.models import Site; \
 
 Файлы: `tests/test_stage_mode.py`
 
-### 6. [ ] `docker-compose.stage.yml`
+### 6. [x] `docker-compose.stage.yml`
 
 1. Новый файл, самодостаточный (`name: sportmemo-stage`), сервисы `db`, `redis`,
    `web`, `worker`. Обязательные отличия от dev-файла:
@@ -576,7 +576,7 @@ manage.py shell -c "from django.contrib.sites.models import Site; \
 
 Файлы: `docker-compose.stage.yml`
 
-### 7. [ ] nginx-эталон
+### 7. [x] nginx-эталон
 
 1. `docker/nginx/sportmemo-stage.conf` — один файл, два `server`-блока:
    - **80**: `location ^~ /.well-known/acme-challenge/ { auth_basic off; root …; }`,
@@ -601,7 +601,7 @@ manage.py shell -c "from django.contrib.sites.models import Site; \
 
 Файлы: `docker/nginx/sportmemo-stage.conf`
 
-### 8. [ ] Скрипт деплоя, `.env.example`, Makefile
+### 8. [x] Скрипт деплоя, `.env.example`, Makefile
 
 1. `scripts/deploy-stage.sh` (исполняемый, `chmod +x`):
    ```bash
@@ -644,7 +644,7 @@ manage.py shell -c "from django.contrib.sites.models import Site; \
 
 Файлы: `scripts/deploy-stage.sh`, `Makefile`, `.env.example`
 
-### 9. [ ] Документация, бэклог, проверка, коммит
+### 9. [x] Документация, бэклог, проверка, коммит
 
 1. `README.md`, новый раздел «Стейдж» (после «Хранилище», до «Почта и домен»):
    - адрес, сервер, порт 8005, имя проекта compose;

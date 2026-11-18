@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 18:56+0300\n"
+"POT-Creation-Date: 2026-11-17 18:46+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -85,7 +85,7 @@ msgid "как обращаться"
 msgstr "display name"
 
 #: apps/accounts/models.py:27 apps/catalog/models.py:191
-#: apps/photos/models.py:539
+#: apps/photos/models.py:544
 msgid "роль"
 msgstr "role"
 
@@ -354,11 +354,11 @@ msgstr ""
 "An event with this name and year is already in the archive. Check the list "
 "above."
 
-#: apps/catalog/models.py:75 apps/photos/models.py:511
+#: apps/catalog/models.py:75 apps/photos/models.py:516
 msgid "игрок"
 msgstr "player"
 
-#: apps/catalog/models.py:76 apps/photos/models.py:512
+#: apps/catalog/models.py:76 apps/photos/models.py:517
 msgid "тренер"
 msgstr "coach"
 
@@ -371,12 +371,12 @@ msgid "персонал"
 msgstr "staff"
 
 #: apps/catalog/models.py:91 apps/catalog/models.py:452 apps/core/models.py:296
-#: apps/moderation/models.py:61 apps/photos/models.py:166
+#: apps/moderation/models.py:61 apps/photos/models.py:167
 msgid "вид спорта"
 msgstr "sport"
 
 #: apps/catalog/models.py:95 apps/catalog/models.py:456 apps/core/models.py:290
-#: apps/photos/models.py:100
+#: apps/photos/models.py:101
 msgid "название"
 msgstr "name"
 
@@ -408,12 +408,12 @@ msgid "дополнительные атрибуты"
 msgstr "extra attributes"
 
 #: apps/catalog/models.py:116 apps/catalog/models.py:299
-#: apps/catalog/models.py:474 apps/photos/models.py:283
+#: apps/catalog/models.py:474 apps/photos/models.py:288
 msgid "поисковый индекс"
 msgstr "search index"
 
 #: apps/catalog/models.py:121 apps/catalog/models.py:178
-#: apps/catalog/models.py:584 apps/photos/models.py:197
+#: apps/catalog/models.py:584 apps/photos/models.py:198
 msgid "команда"
 msgstr "team"
 
@@ -422,7 +422,7 @@ msgid "команды"
 msgstr "teams"
 
 #: apps/catalog/models.py:184 apps/catalog/models.py:304
-#: apps/catalog/models.py:392 apps/photos/models.py:534
+#: apps/catalog/models.py:392 apps/photos/models.py:539
 msgid "человек"
 msgstr "person"
 
@@ -443,7 +443,7 @@ msgid "амплуа"
 msgstr "position"
 
 #: apps/catalog/models.py:195 apps/catalog/models.py:403
-#: apps/photos/models.py:550
+#: apps/photos/models.py:555
 msgid "примечание"
 msgstr "note"
 
@@ -582,7 +582,7 @@ msgid "церемония"
 msgstr "ceremony"
 
 #: apps/catalog/models.py:438 apps/moderation/models.py:21
-#: apps/photos/models.py:67 apps/photos/models.py:516
+#: apps/photos/models.py:68 apps/photos/models.py:521
 msgid "другое"
 msgstr "other"
 
@@ -598,7 +598,7 @@ msgstr "start date"
 msgid "дата окончания"
 msgstr "end date"
 
-#: apps/catalog/models.py:466 apps/photos/models.py:203
+#: apps/catalog/models.py:466 apps/photos/models.py:204
 msgid "год"
 msgstr "year"
 
@@ -607,7 +607,7 @@ msgid "страна"
 msgstr "country"
 
 #: apps/catalog/models.py:487 apps/catalog/models.py:578
-#: apps/photos/models.py:189
+#: apps/photos/models.py:190
 msgid "событие"
 msgstr "event"
 
@@ -987,8 +987,16 @@ msgstr "not set"
 
 #: apps/core/management/commands/mail_check.py:51
 #, python-format
-msgid "Это проверка настроек почты SportMemo. Если письмо дошло, отправка работает.\n\nКонтакт для обращений: %(email)s."
-msgstr "This is a check of the SportMemo mail settings. If you got this email, sending works.\n\nContact address: %(email)s."
+msgid ""
+"Это проверка настроек почты SportMemo. Если письмо дошло, отправка "
+"работает.\n"
+"\n"
+"Контакт для обращений: %(email)s."
+msgstr ""
+"This is a check of the SportMemo mail settings. If you got this email, "
+"sending works.\n"
+"\n"
+"Contact address: %(email)s."
 
 #: apps/core/management/commands/mail_check.py:57
 msgid "Проверка почты SportMemo"
@@ -1087,7 +1095,8 @@ msgstr "A public archive of sports photos: teams, events, people"
 msgid "архив спортивных фотографий"
 msgstr "sports photo archive"
 
-#: apps/core/views.py:107 apps/core/views.py:115 templates/core/rules.html:11
+#: apps/core/views.py:107 apps/core/views.py:115
+#: templates/account/signup_closed.html:15 templates/core/rules.html:11
 #: templates/partials/footer.html:22
 msgid "Правила сервиса"
 msgstr "Service rules"
@@ -1348,8 +1357,12 @@ msgstr "A report about this object has already been sent."
 
 #: apps/moderation/views.py:112
 #, python-format
-msgid "Если жалоба о приватности или правах, ответить вам мы сможем только по адресу %(email)s."
-msgstr "If the report is about privacy or rights, we can answer you only at %(email)s."
+msgid ""
+"Если жалоба о приватности или правах, ответить вам мы сможем только по "
+"адресу %(email)s."
+msgstr ""
+"If the report is about privacy or rights, we can answer you only at "
+"%(email)s."
 
 #: apps/moderation/views.py:137 apps/moderation/views.py:144
 #: templates/moderation/report_form.html:11
@@ -1496,7 +1509,7 @@ msgstr "All"
 msgid "Опубликованы"
 msgstr "Published"
 
-#: apps/photos/cabinet.py:37 apps/photos/models.py:151
+#: apps/photos/cabinet.py:37 apps/photos/models.py:152
 msgid "На проверке"
 msgstr "Under review"
 
@@ -1705,175 +1718,175 @@ msgstr ""
 msgid "Изображение слишком большое: больше %(mpix)s Мпикс."
 msgstr "The image is too large: more than %(mpix)s MP."
 
-#: apps/photos/models.py:59
+#: apps/photos/models.py:60
 msgid "бумажное фото"
 msgstr "paper photo"
 
-#: apps/photos/models.py:60
+#: apps/photos/models.py:61
 msgid "негатив"
 msgstr "negative"
 
-#: apps/photos/models.py:61
+#: apps/photos/models.py:62
 msgid "скан"
 msgstr "scan"
 
-#: apps/photos/models.py:62
+#: apps/photos/models.py:63
 msgid "цифровое фото"
 msgstr "digital photo"
 
-#: apps/photos/models.py:63
+#: apps/photos/models.py:64
 msgid "газета"
 msgstr "newspaper"
 
-#: apps/photos/models.py:64
+#: apps/photos/models.py:65
 msgid "журнал"
 msgstr "log"
 
-#: apps/photos/models.py:65
+#: apps/photos/models.py:66
 msgid "программа"
 msgstr "program"
 
-#: apps/photos/models.py:66
+#: apps/photos/models.py:67
 msgid "билет"
 msgstr "ticket"
 
-#: apps/photos/models.py:79
+#: apps/photos/models.py:80
 msgid "из моего личного архива"
 msgstr "from my personal archive"
 
-#: apps/photos/models.py:80
+#: apps/photos/models.py:81
 msgid "из архива другого человека"
 msgstr "from another person's archive"
 
-#: apps/photos/models.py:81
+#: apps/photos/models.py:82
 msgid "газета, журнал, книга"
 msgstr "newspaper, magazine, book"
 
-#: apps/photos/models.py:82
+#: apps/photos/models.py:83
 msgid "из интернета"
 msgstr "from the internet"
 
-#: apps/photos/models.py:83
+#: apps/photos/models.py:84
 msgid "не знаю"
 msgstr "I do not know"
 
-#: apps/photos/models.py:94
+#: apps/photos/models.py:95
 msgid "тип источника"
 msgstr "source kind"
 
-#: apps/photos/models.py:101
+#: apps/photos/models.py:102
 msgid "издание"
 msgstr "publication"
 
-#: apps/photos/models.py:102
+#: apps/photos/models.py:103
 msgid "дата"
 msgstr "date"
 
-#: apps/photos/models.py:103
+#: apps/photos/models.py:104
 msgid "страница"
 msgstr "page"
 
-#: apps/photos/models.py:104
+#: apps/photos/models.py:105
 msgid "ссылка"
 msgstr "link"
 
-#: apps/photos/models.py:106
+#: apps/photos/models.py:107
 msgid "владелец оригинала"
 msgstr "original owner"
 
-#: apps/photos/models.py:109
+#: apps/photos/models.py:110
 msgid "Например: «семейный архив Ивановых»"
 msgstr "For example: “the Ivanov family archive”"
 
-#: apps/photos/models.py:113
+#: apps/photos/models.py:114
 msgid "владелец записи"
 msgstr "record owner"
 
-#: apps/photos/models.py:119
+#: apps/photos/models.py:120
 msgid "примечания"
 msgstr "notes"
 
-#: apps/photos/models.py:124 apps/photos/models.py:172
+#: apps/photos/models.py:125 apps/photos/models.py:173
 msgid "источник"
 msgstr "source"
 
-#: apps/photos/models.py:125
+#: apps/photos/models.py:126
 msgid "источники"
 msgstr "sources"
 
-#: apps/photos/models.py:135
+#: apps/photos/models.py:136
 msgid "загружено"
 msgstr "uploaded"
 
-#: apps/photos/models.py:136
+#: apps/photos/models.py:137
 msgid "в обработке"
 msgstr "processing"
 
-#: apps/photos/models.py:137
+#: apps/photos/models.py:138
 msgid "обработано"
 msgstr "processed"
 
-#: apps/photos/models.py:138 apps/photos/models.py:260
+#: apps/photos/models.py:139 apps/photos/models.py:265
 msgid "ошибка обработки"
 msgstr "processing error"
 
-#: apps/photos/models.py:145
+#: apps/photos/models.py:146
 msgid "Удалено"
 msgstr "Deleted"
 
-#: apps/photos/models.py:146
+#: apps/photos/models.py:147
 msgid "Ошибка обработки"
 msgstr "Processing error"
 
-#: apps/photos/models.py:147
+#: apps/photos/models.py:148
 msgid "Обрабатывается"
 msgstr "Processing"
 
-#: apps/photos/models.py:148
+#: apps/photos/models.py:149
 msgid "Опубликовано"
 msgstr "Published"
 
-#: apps/photos/models.py:149
+#: apps/photos/models.py:150
 msgid "Скрыто модератором"
 msgstr "Hidden by moderator"
 
-#: apps/photos/models.py:150
+#: apps/photos/models.py:151
 msgid "Отклонено"
 msgstr "Rejected"
 
-#: apps/photos/models.py:179
+#: apps/photos/models.py:180
 msgid "происхождение снимка"
 msgstr "photo origin"
 
-#: apps/photos/models.py:186
+#: apps/photos/models.py:187
 msgid "уточнение"
 msgstr "note"
 
-#: apps/photos/models.py:204
+#: apps/photos/models.py:205
 msgid "дата съёмки"
 msgstr "taken date"
 
-#: apps/photos/models.py:205
+#: apps/photos/models.py:206
 msgid "заголовок"
 msgstr "title"
 
-#: apps/photos/models.py:206
+#: apps/photos/models.py:207
 msgid "подпись"
 msgstr "caption"
 
-#: apps/photos/models.py:209
+#: apps/photos/models.py:210
 msgid "оригинал"
 msgstr "original"
 
-#: apps/photos/models.py:212
+#: apps/photos/models.py:216
 msgid "обработанная версия"
 msgstr "processed version"
 
-#: apps/photos/models.py:219
+#: apps/photos/models.py:224
 msgid "версия для показа"
 msgstr "display version"
 
-#: apps/photos/models.py:225
+#: apps/photos/models.py:230
 msgid ""
 "Нормализованный оригинал или кроп без EXIF, JPEG до 1280 px. Единственный "
 "источник превью: без него фото показывается заглушкой."
@@ -1881,31 +1894,31 @@ msgstr ""
 "Normalised original or crop without EXIF, JPEG up to 1280 px. The only "
 "source of previews: without it the photo shows a placeholder."
 
-#: apps/photos/models.py:231
+#: apps/photos/models.py:236
 msgid "исходное имя файла"
 msgstr "original file name"
 
-#: apps/photos/models.py:234
+#: apps/photos/models.py:239
 msgid "Как файл назывался у автора. Хранится для поиска в админке."
 msgstr "The name the file had for its author. Kept for admin search."
 
-#: apps/photos/models.py:237
+#: apps/photos/models.py:242
 msgid "ширина"
 msgstr "width"
 
-#: apps/photos/models.py:238
+#: apps/photos/models.py:243
 msgid "высота"
 msgstr "height"
 
-#: apps/photos/models.py:240
+#: apps/photos/models.py:245
 msgid "перцептивный хеш"
 msgstr "perceptual hash"
 
-#: apps/photos/models.py:243
+#: apps/photos/models.py:248
 msgid "данные кропа"
 msgstr "crop data"
 
-#: apps/photos/models.py:247
+#: apps/photos/models.py:252
 msgid ""
 "Инструкция обработки, а не новый оригинал: {\"version\": 1, \"x\", \"y\", "
 "\"width\", \"height\", \"rotate\"}. Пустой словарь — без кропа."
@@ -1913,19 +1926,19 @@ msgstr ""
 "Processing instruction, not a new original: {\"version\": 1, \"x\", \"y\", "
 "\"width\", \"height\", \"rotate\"}. An empty dict means no crop."
 
-#: apps/photos/models.py:254
+#: apps/photos/models.py:259
 msgid "статус обработки"
 msgstr "processing status"
 
-#: apps/photos/models.py:267
+#: apps/photos/models.py:272
 msgid "убрано из кабинета"
 msgstr "removed from the cabinet"
 
-#: apps/photos/models.py:270
+#: apps/photos/models.py:275
 msgid "права подтверждены"
 msgstr "rights confirmed"
 
-#: apps/photos/models.py:273
+#: apps/photos/models.py:278
 msgid ""
 "Исторический флаг для админки: на видимость фото не влияет. Ответственность "
 "за контент несёт автор (Правила сервиса)."
@@ -1933,63 +1946,63 @@ msgstr ""
 "Historical flag for the admin: it does not affect visibility. The author is "
 "responsible for the content (Service Rules)."
 
-#: apps/photos/models.py:278
+#: apps/photos/models.py:283
 msgid "дата подтверждения прав"
 msgstr "rights confirmed at"
 
-#: apps/photos/models.py:284
+#: apps/photos/models.py:289
 msgid "EXIF"
 msgstr "EXIF"
 
-#: apps/photos/models.py:285
+#: apps/photos/models.py:290
 msgid "просмотров"
 msgstr "views"
 
-#: apps/photos/models.py:288
+#: apps/photos/models.py:293
 msgid "загрузил"
 msgstr "uploaded by"
 
-#: apps/photos/models.py:315 apps/photos/models.py:528
+#: apps/photos/models.py:320 apps/photos/models.py:533
 msgid "фотография"
 msgstr "photo"
 
-#: apps/photos/models.py:316
+#: apps/photos/models.py:321
 msgid "фотографии"
 msgstr "photos"
 
-#: apps/photos/models.py:513
+#: apps/photos/models.py:518
 msgid "судья"
 msgstr "umpire"
 
-#: apps/photos/models.py:514
+#: apps/photos/models.py:519
 msgid "зритель"
 msgstr "spectator"
 
-#: apps/photos/models.py:515
+#: apps/photos/models.py:520
 msgid "фотограф"
 msgstr "photographer"
 
-#: apps/photos/models.py:545
+#: apps/photos/models.py:550
 msgid "позиция в кадре"
 msgstr "position in frame"
 
-#: apps/photos/models.py:548
+#: apps/photos/models.py:553
 msgid "Например: «слева второй»"
 msgstr "For example: “second from the left”"
 
-#: apps/photos/models.py:553
+#: apps/photos/models.py:558
 msgid "добавил"
 msgstr "added by"
 
-#: apps/photos/models.py:559
+#: apps/photos/models.py:564
 msgid "дата добавления"
 msgstr "added at"
 
-#: apps/photos/models.py:564
+#: apps/photos/models.py:569
 msgid "человек на фото"
 msgstr "person in photo"
 
-#: apps/photos/models.py:565
+#: apps/photos/models.py:570
 msgid "люди на фото"
 msgstr "people in photos"
 
@@ -2122,6 +2135,7 @@ msgstr ""
 "search."
 
 #: templates/404.html:20 templates/500.html:27
+#: templates/account/signup_closed.html:16
 msgid "На главную"
 msgstr "To the home page"
 
@@ -2243,7 +2257,7 @@ msgstr "Sign in"
 
 #: templates/account/login.html:21
 #: templates/account/password_reset_from_key_done.html:12
-#: templates/partials/navbar.html:116
+#: templates/account/signup_closed.html:14 templates/partials/navbar.html:116
 msgid "Войти"
 msgstr "Log in"
 
@@ -2251,15 +2265,15 @@ msgstr "Log in"
 msgid "Забыли пароль?"
 msgstr "Forgot your password?"
 
-#: templates/account/login.html:28 templates/account/signup.html:24
+#: templates/account/login.html:29 templates/account/signup.html:24
 msgid "Зарегистрироваться"
 msgstr "Sign up"
 
-#: templates/account/login.html:37
+#: templates/account/login.html:39
 msgid "Войти с ключом доступа"
 msgstr "Sign in with a passkey"
 
-#: templates/account/login.html:42
+#: templates/account/login.html:44
 msgid "Прислать код для входа"
 msgstr "Send me a sign-in code"
 
@@ -2368,6 +2382,19 @@ msgstr "Already have an account? Sign in"
 #: templates/account/signup.html:37
 msgid "Зарегистрироваться с ключом доступа"
 msgstr "Sign up with a passkey"
+
+#: templates/account/signup_closed.html:4
+#: templates/account/signup_closed.html:8
+msgid "Регистрация закрыта"
+msgstr "Sign up is closed"
+
+#: templates/account/signup_closed.html:10
+msgid ""
+"Сейчас регистрация на сайте закрыта. Если у вас есть архив, напишите нам — "
+"контакты в правилах сервиса."
+msgstr ""
+"Sign up is closed right now. If you have an archive to share, write to us: "
+"the contacts are in the service rules."
 
 #: templates/account/verification_sent.html:4
 #: templates/account/verification_sent.html:8
@@ -2513,8 +2540,12 @@ msgstr "Reject"
 
 #: templates/admin/moderation/report_decide.html:17
 #, python-format
-msgid "Жалоб к разбору: %(count)s. Текст решения уйдёт заявителю, поэтому напишите его так, чтобы можно было прочитать без пояснений."
-msgstr "Reports to decide: %(count)s. The decision text goes to the reporter, so write it so that it can be read without extra explanations."
+msgid ""
+"Жалоб к разбору: %(count)s. Текст решения уйдёт заявителю, поэтому напишите "
+"его так, чтобы можно было прочитать без пояснений."
+msgstr ""
+"Reports to decide: %(count)s. The decision text goes to the reporter, so "
+"write it so that it can be read without extra explanations."
 
 #: templates/admin/moderation/report_decide.html:20
 msgid "Выбранные жалобы"
@@ -3224,8 +3255,12 @@ msgid "Взять в работу"
 msgstr "Take in work"
 
 #: templates/moderation/partials/report_resolution_form.html:30
-msgid "Текст решения уйдёт заявителю. Напишите так, чтобы его можно было прочитать без пояснений."
-msgstr "The decision text goes to the reporter. Write it so that it can be read without extra explanations."
+msgid ""
+"Текст решения уйдёт заявителю. Напишите так, чтобы его можно было прочитать "
+"без пояснений."
+msgstr ""
+"The decision text goes to the reporter. Write it so that it can be read "
+"without extra explanations."
 
 #: templates/moderation/people.html:13
 msgid "Черновики людей: очередь общая, человек не привязан к виду спорта"

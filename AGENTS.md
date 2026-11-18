@@ -226,7 +226,7 @@ constructor". Legal pages and SMTP are stage 5.
 
 ## Current state
 
-- Version: 0.34.0; development branch `master`; 1807 tests passing on Python 3.12
+- Version: 0.34.1; development branch `master`; 1820 tests passing on Python 3.12
   and 3.13 (`make test`); linter clean (`make lint`). Version 0.29.1 fixed
   `collectstatic` (the `sourceMappingURL` lines of the vendor Bootstrap files are gone),
   and 0.29.2 removed the word "archive" from the cabinet: the tabs now read "Published"
@@ -236,7 +236,9 @@ constructor". Legal pages and SMTP are stage 5.
   (sub-stage 5.1) sets mail up on the real domain, and a report author now gets
   a letter with the decision text. Version 0.34.0 (sub-stage 5.2) splits storage into
   private originals and public derivatives, moves the cache to Redis, and switches
-  the preview strategy to `Optimistic`.
+  the preview strategy to `Optimistic`. Version 0.34.1 (sub-stage 5.3) adds the stage
+  setup: `docker-compose.stage.yml`, an nginx reference with basic auth,
+  `make stage-deploy`, closed signup and noindex; server operations stay with the owner.
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is complete: sub-stages 3.1–3.6
   are done, 3.7 (batch upload) is deferred. Sub-stage 3.1 (processing foundation) — EXIF by
@@ -1246,4 +1248,22 @@ chosen automatically. The DNS zone and its gotchas are in the README section
   record before editing the zone, and add Postbox inside `include:`. DKIM-CNAME names come only
   from the Postbox console — guessing selectors is pointless; the check is the `Success` status
   and the headers of a real letter (`spf=pass`, `dkim=pass`, `dmarc=pass`).
+- **Synthetic data only on the stage.** Real emails, names and photos from the personal archive
+  on a foreign server break Russian personal-data law (152-FZ): the stage lives in the
+  Netherlands. The demo archive is created by `seed_demo`, and it runs photos through the real
+  `process_photo()`. If real data appears, erase it and find out how it got there.
+- **Signup is closed by `AccountAdapter.is_open_for_signup`** (`apps/accounts/adapters.py`), not
+  by an `ACCOUNT_ALLOW_REGISTRATION` setting: allauth 65 has no such setting, and writing it
+  "for order" would switch nothing off. The value comes from our own `SPORTMEMO_SIGNUP_OPEN`
+  (`SIGNUP_OPEN` in env): the `ACCOUNT_*` namespace belongs to the package, and our own name
+  cannot clash with future allauth versions.
+- **`collectstatic` is mandatory at `DEBUG=False`.** Without a manifest,
+  `CompressedManifestStaticFilesStorage` raises `ValueError: Missing staticfiles manifest entry`
+  on any `{% static %}`, which means a 500 on every page, not an ugly look. Today the command is
+  a step of `scripts/deploy-stage.sh`; moving it into the image and the deploy checklist is
+  task `P5-14` of stage 5.7.
+- **The stage is closed by nginx basic auth and `X-Robots-Tag: noindex`.** Access and indexing
+  are set on the server, not in page code: `NoindexAllMiddleware` adds the header to every
+  response when `SPORTMEMO_NOINDEX_ALL` is on, and `robots.txt` returns `Disallow: /`. A flag in
+  every view would be forgotten by the next view, and a password in page code protects nothing.
 

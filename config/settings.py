@@ -111,6 +111,9 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Вторым, сразу после SecurityMiddleware: заголовок `X-Robots-Tag`
+    # должен попасть на все ответы, включая ошибки и `/healthz/`.
+    "apps.core.middleware.NoindexAllMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
@@ -395,3 +398,9 @@ LOGGING = {
 SPORTMEMO_PRIVACY_POLICY_VERSION = env("PRIVACY_POLICY_VERSION", default="2026-10-01")
 SPORTMEMO_TERMS_VERSION = env("TERMS_VERSION", default="2026-10-01")
 SPORTMEMO_CONSENT_PD_VERSION = env("CONSENT_PD_VERSION", default="2026-10-01")
+# Регистрация. На стейдже выключена: сервер в Нидерландах, и реальные
+# ПДн россиян там хранить нельзя, а без пароля зарегистрируется кто угодно.
+SPORTMEMO_SIGNUP_OPEN = env.bool("SIGNUP_OPEN", default=True)
+# Закрыть от индексации все ответы: заголовок `X-Robots-Tag` в middleware
+# и `Disallow: /` в `robots.txt`. Нужно стейджу, на проде выключено.
+SPORTMEMO_NOINDEX_ALL = env.bool("NOINDEX_ALL", default=False)

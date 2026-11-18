@@ -1,6 +1,7 @@
 """Адаптеры django-allauth."""
 
 from allauth.account.adapter import DefaultAccountAdapter
+from django.conf import settings
 
 
 class AccountAdapter(DefaultAccountAdapter):
@@ -10,6 +11,15 @@ class AccountAdapter(DefaultAccountAdapter):
     роль по умолчанию (обычный пользователь), чтобы роль никогда не
     оставалась пустой.
     """
+
+    def is_open_for_signup(self, request):
+        """Открыта ли регистрация.
+
+        В allauth 65 настройки `ACCOUNT_ALLOW_REGISTRATION` нет: точка
+        выключения — этот метод (`allauth/account/mixins.py`). Своё имя
+        настройки не конфликтует с пространством `ACCOUNT_*` пакета.
+        """
+        return settings.SPORTMEMO_SIGNUP_OPEN
 
     def save_user(self, request, user, form, commit=True):
         user = super().save_user(request, user, form, commit=False)

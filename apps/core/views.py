@@ -1,5 +1,6 @@
 """Служебные представления приложения core."""
 
+from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 from django.db import connection
 from django.db.models import Count, F
@@ -57,6 +58,9 @@ def robots_txt(request):
 
     Это вежливая просьба, а не защита: страницу можно открыть по прямой
     ссылке. Черновики защищает `get_visible_or_404`.
+
+    При `SPORTMEMO_NOINDEX_ALL` (стейдж) отдаётся один `Disallow: /`
+    без карты сайта: карта стейджа поисковику не нужна и вредна.
     """
     site = get_current_site(request)
     sitemap_url = (
@@ -66,7 +70,10 @@ def robots_txt(request):
     return render(
         request,
         "robots.txt",
-        {"sitemap_url": sitemap_url},
+        {
+            "sitemap_url": sitemap_url,
+            "disallow_all": settings.SPORTMEMO_NOINDEX_ALL,
+        },
         content_type="text/plain",
     )
 

@@ -314,6 +314,16 @@ header.i=@sportmemo.ru`, `From: SportMemo <info@sportmemo.ru>`. Ответ на 
 `config/settings.py`, `templates/robots.txt`, `apps/core/views.py`, `README.md`.
 Semver: **patch**.
 
+**Итог 5.3 (2026-11-17, 0.34.1).** Код и документация готовы: самодостаточный
+`docker-compose.stage.yml` с лимитами памяти и без `minio`, nginx-эталон с basic auth,
+`scripts/deploy-stage.sh` и `make stage-deploy`, регистрация закрыта адаптером
+`is_open_for_signup` (настройки `ACCOUNT_ALLOW_REGISTRATION` в allauth 65 нет —
+уточнение к тексту выше), noindex — middleware плюс `Disallow: /`, `collectstatic`
+стал обязательным шагом деплоя. **Ворота не пройдены:** операции на сервере
+(клонирование, `.env`, basic auth, certbot, `seed_demo`, загрузка фото, замеры)
+не выполнялись, поэтому строка «годится ли стейдж» ещё не заполнена. Решение
+принимает владелец по замерам раздела 7 детального плана.
+
 ### 5.4 Бэкапы и алерт
 
 **Цель.** Потеря сервера не означает потерю архива, и о сбое бэкапа владелец

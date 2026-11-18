@@ -1,0 +1,146 @@
+# Стейдж: `stage.sportmemo.ru` на общем сервере рядом с соседями.
+#
+# Файл самодостаточный, без `-f docker-compose.yml`: наследование не
+# умеет убрать сервис `minio`, а на стейдже он не нужен (`USE_S3=False`)
+# и стоит ~100 МБ памяти, которых на сервере нет. Цена — дублирование
+# блоков, поэтому при изменении сервисов правьте и `docker-compose.yml`,
+# и этот файл.
+#
+# Запуск: `docker compose -f docker-compose.stage.yml up -d` (или
+# `make stage-deploy`, который вызывает `scripts/deploy-stage.sh`).
+
+# Имя проекта задаёт имена контейнеров и томов
+# (`sportmemo-stage-web-1`): без него они столкнулись бы с `taskman_*`
+# и `lex-*` на том же сервере.
+name: sportmemo-stage
+
+x-logging: &stage_logging
+  driver: json-file
+  options:
+    # Диск 15 ГБ делится с соседями: без лимита логи съедят его первыми.
+    max-size: "10m"
+    max-file: "3"
+
+x-django-env: &stage_django_env
+  # Репетиция прода: те же режимы, что будут на боевом сервере.
+  DEBUG: "False"
+  ALLOWED_HOSTS: stage.sportmemo.ru
+  CSRF_TRUSTED_ORIGINS: https://stage.sportmemo.ru
+  # Оригиналы лежат в локальном `media/`. Приватности оригиналов здесь
+  # нет: защита — basic auth в nginx и отсутствие реальных данных.
+  USE_S3: "False"
+  # Регистрация закрыта: сервер в Нидерландах, реальные ПДн россиян
+  # там хранить нельзя.
+  SIGNUP_OPEN: "False"
+  NOINDEX_ALL: "True"
+  # Имена сервисов, а не localhost: у каждого контейнера свой network.
+  # `:?` — не косметика: без пароля URL собрался бы с пустым паролем,
+  # и ошибка всплыла бы на первом запросе к базе, а не при запуске.
+  DATABASE_URL: postgres://${POSTGRES_USER:-sportmemo}:${POSTGRES_PASSWORD:?set in .env}@db:5432/${POSTGRES_DB:-sportmemo}
+  REDIS_URL: redis://redis:6379/0
+  CACHE_URL: redis://redis:6379/1
+  # 1 vCPU: второй воркер только делил бы память и не ускорял обработку.
+  CELERY_WORKER_CONCURRENCY: "1"
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sportmemo}
+      POSTGRES_USER: ${POSTGRES_USER:-sportmemo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+    # Портов нет намеренно: наружу смотрит только nginx, а 5432 на общем
+    # сервере открыт не должен быть ни у кого.
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          pg_isready -U ${POSTGRES_USER:-sportmemo}
+          -d ${POSTGRES_DB:-sportmemo}
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Лимит — потолок, а не резервация: распухший контейнер должен упасть
+    # сам, а не утянуть за собой OOM-киллером соседний проект.
+    mem_limit: 256m
+    restart: unless-stopped
+    logging: *stage_logging
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    # Кеш превью и брокер: наружу не нужны, ходят только по сети compose.
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    mem_limit: 96m
+    restart: unless-stopped
+    logging: *stage_logging
+
+  web:
+    build: .
+    # Два воркера, а не четыре из `Dockerfile`: на 1 vCPU лишние только
+    # делят память. `--max-requests` прикрывает утечки Django-процессов.
+    command: >
+      gunicorn -w 2 --max-requests 500 --timeout 60
+      -b 0.0.0.0:8000
+      --access-logfile - --error-logfile -
+      config.wsgi:application
+    env_file: .env
+    environment: *stage_django_env
+    # Только loopback: снаружи сайт открывает nginx на 80/443, и порт
+    # контейнера не должен быть виден никому, кроме него.
+    ports:
+      - "127.0.0.1:8005:8000"
+    volumes:
+      # Код внутрь не монтируется: образ содержит код, а «что задеплоено»
+      # должно оставаться известным. Общие с хостом только данные.
+      # Каталоги должны существовать на хосте до первого запуска:
+      # отсутствующий bind-mount docker создаёт от root, и appuser (uid 1000)
+      # не смог бы писать туда ни `display`, ни `collectstatic`.
+      - ./media:/app/media
+      # Статику с манифестом собирает `collectstatic` в скрипте деплоя,
+      # а раздаёт nginx прямо с хоста.
+      - ./staticfiles:/app/staticfiles
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    mem_limit: 384m
+    restart: unless-stopped
+    logging: *stage_logging
+
+  worker:
+    build: .
+    # `--concurrency=1` и перезапуск процесса каждые 50 задач: Pillow
+    # течёт на больших снимках, а на 1 vCPU лишние процессы только мешают.
+    command: >
+      celery -A config worker -l info
+      --concurrency=1 --max-tasks-per-child=50
+    env_file: .env
+    environment: *stage_django_env
+    volumes:
+      # Воркер читает оригинал и пишет `display` в тот же `media/`, что
+      # и web: без общего тома обработка падала бы на отсутствии файла.
+      - ./media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    mem_limit: 512m
+    restart: unless-stopped
+    logging: *stage_logging
+
+volumes:
+  # Имена томов получают префикс проекта: данные стейджа не пересекаются
+  # с базами соседних проектов на этом сервере.
+  postgres_data:
+  redis_data:

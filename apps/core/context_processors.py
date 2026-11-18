@@ -8,6 +8,9 @@ def project_info(request):
     return {
         "SPORTMEMO_VERSION": settings.VERSION,
         "SPORTMEMO_SITE_NAME": "SportMemo",
+        # Ссылка «Зарегистрироваться» на странице входа ведёт в тупик,
+        # когда регистрация закрыта: страница отвечает «Регистрация закрыта».
+        "SPORTMEMO_SIGNUP_OPEN": settings.SPORTMEMO_SIGNUP_OPEN,
     }
 
 

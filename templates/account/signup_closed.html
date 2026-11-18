@@ -1,0 +1,18 @@
+{% extends "account/base_entrance.html" %}
+{% load i18n allauth %}
+
+{% block head_title %}{% trans "Регистрация закрыта" %}{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        {% element h1 %}{% trans "Регистрация закрыта" %}{% endelement %}
+        {% element p %}
+            {% trans "Сейчас регистрация на сайте закрыта. Если у вас есть архив, напишите нам — контакты в правилах сервиса." %}
+        {% endelement %}
+    </div>
+    <div class="auth-links">
+        <a href="{% url 'account_login' %}">{% trans "Войти" %}</a>
+        <a href="{% url 'core:rules' %}">{% trans "Правила сервиса" %}</a>
+        <a href="{% url 'core:home' %}">{% trans "На главную" %}</a>
+    </div>
+{% endblock content %}

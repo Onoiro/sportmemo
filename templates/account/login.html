@@ -25,7 +25,9 @@
 
         <div class="auth-links">
             <a href="{% url 'account_reset_password' %}">{% trans "Забыли пароль?" %}</a>
-            <a href="{{ signup_url }}">{% trans "Зарегистрироваться" %}</a>
+            {% if SPORTMEMO_SIGNUP_OPEN %}
+                <a href="{{ signup_url }}">{% trans "Зарегистрироваться" %}</a>
+            {% endif %}
         </div>
     {% endif %}
 

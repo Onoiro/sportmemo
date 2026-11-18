@@ -4,7 +4,7 @@ DC := docker compose
 .PHONY: help install lint format format-check test test-cov migrate migrations shell superuser \
         run collectstatic messages compile i18n seed-demo seed-demo-flush search-reindex \
         photos-backfill photos-previews up down down-clean restart build rebuild logs ps \
-        plan-list plan-dry plan-step plan-from plan-all
+        stage-deploy plan-list plan-dry plan-step plan-from plan-all
 
 help: ## Показать доступные команды
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -155,3 +155,12 @@ logs: ## Показать логи всех сервисов
 
 ps: ## Показать статус сервисов
 	$(DC) ps
+
+# ======================================================================
+# Стейдж
+# ======================================================================
+
+# `--ff-only` намеренно: если на сервере правка, сделанная руками,
+# деплой должен остановиться, а не сливать ветки вслепую.
+stage-deploy: ## Задеплоить стейдж (git pull + сборка + миграции)
+	ssh taskman-stage 'cd ~/sportmemo && git pull --ff-only && ./scripts/deploy-stage.sh'
