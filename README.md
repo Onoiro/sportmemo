@@ -289,6 +289,55 @@ sudo nginx -t && sudo systemctl reload nginx
 `htpasswd` на сервере нет, `openssl passwd -apr1` даёт тот же формат, который
 понимает nginx.
 
+### Сертификат: порядок из трёх шагов
+
+Полный конфиг стейджа ссылается на сертификат, которого при первом деплое ещё нет.
+Nginx читает `ssl_certificate` **во время проверки конфигурации**, поэтому
+`nginx -t` падает:
+
+```
+nginx: [emerg] cannot load certificate
+"/etc/letsencrypt/live/stage.sportmemo.ru/fullchain.pem":
+BIO_new_file() failed (SSL: ... No such file or directory)
+```
+
+Пока конфиг на диске невалиден, `reload` и перезагрузка сервера **уронят все
+сайты на нём**, хотя работающий процесс продолжает отвечать старой конфигурацией.
+Поэтому порядок такой:
+
+**1. Bootstrap-конфиг, только HTTP.**
+
+```bash
+sudo cp ~/sportmemo/docker/nginx/sportmemo-stage-bootstrap.conf \
+         /etc/nginx/conf.d/stage.sportmemo.ru.conf
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+**2. Сертификат через `--webroot`.**
+
+```bash
+sudo certbot certonly --webroot -w /home/abo/sportmemo \
+     -d stage.sportmemo.ru --non-interactive --agree-tos -m info@sportmemo.ru
+sudo ls /etc/letsencrypt/live/stage.sportmemo.ru/
+```
+
+`--webroot`, а не `--nginx`: плагин nginx правит конфигурацию сам и завёл бы
+второй `server` с тем же `server_name`, который потом конфликтовал бы с эталоном
+из репозитория. Webroot только кладёт файл проверки в каталог.
+
+**3. Полный конфиг с TLS.**
+
+```bash
+sudo cp ~/sportmemo/docker/nginx/sportmemo-stage.conf \
+         /etc/nginx/conf.d/stage.sportmemo.ru.conf
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Проверка: `curl -sI http://stage.sportmemo.ru` → `301` на `https://`.
+
+Обновление сертификата дальше идёт само: пакет `certbot` ставит таймер
+`certbot.timer`, и `certonly`-сертификаты он продлевает без правки конфигурации.
+
 ### Деплой
 
 С рабочей машины: `make stage-deploy` — он заходит по ssh, делает `git pull --ff-only`

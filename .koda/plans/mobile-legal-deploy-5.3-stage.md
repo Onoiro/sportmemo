@@ -350,8 +350,36 @@ manage.py shell -c "from django.contrib.sites.models import Site; \
    sudo chown root:www-data /etc/nginx/.htpasswd_sportmemo_stage
    ```
 
-8. **Положить nginx-эталон и включить сайт** (эталон берётся из репозитория,
-   не пишется руками):
+8. **Положить nginx-эталон и включить сайт.** Порядок **двухэтапный**, иначе
+   получается замкнутый круг: полный конфиг ссылается на сертификат, которого
+   ещё нет, `nginx -t` падает на `BIO_new_file() failed`, а `certbot --nginx`
+   без валидного конфига не работает.
+
+   **Этап 1 — только HTTP (bootstrap).** Пока сайт не работает, nginx держит
+   в памяти старую конфигурацию: файл на диске невалиден, и первый же `reload`
+   или перезагрузка сервера уронил бы **все три соседних сайта**. Поэтому
+   невалидный конфиг нельзя оставлять на диске ни на минуту.
+
+   ```bash
+   sudo cp ~/sportmemo/docker/nginx/sportmemo-stage-bootstrap.conf \
+            /etc/nginx/conf.d/stage.sportmemo.ru.conf
+   sudo nginx -t && sudo systemctl reload nginx
+   ```
+
+   **Этап 2 — сертификат через `--webroot`, а не `--nginx`.** Плагин `--nginx`
+   правит конфигурацию сам и завёл бы второй `server` с тем же `server_name`,
+   который потом конфликтовал бы с эталоном. Webroot только кладёт файл проверки
+   в каталог и ничего не меняет:
+
+   ```bash
+   sudo certbot certonly --webroot -w /home/abo/sportmemo \
+        -d stage.sportmemo.ru --non-interactive --agree-tos -m info@sportmemo.ru
+   ```
+
+   Проверка выпуска: `sudo ls /etc/letsencrypt/live/stage.sportmemo.ru/` →
+   `fullchain.pem`, `privkey.pem`.
+
+   **Этап 3 — полный конфиг с TLS.**
 
    ```bash
    sudo cp ~/sportmemo/docker/nginx/sportmemo-stage.conf \
@@ -359,21 +387,8 @@ manage.py shell -c "from django.contrib.sites.models import Site; \
    sudo nginx -t && sudo systemctl reload nginx
    ```
 
-9. **Выпустить сертификат** — A-запись уже резолвится, блокера нет:
-
-   ```bash
-   sudo certbot --nginx -d stage.sportmemo.ru
-   ```
-
-   Порядок важен: `certbot --nginx` вставляет свой `location` для http-01, но
-   basic auth на уровне `server` закрыл бы и его. В эталоне на 80-м сервере
-   `location ^~ /.well-known/acme-challenge/ { auth_basic off; }` стоит заранее —
-   без него выпуск провалится с 401. Второй вариант, если `--nginx` капризничает:
-   `sudo certbot certonly --webroot -w /home/abo/sportmemo -d stage.sportmemo.ru`
-   и прописать пути к сертификату в конфиге руками.
-
-10. **Перезагрузить nginx после выпуска** и убедиться, что редирект на HTTPS
-    появился: `sudo nginx -t && sudo systemctl reload nginx`.
+10. **Проверить редирект на HTTPS** после этапа 3:
+    `curl -sI http://stage.sportmemo.ru` → `301`, `Location: https://…`.
 
 11. **Проверить соседние проекты после включения сайта** — это ваша зона
     ответственности, потому что сервер общий:
@@ -766,7 +781,7 @@ LOG_LEVEL=INFO
 3. `cd ~/sportmemo && time ./scripts/deploy-stage.sh` — **время записать**, это
    замер для ворот.
 4. Владелец: файл паролей basic auth, копия nginx-эталона, `nginx -t`, `reload`,
-   `certbot --nginx -d stage.sportmemo.ru`, ещё раз `reload` (раздел 4.2, пункты 7–10).
+   `certbot certonly --webroot`, ещё раз `reload` (раздел 4.2, пункты 7–10).
 
 ### 6.2 Наполнение синтетикой
 
@@ -848,7 +863,7 @@ sudo nginx -t && sudo systemctl reload nginx
 |---|---|
 | OOM-киллер убил соседний контейнер | `mem_limit` у всех сервисов; `--concurrency=1`; проверка `docker stats` при загрузке фото |
 | Диск кончился на сборке (3.0 ГБ) | лимиты логов 10 МБ × 3; `docker builder prune -f` **не помогает** (проверено: `Total: 0B`, кеш помечен используемым) — тогда `docker image prune -a` только после согласования с владельцем, иначе расширять диск |
-| `certbot --nginx` упал на basic auth | `location ^~ /.well-known/acme-challenge/ { auth_basic off; }` в эталоне; запасной путь — `certonly --webroot` |
+| `certbot --nginx` упал: конфиг требует сертификат, которого нет | двухэтапный порядок: bootstrap-конфиг без TLS → `certbot certonly --webroot` → полный конфиг. Плагин `--nginx` не используем вовсе |
 | Сайт отдаёт 500 на статике | `collectstatic` в скрипте деплоя; проверка `/static/css/sportmemo.<hash>.css` |
 | Реальные ПДн попали на стейдж | регистрация закрыта, basic auth, правило в `KODA.md`; при появлении — стереть и разобраться |
 | Письма со стейджа уходят с боевого домена | регистрация закрыта, пользователей нет; `mail_check` — вручную на личный ящик |
