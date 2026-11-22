@@ -421,7 +421,7 @@ BACKUP_ALLOW_RESTORE_CHECK=1
 
 Файлы: `.env.example`, `.gitignore`
 
-### 3. [ ] `scripts/backup.sh`
+### 3. [x] `scripts/backup.sh`
 
 Скрипт-«один файл», POSIX-совместимый bash, `set -Eeuo pipefail`.
 Порядок шагов внутри — от самого дешёвого к самому дорогому, чтобы
@@ -708,7 +708,7 @@ restore-check: ## Проверить восстановление из посл�
 |---|---|---|
 | 1 | Ветка и замеры исходного состояния | [x] |
 | 2 | Переменные окружения и `.gitignore` | [x] |
-| 3 | `scripts/backup.sh` | [ ] |
+| 3 | `scripts/backup.sh` | [x] |
 | 4 | Тесты скрипта бэкапа | [ ] |
 | 5 | `restore-check.sh` и `restore.md` | [ ] |
 | 6 | systemd-юниты и цели `Makefile` | [ ] |
