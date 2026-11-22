@@ -4,7 +4,8 @@ DC := docker compose
 .PHONY: help install lint format format-check test test-cov migrate migrations shell superuser \
         run collectstatic messages compile i18n seed-demo seed-demo-flush search-reindex \
         photos-backfill photos-previews up down down-clean restart build rebuild logs ps \
-        stage-deploy plan-list plan-dry plan-step plan-from plan-all
+        stage-deploy backup restore-check \
+        plan-list plan-dry plan-step plan-from plan-all
 
 help: ## Показать доступные команды
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -164,3 +165,15 @@ ps: ## Показать статус сервисов
 # деплой должен остановиться, а не сливать ветки вслепую.
 stage-deploy: ## Задеплоить стейдж (git pull + сборка + миграции)
 	ssh taskman-stage 'cd ~/sportmemo && git pull --ff-only && ./scripts/deploy-stage.sh'
+
+# ======================================================================
+# Бэкапы
+# ======================================================================
+
+# Таймер systemd зовёт скрипт напрямую; цели нужны человеку и проверке
+# на стейдже, где .env и бакет уже настроены.
+backup: ## Сделать бэкап вручную (--dry-run: BACKUP_DRY=1)
+	./scripts/backup.sh $(if $(BACKUP_DRY),--dry-run,)
+
+restore-check: ## Проверить восстановление из последнего дампа (только стейдж)
+	./scripts/restore-check.sh $(ARGS)

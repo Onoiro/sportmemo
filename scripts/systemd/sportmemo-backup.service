@@ -1,0 +1,13 @@
+[Unit]
+Description=SportMemo backup (database dump and media copy)
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=abo
+WorkingDirectory=/home/abo/sportmemo
+# ~/.local/bin нужен: rclone ставится без sudo (см. README).
+Environment=PATH=/home/abo/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/abo/sportmemo/scripts/backup.sh
+TimeoutStartSec=3600

@@ -566,7 +566,7 @@ printf 'url = "https://api.telegram.org/bot%s/sendMessage"\nproxy = "%s"\n' \
 
 Файлы: `scripts/restore-check.sh`, `scripts/restore.md`
 
-### 6. [ ] systemd-юниты и цели `Makefile`
+### 6. [x] systemd-юниты и цели `Makefile`
 
 `scripts/systemd/sportmemo-backup.service`:
 
@@ -711,7 +711,7 @@ restore-check: ## Проверить восстановление из посл�
 | 3 | `scripts/backup.sh` | [x] |
 | 4 | Тесты скрипта бэкапа | [x] |
 | 5 | `restore-check.sh` и `restore.md` | [x] |
-| 6 | systemd-юниты и цели `Makefile` | [ ] |
+| 6 | systemd-юниты и цели `Makefile` | [x] |
 | 7 | Действия владельца | [ ] |
 | 8 | Ворота: восстановление на стейдже | [ ] |
 | 9 | Документация | [ ] |
