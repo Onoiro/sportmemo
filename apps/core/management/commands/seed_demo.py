@@ -15,6 +15,7 @@ import random
 from datetime import date
 from pathlib import Path
 
+from allauth.account.models import EmailAddress
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
@@ -801,6 +802,15 @@ class Command(BaseCommand):
         if created:
             user.set_password(DEMO_PASSWORD)
             user.save(update_fields=["password"])
+        # Адрес подтверждён: при `ACCOUNT_EMAIL_VERIFICATION="mandatory"`
+        # вход неподтверждённого пользователя пытается отправить письмо.
+        # На стейдже исходящий SMTP закрыт хостером, и вход падал 500
+        # по таймауту почты, а не показывал страницу «проверьте почту».
+        EmailAddress.objects.update_or_create(
+            user=user,
+            email=email,
+            defaults={"primary": True, "verified": True},
+        )
         return user
 
     # --- команды, люди, события ---------------------------------------

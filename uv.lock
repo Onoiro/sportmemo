@@ -722,7 +722,7 @@ wheels = [
 
 [[package]]
 name = "sportmemo"
-version = "0.34.8"
+version = "0.34.9"
 source = { virtual = "." }
 dependencies = [
     { name = "celery", extra = ["redis"] },

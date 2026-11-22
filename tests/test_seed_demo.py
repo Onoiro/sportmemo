@@ -3,6 +3,8 @@
 import io
 
 import pytest
+from allauth.account.models import EmailAddress
+from django.core import mail
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from PIL import Image
@@ -12,6 +14,7 @@ from apps.catalog.models import Event, Person, Team
 from apps.core.management.commands.seed_demo import (
     DEMO_EMAIL,
     DEMO_MODERATOR_EMAIL,
+    DEMO_PASSWORD,
     PHOTO_SIZES,
     _make_demo_image,
 )
@@ -110,6 +113,38 @@ class TestDemoSet:
         )
 
         assert photos.count() == 6
+
+    @pytest.mark.parametrize("email", [DEMO_EMAIL, DEMO_MODERATOR_EMAIL])
+    def test_demo_users_have_verified_email(self, seed, email):
+        """Иначе вход пытается отправить письмо и падает 500 по таймауту.
+
+        При `ACCOUNT_EMAIL_VERIFICATION="mandatory"` allauth на входе
+        неподтверждённого пользователя отправляет письмо подтверждения.
+        На стейдже исходящий SMTP закрыт хостером, и вход отвечал 500.
+        """
+        seed()
+
+        address = EmailAddress.objects.get(user__email=email)
+
+        assert address.verified
+        assert address.primary
+        assert address.email == email
+
+    @pytest.mark.parametrize("email", [DEMO_EMAIL, DEMO_MODERATOR_EMAIL])
+    def test_demo_user_can_log_in_without_email(self, seed, client, settings, email):
+        """Вход демо-пользователем не должен отправлять письмо."""
+        settings.ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+        settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+        seed()
+
+        response = client.post(
+            "/accounts/login/",
+            {"login": email, "password": DEMO_PASSWORD},
+        )
+
+        assert response.status_code == 302
+        assert response["Location"] == "/"
+        assert len(mail.outbox) == 0
 
 
 class TestPhotos:
