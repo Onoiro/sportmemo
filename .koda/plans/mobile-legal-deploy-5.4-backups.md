@@ -535,7 +535,7 @@ printf 'url = "https://api.telegram.org/bot%s/sendMessage"\nproxy = "%s"\n' \
 
 Файлы: `tests/test_backup_script.py`
 
-### 5. [ ] `scripts/restore-check.sh` и `scripts/restore.md`
+### 5. [x] `scripts/restore-check.sh` и `scripts/restore.md`
 
 **`restore-check.sh`** — воспроизводимая проверка, а не «на глаз»:
 
@@ -710,7 +710,7 @@ restore-check: ## Проверить восстановление из посл�
 | 2 | Переменные окружения и `.gitignore` | [x] |
 | 3 | `scripts/backup.sh` | [x] |
 | 4 | Тесты скрипта бэкапа | [x] |
-| 5 | `restore-check.sh` и `restore.md` | [ ] |
+| 5 | `restore-check.sh` и `restore.md` | [x] |
 | 6 | systemd-юниты и цели `Makefile` | [ ] |
 | 7 | Действия владельца | [ ] |
 | 8 | Ворота: восстановление на стейдже | [ ] |
