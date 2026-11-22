@@ -338,7 +338,7 @@ BACKUP_ALLOW_RESTORE_CHECK=1
 
 ## 5. Шаги (код и коммиты)
 
-### 1. [ ] Ветка и замеры исходного состояния
+### 1. [x] Ветка и замеры исходного состояния
 
 1. `git status` — дерево чистое (допускается только файл этого плана,
    он коммитится до шага 1).
@@ -352,6 +352,38 @@ BACKUP_ALLOW_RESTORE_CHECK=1
    - `docker compose -f docker-compose.stage.yml exec -T db psql -U sportmemo -d sportmemo -c "select count(*) from photos_photo;"` — число фото
      (пригодится как эталон сверки при восстановлении);
    - `ls -la ~/sportmemo/.env` — что уже прописано (без вывода значений).
+
+**Замеры 2026-11-22 (стейдж `taskman-stage`, 89.125.130.69):**
+
+| Показатель | Значение |
+|---|---|
+| Свободно на `/` (он же `~`) | **1.9 ГБ** из 15 ГБ, занято 87% |
+| Объём `~/sportmemo/media` | **13 МБ**, 168 файлов |
+| Размер БД `sportmemo` | **15 МБ** |
+| Фото (`photos_photo`) | **42** |
+| Команд (`catalog_team`) | **5** |
+| Людей (`catalog_person`) | **30** |
+| Миграций (`django_migrations`) | **53** |
+| `.env` | 1612 байт, права `664`, 24 ключа |
+
+Ключи в `.env` стейджа: `ALLOWED_HOSTS`, `CACHE_URL`, `CONN_MAX_AGE`,
+`CONTACT_EMAIL`, `CSRF_TRUSTED_ORIGINS`, `DATABASE_URL`, `DEBUG`,
+`DEFAULT_FROM_EMAIL`, `DJANGO_LANGUAGE_CODE`, `EMAIL_HOST`,
+`EMAIL_HOST_PASSWORD`, `EMAIL_HOST_USER`, `EMAIL_PORT`, `EMAIL_TIMEOUT`,
+`EMAIL_USE_SSL`, `LOG_LEVEL`, `NOINDEX_ALL`, `POSTGRES_DB`,
+`POSTGRES_PASSWORD`, `POSTGRES_USER`, `REDIS_URL`, `SECRET_KEY`,
+`SIGNUP_OPEN`, `USE_S3`. Блоков бэкапа и Telegram пока нет — их добавит
+владелец на шаге 7 по §4.5.
+
+**Что это значит для шага 3:** свободного места **1.9 ГБ**, а не 3.0 ГБ
+из планирования, и порог `BACKUP_MIN_FREE_MB=1024` оставляет запас
+около 0.9 ГБ. Дамп демо-базы — единицы мегабайт, семь локальных копий
+проблемы не создают; но при росте медиа диск кончится раньше бакета,
+поэтому порог в скрипте обязателен, а не «для порядка».
+
+**Git:** `master` = `197aea8` (план бэкапов), `origin/master` = `45bd310`
+(план ещё не запушен). Ветка `feature/backups` создана от `master`,
+дерево чистое.
 
 Файлы: —
 
@@ -674,7 +706,7 @@ restore-check: ## Проверить восстановление из посл�
 
 | # | Шаг | Статус |
 |---|---|---|
-| 1 | Ветка и замеры исходного состояния | [ ] |
+| 1 | Ветка и замеры исходного состояния | [x] |
 | 2 | Переменные окружения и `.gitignore` | [ ] |
 | 3 | `scripts/backup.sh` | [ ] |
 | 4 | Тесты скрипта бэкапа | [ ] |
