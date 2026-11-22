@@ -512,7 +512,7 @@ printf 'url = "https://api.telegram.org/bot%s/sendMessage"\nproxy = "%s"\n' \
 
 Файлы: `scripts/backup.sh`
 
-### 4. [ ] Тесты скрипта бэкапа
+### 4. [x] Тесты скрипта бэкапа
 
 `tests/test_backup_script.py`, `subprocess` + `tmp_path`, без Docker,
 без сети, без `rclone`. Проверяется то, что ломается молча:
@@ -709,7 +709,7 @@ restore-check: ## Проверить восстановление из посл�
 | 1 | Ветка и замеры исходного состояния | [x] |
 | 2 | Переменные окружения и `.gitignore` | [x] |
 | 3 | `scripts/backup.sh` | [x] |
-| 4 | Тесты скрипта бэкапа | [ ] |
+| 4 | Тесты скрипта бэкапа | [x] |
 | 5 | `restore-check.sh` и `restore.md` | [ ] |
 | 6 | systemd-юниты и цели `Makefile` | [ ] |
 | 7 | Действия владельца | [ ] |
