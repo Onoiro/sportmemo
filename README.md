@@ -64,7 +64,7 @@ nginx-эталон, `make stage-deploy`) готова и закрыта от и�
 регистрация выключена. Операции на сервере и ворота «годится ли стейдж» — за
 владельцем, см. раздел «Стейдж».
 
-Версия: 0.34.1; тестов 1820.
+Версия: 0.34.8; тестов 1823.
 
 ## Стек
 
@@ -358,8 +358,39 @@ sudo nginx -t && sudo systemctl reload nginx
 Код внутрь контейнера не монтируется: в образе лежит то, что задеплоено, и правка
 файла на хосте не меняет работающий сайт. Изменения — только через `git pull` и деплой.
 
-### `collectstatic` при `DEBUG=False`
+### Сжатие статики в nginx
 
+`gzip_static` в конфиге сайта **обязателен**. `whitenoise` при `collectstatic`
+кладёт рядом с каждым CSS и JS готовый `.gz` (вся статика 4.06 МБ против 1.05 МБ
+в сжатом виде, 284 файла), но без директивы nginx отдаёт несжатый файл:
+`bootstrap.min.css` уходил 232 066 Б вместо 30 813 Б. На мобильном канале это
+разница в секунды, а не в миллисекунды: браузерная проверка с телефона показала
+6.6 с на главную и «зависание» в Firefox.
+
+`gzip_types` в системном `/etc/nginx/nginx.conf` закомментирован, поэтому типы
+заданы в конфиге сайта — эталон из репозитория должен работать на чистой машине:
+
+```nginx
+gzip on;
+gzip_vary on;
+gzip_static on;
+gzip_types text/css application/javascript application/json image/svg+xml;
+```
+
+Проверка (файл полным именем, а не через переменную: запрос каталога отдаёт 403):
+
+```bash
+curl -s -o /dev/null -D - -u sportmemo:$STAGE_PASS -H 'Accept-Encoding: gzip' \
+  "https://stage.sportmemo.ru/static/vendor/bootstrap/css/bootstrap.min.<hash>.css" \
+  | grep -iE 'content-encoding|content-length'
+# ожидание: content-encoding: gzip, content-length: 30813
+```
+
+`http2` в `listen 443 ssl http2;` указан явно. Раньше протокол работал
+«по наследству» от соседнего сайта на том же порту, и убрать соседний значило
+молча потерять HTTP/2.
+
+### `collectstatic` при `DEBUG=False`
 `CompressedManifestStaticFilesStorage` отдаёт статику по адресам с отпечатком
 содержимого (`sportmemo.<hash>.css`), а список «файл → адрес» создаёт `collectstatic`.
 Без манифеста шаблон не может построить адрес CSS, и страница отвечает 500:

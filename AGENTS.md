@@ -226,7 +226,7 @@ constructor". Legal pages and SMTP are stage 5.
 
 ## Current state
 
-- Version: 0.34.1; development branch `master`; 1820 tests passing on Python 3.12
+- Version: 0.34.8; development branch `master`; 1823 tests passing on Python 3.12
   and 3.13 (`make test`); linter clean (`make lint`). Version 0.29.1 fixed
   `collectstatic` (the `sourceMappingURL` lines of the vendor Bootstrap files are gone),
   and 0.29.2 removed the word "archive" from the cabinet: the tabs now read "Published"
@@ -238,7 +238,12 @@ constructor". Legal pages and SMTP are stage 5.
   private originals and public derivatives, moves the cache to Redis, and switches
   the preview strategy to `Optimistic`. Version 0.34.1 (sub-stage 5.3) adds the stage
   setup: `docker-compose.stage.yml`, an nginx reference with basic auth,
-  `make stage-deploy`, closed signup and noindex; server operations stay with the owner.
+  `make stage-deploy`, closed signup and noindex. Versions 0.34.6–0.34.8 (2026-11-22)
+  close sub-stage 5.3: a browser test on a phone found six defects, and
+  [`plans/stage-fixes.md`](.koda/plans/stage-fixes.md) fixes them — `gzip_static`
+  and explicit `http2` in nginx (static files 232 KB → 31 KB), one password reset
+  link, the demo moderator gets all sports, and the disk is freed to 3.0 GB.
+  The 5.3 gate is passed.
 - Stage 1 (foundation and data model) is complete. Stage 2 (public archive) is complete:
   sub-stages 2.1–2.15 are done. Stage 3 (photo processing) is complete: sub-stages 3.1–3.6
   are done, 3.7 (batch upload) is deferred. Sub-stage 3.1 (processing foundation) — EXIF by
@@ -1262,6 +1267,13 @@ chosen automatically. The DNS zone and its gotchas are in the README section
   on any `{% static %}`, which means a 500 on every page, not an ugly look. Today the command is
   a step of `scripts/deploy-stage.sh`; moving it into the image and the deploy checklist is
   task `P5-14` of stage 5.7.
+- **`gzip_static` in nginx is mandatory.** `whitenoise` writes a `.gz` file next to every CSS and
+  JS at `collectstatic` time, but without the directive nginx sends the uncompressed file
+  (232 KB instead of 31 KB). `gzip_types` is commented out in the system `nginx.conf`, so the
+  types are set in the site config. `http2` also goes into `listen` explicitly: a protocol that
+  works "by inheritance" from a neighbour site on the same port disappears silently when the
+  neighbour is removed. The reference config lives in the repository, the server holds a copy:
+  edit the repository, and `grep` the file on the server **before** `cp`, or the old one is copied.
 - **The stage is closed by nginx basic auth and `X-Robots-Tag: noindex`.** Access and indexing
   are set on the server, not in page code: `NoindexAllMiddleware` adds the header to every
   response when `SPORTMEMO_NOINDEX_ALL` is on, and `robots.txt` returns `Disallow: /`. A flag in

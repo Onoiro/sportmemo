@@ -211,6 +211,11 @@ class TestLogin:
         assert reverse("account_reset_password") in html
         assert reverse("account_signup") in html
 
+    def test_login_page_has_one_reset_link(self, client):
+        html = client.get(LOGIN_URL).content.decode()
+
+        assert html.count(reverse("account_reset_password")) == 1
+
 
 class TestPasswordReset:
     def test_reset_sends_email(self, client, user):

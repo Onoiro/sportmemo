@@ -24,7 +24,16 @@ class ProfileForm(BootstrapFormMixin, forms.ModelForm):
 
 
 class LoginForm(BootstrapFormMixin, allauth_forms.LoginForm):
-    pass
+    """Форма входа без подсказки сброса под полем пароля.
+
+    `allauth` кладёт ссылку «Забыли пароль?» в `help_text` поля, а вторая
+    стоит в блоке `.auth-links` шаблона — две одинаковые ссылки на одной
+    странице. Оставляем ту, что рядом с «Зарегистрироваться».
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["password"].help_text = ""
 
 
 class ResetPasswordForm(BootstrapFormMixin, allauth_forms.ResetPasswordForm):

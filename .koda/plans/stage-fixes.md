@@ -1,14 +1,14 @@
 # SportMemo — исправления по итогам проверки стейджа
 
 Дата создания: 2026-11-19
-Статус: **утверждён владельцем**
+Статус: **выполнен 2026-11-22** (шаги 1–5, 0.34.6 → 0.34.8)
 Основание: браузерная проверка `https://stage.sportmemo.ru` с телефона 2026-11-19
 Мастер-план: [`mobile-legal-deploy.md`](mobile-legal-deploy.md) — этап 5
 Связанный план: [`mobile-legal-deploy-5.3-stage.md`](mobile-legal-deploy-5.3-stage.md) —
 разделы 6.3 и 6.4 выполнены, здесь записаны найденные при них дефекты
 База: `master`, версия 0.34.6
 Ветка: `fix/stage-browser-fixes`
-Финал: фактический bump — **0.34.6 → 0.34.8** двумя patch-коммитами
+Финал: фактический bump — **0.34.6 → 0.34.8** двумя patch-коммитами (сделано)
 
 > **Для новой сессии.** Владелец зашёл на стейдж с телефона и нашёл пять
 > проблем. Этот план их закрывает: три правки в коде, две операции на сервере
@@ -57,6 +57,10 @@
 
 ## 2. Шаг 1. Убрать дубль ссылки «Забыли пароль»
 
+**[x] Сделано 2026-11-22** (коммит `982940b`, 0.34.6 → 0.34.7).
+`LoginForm.__init__` очищает `help_text` поля пароля; тест
+`test_login_page_has_one_reset_link` держит одну ссылку на странице.
+
 **Файлы:** `apps/accounts/forms.py`, `tests/test_auth_ui.py`
 
 `allauth` в `LoginForm` ставит `show_reset_help=True` и подкладывает ссылку
@@ -95,6 +99,11 @@ def test_login_page_has_one_reset_link(self, client):
 ---
 
 ## 3. Шаг 2. Демо-модератор получает область
+
+**[x] Сделано 2026-11-22** (коммит `982940b`). `seed_demo` вызывает
+`moderated_sports.set(Sport.objects.all())`; тест
+`test_demo_moderator_sees_drafts_in_queue` проверяет не данные, а то, что
+очередь фото не пуста (6 черновиков).
 
 **Файлы:** `apps/core/management/commands/seed_demo.py`, `tests/test_seed_demo.py`
 
@@ -154,6 +163,33 @@ def test_demo_moderator_sees_drafts_in_queue(self, seed):
 
 ## 4. Шаг 3. `gzip_static` и `http2` в nginx
 
+**[x] Сделано 2026-11-22** (коммит `2677f85`, 0.34.7 → 0.34.8).
+Обе директивы добавлены в `sportmemo-stage.conf` и `sportmemo-stage-bootstrap.conf`.
+
+**Факт проверки после копирования на сервер:**
+
+```
+$ curl -s -o /dev/null -D - -u sportmemo:… -H 'Accept-Encoding: gzip' \
+    https://stage.sportmemo.ru/static/vendor/bootstrap/css/bootstrap.min.6032a13145bb.css
+HTTP/2 200
+content-length: 30813
+content-encoding: gzip
+```
+
+`content-length: 30813` совпал с ожиданием в точности: nginx отдаёт готовый
+`.gz`, а не сжимает на лету. До правки тот же файл уходил 232 066 Б.
+
+**Го́тча, которая съела один круг проверки.** Ветка `fix/stage-browser-fixes`
+существовала только локально, а на сервере `git switch` в неё молча не сработал:
+там остался `master`, и `cp` копировал файл без правок. Симптом: `grep` по
+`nginx -T` не находил `gzip_static` вовсе, а `curl` отдавал несжатый CSS.
+Поэтому ветку нужно **пушить** (`git push -u origin fix/stage-browser-fixes`)
+и проверять содержимое файла на сервере `grep`-ом **до** `cp`.
+
+Второй ложный сигнал: `content-length: 188` и `HTTP/2 403` — это ответ на запрос
+каталога (`$F` не была установлена в новом шелле). 188 Б и 403 не связаны
+со сжатием; проверять надо полным именем файла.
+
 **Файлы:** `docker/nginx/sportmemo-stage.conf`, `docker/nginx/sportmemo-stage-bootstrap.conf`
 
 `whitenoise` при `collectstatic` кладёт рядом с каждым CSS и JS готовый `.gz`
@@ -203,6 +239,10 @@ curl -sI -u sportmemo:$STAGE_PASS -H 'Accept-Encoding: gzip' \
 
 ## 5. Шаг 4. Обновить эталон на сервере (владелец, `sudo`)
 
+**[x] Сделано владельцем 2026-11-22.** `nginx -t` прошёл, `reload` выполнен,
+`gzip_static` активен (см. факт в шаге 3). `listen 443 ssl http2` подтверждён
+в активной конфигурации: блок нашего сайта содержит `http2` явно.
+
 ```bash
 cd ~/sportmemo && git pull --ff-only
 sudo cp docker/nginx/sportmemo-stage.conf /etc/nginx/conf.d/stage.sportmemo.ru.conf
@@ -223,7 +263,9 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ## 6. Шаг 5. Освободить диск (владелец, `sudo`)
 
-Проверено: `lxd` неактивен, контейнеров нет; старые ревизии помечены `disabled`.
+**[x] Сделано владельцем 2026-11-22.** `df -h /` → **15 ГБ, занято 11 ГБ,
+свободно 3.0 ГБ (79%)** — лучше планового порога ≥ 1.9 ГБ. Диск перестал
+быть узким местом стейджа.
 
 ```bash
 # 305 МБ: старые отключённые ревизии

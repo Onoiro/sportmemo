@@ -15,7 +15,8 @@ from apps.core.management.commands.seed_demo import (
     PHOTO_SIZES,
     _make_demo_image,
 )
-from apps.core.models import Status
+from apps.core.models import Sport, Status
+from apps.moderation.queue import QUEUE_MODELS, pending_queryset
 from apps.photos.models import Photo, ProcessingStatus, Source
 from tests.utils import make_image_file
 
@@ -88,6 +89,27 @@ class TestDemoSet:
             Photo.objects.count(),
         ) == counts
         assert User.objects.count() == 2
+
+    def test_demo_moderator_moderates_all_sports(self, seed):
+        seed()
+
+        moderator = User.objects.get(email=DEMO_MODERATOR_EMAIL)
+
+        assert set(moderator.moderated_sports.values_list("slug", flat=True)) == {
+            sport.slug for sport in Sport.objects.all()
+        }
+
+    def test_demo_moderator_sees_drafts_in_queue(self, seed):
+        seed()
+
+        moderator = User.objects.get(email=DEMO_MODERATOR_EMAIL)
+        photos = pending_queryset(
+            QUEUE_MODELS["photo"],
+            sport_ids=moderator.moderated_sport_ids(),
+            exclude_author=moderator,
+        )
+
+        assert photos.count() == 6
 
 
 class TestPhotos:

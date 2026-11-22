@@ -759,6 +759,9 @@ class Command(BaseCommand):
         self.demo_moderator = self._ensure_user(
             DEMO_MODERATOR_EMAIL, "Демо-модератор", UserRole.MODERATOR
         )
+        # Роль без области не даёт видеть ничего (4.1): демо-модератор должен
+        # решать очередь, иначе демонстрация модерации на стейдже пуста.
+        self.demo_moderator.moderated_sports.set(Sport.objects.all())
 
         teams = self._seed_teams()
         persons = self._seed_persons()
