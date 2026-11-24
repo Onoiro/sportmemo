@@ -1,0 +1,12 @@
+[Unit]
+Description=Run SportMemo backup every night
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+# Догоняет пропущенный запуск после ребута: без этого выключенный
+# на ночь сервер молча остаётся без бэкапа.
+Persistent=true
+RandomizedDelaySec=600
+
+[Install]
+WantedBy=timers.target

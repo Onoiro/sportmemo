@@ -226,7 +226,7 @@ constructor". Legal pages and SMTP are stage 5.
 
 ## Current state
 
-- Version: 0.34.8; development branch `master`; 1823 tests passing on Python 3.12
+- Version: 0.34.10; development branch `master`; 1837 tests passing on Python 3.12
   and 3.13 (`make test`); linter clean (`make lint`). Version 0.29.1 fixed
   `collectstatic` (the `sourceMappingURL` lines of the vendor Bootstrap files are gone),
   and 0.29.2 removed the word "archive" from the cabinet: the tabs now read "Published"
@@ -283,7 +283,8 @@ constructor". Legal pages and SMTP are stage 5.
   deletion policy (P5-12) and the S3 storage decision (R-1, Russian S3 chosen) — P5-13.
   Re-cropping an uploaded photo (P3-18) stays a stage 3 task.
 - Stage 5 is in progress: sub-stages 5.0 (master plan and documentation), 5.1
-  (mail and domain) and 5.2 (storage) are closed, the next one is 5.3 (staging).
+  (mail and domain), 5.2 (storage), 5.3 (staging) and 5.4 (backups and alert) are closed,
+  the next one is 5.5 (legal layer).
   The master plan
   [`plans/mobile-legal-deploy.md`](.koda/plans/mobile-legal-deploy.md) records the owner's
   decisions of 2026-11-02: mail is VK WorkSpace for receiving and Yandex Cloud Postbox for
@@ -298,7 +299,22 @@ constructor". Legal pages and SMTP are stage 5.
   moved there, while `display` and the previews stayed in the public `default`;
   `MINIO_*` variables were renamed to `S3_*`, `CACHES` uses Redis when `DEBUG=False`,
   the preview strategy is `Optimistic`, and `manage.py photos_previews` rebuilds
-  lost previews.
+  lost previews. Sub-stage 5.3: the stage is up and checked, a browser test on a phone
+  found six defects, and [`plans/stage-fixes.md`](.koda/plans/stage-fixes.md) fixed them
+  in 0.34.6–0.34.8. Sub-stage 5.4 (0.34.10): `scripts/backup.sh` runs `pg_dump -Fc`
+  in the `db` container, checks the dump with `pg_restore --list`, copies it and the
+  media to a Cloud.ru bucket (`rclone copy`), rotates dumps by local count and by
+  `--min-age` in the bucket, and sends a Telegram alert on any failure. The restore is
+  checked by `scripts/restore-check.sh`: a dump from the bucket goes into a temporary
+  `<name>_restore_check` database and row counts are compared with the live one; the
+  disaster checklist is [`scripts/restore.md`](scripts/restore.md). A systemd timer runs
+  the backup at 03:30 with `Persistent=true`. **The 5.4 gate passed on 2026-11-24:**
+  a dump was downloaded from the bucket, restored into `<name>_restore_check`, and row
+  counts matched (42 photos, 5 teams, 30 people, 53 migrations); media is 168 objects;
+  the alert arrived. The gate found two defects: `pg_restore` without `-U` picked the
+  `root` role, and `TELEGRAM_PROXY` on staging broke delivery (tinyproxy allows the
+  production IP only). Details are in
+  [`plans/mobile-legal-deploy-5.4-backups.md`](.koda/plans/mobile-legal-deploy-5.4-backups.md).
 
 ### Public UI
 
@@ -1278,4 +1294,40 @@ chosen automatically. The DNS zone and its gotchas are in the README section
   are set on the server, not in page code: `NoindexAllMiddleware` adds the header to every
   response when `SPORTMEMO_NOINDEX_ALL` is on, and `robots.txt` returns `Disallow: /`. A flag in
   every view would be forgotten by the next view, and a password in page code protects nothing.
+- **A backup without a verified restore is not a backup.** The 5.4 gate is a dump downloaded
+  **from the bucket** (not a local copy), restored into a separate database with row counts
+  compared and media checked. Real data does not go to production until this is done. The check
+  is reproducible with `scripts/restore-check.sh`, not a glance by eye.
+- **The backup goes to a second provider.** A copy at the same provider protects against
+  neither its outage nor an account lock, which is the most likely loss scenario. On
+  production, media lives in Yandex Object Storage and the backup goes to Cloud.ru.
+- **The failure alert is sent by the script, not by the application.** The alert is needed
+  exactly when the application is broken: no database, no disk, a dead container. Hence `curl`
+  from `scripts/backup.sh`, with no Django and no live `web` container.
+- **Alert text carries no data.** The channel is foreign (Telegram): only the failure fact and
+  the step name, with no paths, file names, sizes or database messages. The token goes to
+  `curl` through a stdin config, not as an argument, or it would show up in `ps`.
+- **Media is copied with `rclone copy`, not `sync`.** `sync` deletes at the destination what is
+  missing at the source and repeats a wrong deletion in the only remaining copy. A backup only
+  grows; bucket rotation is a separate `rclone delete --min-age` (age counts from the object
+  date, not from the file name).
+- **`.env` is never executed through `source`.** The line
+  `DEFAULT_FROM_EMAIL=SportMemo <info@sportmemo.ru>` is an input redirect for bash, and the
+  rest of the file is lost silently. The scripts read the keys line by line, and **the
+  environment wins over the file**: otherwise a one-off run and `Environment=` in a systemd
+  unit are ignored without a word.
+- **`BACKUP_ALLOW_RESTORE_CHECK=1` is for staging only.** The flag allows creating and dropping
+  a temporary database. Production has no such flag, and turning it on "for a minute" is not
+  allowed: the temporary database name is checked against the `*_restore_check` pattern, and
+  that is the guard against hitting the live database.
+- **`pg_restore` and the other postgres clients inside the container get
+  `-U "$POSTGRES_USER"`.** `docker compose exec` runs the command as `root`, and without `-U`
+  libpq picks the `root` role, which does not exist in the container. The error then looks
+  like a broken dump (`role "root" does not exist`) while the dump is fine. Found at the 5.4
+  gate: the restore check could never pass.
+- **`TELEGRAM_PROXY` is set on production only.** tinyproxy on staging allows one production
+  IP and answers a staging request with `403 from proxy after CONNECT`, while
+  `api.telegram.org` is reachable from staging directly. With a proxy in the staging `.env`
+  the alert never arrives, even though the bot is live and the token is valid. Found at the
+  5.4 gate.
 

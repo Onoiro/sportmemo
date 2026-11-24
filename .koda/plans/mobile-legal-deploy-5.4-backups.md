@@ -171,11 +171,65 @@ DEFAULT_FROM_EMAIL=SportMemo <info@sportmemo.ru>
   в разделе **Хранение данных → Object Storage → Параметры работы с API**.
 - В `rclone`: тип S3, провайдер **Other**, `force_path_style = true`,
   `v2_auth = false`.
-- Роль учётной записи — не ниже `s3e.editor`.
+- **Ролей нужно две: `s3e.editor` и `s3e.viewer`** — см. §3.9.
 - Рекомендация провайдера: задать бакету доменное имя, совпадающее
   с названием бакета (иначе путь-стайл адресация может не сработать).
 
-### 3.9 Версионирование бакета не включаем
+### 3.9 `s3e.editor` не даёт чтения — нужны обе роли
+
+Проверено по таблице ролей Cloud.ru и подтверждено опытом владельца
+2026-11-23 (403 `AccessDenied` при верных ключах).
+
+`s3e.editor` — **только запись**: `PutObject`, `DeleteObject`,
+`CreateBucket`, `CreateMultipartUpload`, `UploadPart`. В нём **нет**
+`ListBuckets`, `ListObjects`, `GetObject`, `HeadBucket`.
+
+`s3e.viewer` — **только чтение**: `ListBuckets`, `ListObjects`,
+`HeadBucket`, `GetObject`, `HeadObject`.
+
+Отсюда два следствия, которые стоили времени:
+
+1. `rclone lsd cloudru:` — это `ListBuckets`, операция **уровня
+   тенанта**. С ролью, выданной на один бакет, она даёт 403 всегда,
+   даже когда всё настроено верно. Проверять надо конкретный бакет:
+   `rclone lsd cloudru:sportmemo-backup`.
+2. Для бэкапа нужны **обе** роли, а не «одна из». Без `s3e.viewer`
+   бэкап запишется, но `restore-check.sh --from-bucket` не скачает
+   дамп (`GetObject`), а `rclone copy` не сверит источник и приёмник
+   (`ListObjects`). То есть ворота подэтапа не закрыть.
+
+В личном кабинете: **Пользователи → сервисные аккаунты → (свой) →
+Изменить права**, блок **Evolution Object Storage → Роли на бакеты** —
+две строки на `sportmemo-backup`: `s3e.editor` и `s3e.viewer`.
+
+Общая роль на тенант (`ListBuckets` по всем бакетам) для бэкапа шире,
+чем нужно: ключ, который лежит на сервере, не должен видеть чужие бакеты.
+
+**Диагностика 403.** Различать два случая по тексту ошибки:
+`AccessDenied` — ключ верный, прав нет (аутентификация прошла);
+`InvalidAccessKeyId` или `SignatureDoesNotMatch` — проблема в самом
+ключе (`tenant_id`, `Key Secret`, перевыпуск).
+
+### 3.10 `env_get` должен читать окружение, а не только `.env`
+
+Найдено 2026-11-24 на стейдже при проверке dry-run.
+
+`env_get()` читала только файл `.env`. Следствие: `RCLONE_BIN=/path
+./scripts/backup.sh` молча игнорировался, и `Environment=RCLONE_BIN=...`
+в юните systemd тоже не сработал бы. На стейдже это выглядело как
+«rclone не установлен» при установленном rclone.
+
+Исправлено: `value="${!key-}"` — окружение проверяется первым, файл
+`.env` остаётся запасным источником. Приоритет именно такой, потому что
+явно заданное значение должно побеждать файл; иначе разовый запуск
+и юнит бесполезны.
+
+**Ловушка в тестах:** `config/settings.py` кладёт значения `.env`
+в `os.environ` при импорте Django, поэтому тест, не очистивший
+`SCRIPT_VARIABLES`, проверял бы локальный `.env` разработчика вместо
+своего временного файла. Тестовый хелпер `_run()` чистит эти имена.
+
+### 3.11 Версионирование бакета не включаем
 
 Cloud.ru поддерживает версии объектов. При включённом версионировании
 `rclone delete --min-age 30d` создаёт delete-marker, а старые версии
@@ -184,7 +238,7 @@ Cloud.ru поддерживает версии объектов. При вклю
 ротацией версионирование — лишняя механика. Если понадобится защита
 от случайного удаления, это отдельное решение с другим сроком.
 
-### 3.10 Алерт: почему `curl`, а не `manage.py`
+### 3.12 Алерт: почему `curl`, а не `manage.py`
 
 Алерт нужен именно тогда, когда приложение сломано (нет БД, нет диска,
 упал контейнер). Скрипт не должен зависеть от Django и от того, что
@@ -192,6 +246,43 @@ Cloud.ru поддерживает версии объектов. При вклю
 
 Токен не попадает в `ps`: URL с токеном передаётся через конфиг
 в stdin (`curl -K -`), а не аргументом командной строки.
+
+### 3.13 `pg_restore` в контейнере требует `-U`
+
+Найдено 2026-11-24 на воротах шага 8.
+
+`docker compose exec -T db pg_restore ...` запускает команду от `root`
+внутри контейнера. Без `-U` libpq берёт роль по имени пользователя
+процесса, то есть `root`, и подключение падает:
+
+```
+pg_restore: error: connection to server on socket
+"/var/run/postgresql/.s.PGSQL.5432" failed: FATAL: role "root" does not exist
+```
+
+Выглядит это как поломка дампа, а дамп исправен. Поэтому `-U
+"$POSTGRES_USER"` нужен у **каждой** команды в контейнере: `pg_restore`,
+`createdb`, `dropdb`, `psql`. У `pg_dump` в `backup.sh` он был с самого
+начала, а в `restore-check.sh` его не было — проверка восстановления
+не могла пройти ни разу.
+
+### 3.14 `TELEGRAM_PROXY` нужен только проду
+
+Найдено 2026-11-24 на воротах шага 8.
+
+`tinyproxy` на стейдже разрешает ровно один адрес — прод-IP
+(`Allow 45.155.204.194`). Со стейджа запрос через прокси получает
+`403 from proxy after CONNECT`, а не ответ Telegram. При этом
+`api.telegram.org` со стейджа доступен **напрямую** (`302` на `/`):
+блокировка ТСПУ действует на прод-сервере, а не на стейдже.
+
+Следствие: `TELEGRAM_PROXY` в `.env` стейджа — вредная строка. Алерт
+«не доставлен» при живом боте и верном токене, и причину не видно:
+`curl` печатает предупреждение, а скрипт продолжает работу. В `.env`
+стейджа строка закомментирована, в `.env.example` и README написано
+«только для прода».
+
+Проверка доставки — без прокси на стейдже и с прокси на проде (§4.2 п. 5).
 
 ---
 
@@ -211,8 +302,8 @@ Cloud.ru поддерживает версии объектов. При вклю
 3. **Проверить роль.** Учётная запись должна иметь роль не ниже
    **Пользователь проекта** / **Пользователь сервиса**. Роль ниже
    (`Пользователь`) не даст работать с Object Storage — запросить у
-   администратора аккаунта. Для работы через API нужна роль не ниже
-   **`s3e.editor`**.
+   администратора аккаунта. Для работы через API нужны **обе** роли:
+   `s3e.editor` (запись) и `s3e.viewer` (чтение) — см. §3.9.
 4. **Открыть раздел** **Хранение данных → Object Storage**. Если сервиса
    нет в списке — он не подключён, писать в поддержку.
 5. **Создать бакет:** кнопка **Создать бакет** справа сверху.
@@ -224,7 +315,7 @@ Cloud.ru поддерживает версии объектов. При вклю
 6. **Убедиться, что бакет приватный.** Публичный доступ для бэкапа
    не нужен ни в каком виде: в дампе ПДн, в медиа — лица людей.
    Политику публичного чтения (`GetObject` для всех) **не задавать**.
-   Версионирование не включать (см. §3.9).
+   Версионирование не включать (см. §3.11).
 7. **Записать `tenant_id`:** **Хранение данных → Object Storage →
    Параметры работы с API** → идентификатор тенанта. Он входит в
    Access Key, без него подключение не соберётся.
@@ -237,9 +328,32 @@ Cloud.ru поддерживает версии объектов. При вклю
 9. **Сохранить `Key ID` (логин) и `Key Secret` (пароль).** `Key Secret`
    показывается один раз — второй раз его не восстановить, только
    выпустить новый ключ.
-10. **Проверить права ключа:** ключ сервисного аккаунта должен иметь
-    доступ к Object Storage (роль `s3e.editor` или выше). Иначе
-    `rclone lsd` вернёт `AccessDenied` при верных ключах.
+10. **Назначить роли сервисному аккаунту.** Без этого шага всё
+    остальное не работает, и ошибка выглядит как неверный ключ.
+    **Пользователи → сервисные аккаунты → (свой) → Изменить права**,
+    блок **Evolution Object Storage → Роли на бакеты**, две строки
+    на `sportmemo-backup`:
+    - `s3e.editor` — запись (`PutObject`, `DeleteObject`);
+    - `s3e.viewer` — чтение (`ListObjects`, `GetObject`).
+
+    `s3e.editor` **не содержит чтения**: с одной этой ролью `rclone`
+    вернёт 403 на любой операции чтения, включая проверку
+    восстановления (§3.9). Роль на весь тенант не выдавать.
+11. **Проверить права ключа конкретным бакетом, а не `lsd` по
+    аккаунту:**
+
+```bash
+rclone lsd cloudru:sportmemo-backup    # HeadBucket + ListObjects
+echo ok | rclone rcat cloudru:sportmemo-backup/_check.txt
+rclone cat cloudru:sportmemo-backup/_check.txt   # печатает ok
+rclone delete cloudru:sportmemo-backup/_check.txt
+```
+
+    `rcat` проверяет `s3e.editor`, `cat` — `s3e.viewer`. Если `rcat`
+    проходит, а `cat` даёт 403 — не хватает именно читающей роли.
+    **`rclone lsd cloudru:` для проверки не годится**: это
+    `ListBuckets` по всему тенанту, и с ролью на один бакет он даёт
+    403 при полностью верной настройке.
 
 **Стоимость:** платим за объём и операции. Ориентир — архив SportMemo
 на старте это единицы гигабайт; проверить в разделе тарификации перед
@@ -259,9 +373,16 @@ Cloud.ru поддерживает версии объектов. При вклю
    затем открыть `https://api.telegram.org/bot<TOKEN>/getUpdates`
    и взять `chat.id` — это `TELEGRAM_CHAT_ID`. У групп id отрицательный,
    минус сохраняется.
-5. **Проверить отправку** через прокси, иначе алерт молча не дойдёт:
+5. **Проверить отправку**, иначе алерт молча не дойдёт. Со стейджа
+   Telegram доступен напрямую, с прода — только через прокси:
 
 ```bash
+# на стейдже (без прокси: tinyproxy пускает один прод-IP, §3.14)
+curl -sS --max-time 15 \
+  "https://api.telegram.org/bot<TOKEN>/sendMessage" \
+  -d chat_id=<CHAT_ID> -d text="SportMemo: проверка алерта"
+
+# на проде
 curl -sS --max-time 15 --proxy http://89.125.130.69:8888 \
   "https://api.telegram.org/bot<TOKEN>/sendMessage" \
   -d chat_id=<CHAT_ID> -d text="SportMemo: проверка алерта"
@@ -288,6 +409,14 @@ chmod +x ~/.local/bin/rclone
 Если `~/.local/bin` не в `PATH` — в юните systemd путь задаётся явно
 (§5.6), а скрипт ищет бинарник через `RCLONE_BIN` с дефолтом `rclone`.
 
+**Го́тча, найденная 2026-11-24 на стейдже.** `~/.local/bin` попадает
+в `PATH` только в интерактивном шелле (через `~/.profile`), а
+неинтерактивная ssh-сессия его не видит. Поэтому `./scripts/backup.sh`
+руками пишет `rclone is not installed` при установленном rclone.
+Через systemd это не проявляется (юнит задаёт `PATH` явно), но человек
+прогонит скрипт руками, получит ложную ошибку и будет искать причину
+не там. Лечится строкой в `.env` (§4.5): `RCLONE_BIN=/home/abo/.local/bin/rclone`.
+
 ### 4.4 Конфиг `rclone` на сервере
 
 Файл `~/.config/rclone/rclone.conf`, права `600`. Два remote:
@@ -306,9 +435,17 @@ force_path_style = true
 v2_auth = false
 ```
 
-Проверка: `rclone lsd cloudru:` → в списке `sportmemo-backup`.
-Пустая строка при живом бакете означает, что ключ видит чужой тенант —
-перепроверить `tenant_id`.
+Проверка — **по конкретному бакету**, не `lsd` по аккаунту (§3.9):
+
+```bash
+rclone lsd cloudru:sportmemo-backup
+echo ok | rclone rcat cloudru:sportmemo-backup/_check.txt
+rclone cat cloudru:sportmemo-backup/_check.txt
+rclone delete cloudru:sportmemo-backup/_check.txt
+```
+
+`rclone lsd cloudru:` даёт 403 при роли, выданной на бакет, — это
+ожидаемое поведение, а не ошибка настройки.
 
 ### 4.5 `.env` на стейдже
 
@@ -317,11 +454,17 @@ v2_auth = false
 ```
 TELEGRAM_BOT_TOKEN=...
 TELEGRAM_CHAT_ID=...
-TELEGRAM_PROXY=http://89.125.130.69:8888
+# TELEGRAM_PROXY на стейдже НЕ задаётся: tinyproxy пускает один
+# прод-IP и отвечает стейджу 403, а api.telegram.org со стейджа
+# доступен напрямую (§3.14).
 BACKUP_COMPOSE_FILE=docker-compose.stage.yml
 BACKUP_RCLONE_REMOTE=cloudru
 BACKUP_BUCKET=sportmemo-backup
 BACKUP_ALLOW_RESTORE_CHECK=1
+# Обязательно: неинтерактивная ssh-сессия не видит ~/.local/bin,
+# и без этой строки ручной запуск скрипта даёт ложное
+# «rclone is not installed» (§4.3).
+RCLONE_BIN=/home/abo/.local/bin/rclone
 ```
 
 `BACKUP_ALLOW_RESTORE_CHECK=1` — **только на стейдже**: этим флагом
@@ -329,16 +472,44 @@ BACKUP_ALLOW_RESTORE_CHECK=1
 
 ### 4.6 Установка таймера
 
-См. §5.6 и README. Кратко: `systemctl --user` не годится (нужен запуск
-без входа), поэтому системный юнит с `User=abo`, установка через
+`systemctl --user` не годится: таймер должен срабатывать и без входа
+человека на сервер. Поэтому системный юнит с `User=abo`, установка через
 `sudo cp` + `sudo systemctl enable --now sportmemo-backup.timer`.
 На стейдже sudo спросит пароль — это делает владелец.
+
+**Порядок команд** (на стейдже, из `~/sportmemo`, ветка `feature/backups`):
+
+```bash
+# 1. Добавить RCLONE_BIN в .env (§4.5), иначе ручной прогон даст
+#    ложное «rclone is not installed».
+echo 'RCLONE_BIN=/home/abo/.local/bin/rclone' >> .env
+
+# 2. Проверить конфигурацию без запуска.
+./scripts/backup.sh --dry-run
+
+# 3. Поставить юнит и таймер.
+sudo cp scripts/systemd/sportmemo-backup.service /etc/systemd/system/
+sudo cp scripts/systemd/sportmemo-backup.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now sportmemo-backup.timer
+
+# 4. Убедиться, что таймер запланирован.
+systemctl list-timers sportmemo-backup.timer
+
+# 5. Прогнать один раз руками и посмотреть журнал.
+sudo systemctl start sportmemo-backup.service
+journalctl -u sportmemo-backup -n 30 --no-pager
+rclone lsf cloudru:sportmemo-backup/db/
+```
+
+`systemctl list-timers` показывает `NEXT` (когда сработает в следующий
+раз) и `LAST` (когда сработал). Если `NEXT` пуст — таймер не включён.
 
 ---
 
 ## 5. Шаги (код и коммиты)
 
-### 1. [ ] Ветка и замеры исходного состояния
+### 1. [x] Ветка и замеры исходного состояния
 
 1. `git status` — дерево чистое (допускается только файл этого плана,
    он коммитится до шага 1).
@@ -353,9 +524,41 @@ BACKUP_ALLOW_RESTORE_CHECK=1
      (пригодится как эталон сверки при восстановлении);
    - `ls -la ~/sportmemo/.env` — что уже прописано (без вывода значений).
 
+**Замеры 2026-11-22 (стейдж `taskman-stage`, 89.125.130.69):**
+
+| Показатель | Значение |
+|---|---|
+| Свободно на `/` (он же `~`) | **1.9 ГБ** из 15 ГБ, занято 87% |
+| Объём `~/sportmemo/media` | **13 МБ**, 168 файлов |
+| Размер БД `sportmemo` | **15 МБ** |
+| Фото (`photos_photo`) | **42** |
+| Команд (`catalog_team`) | **5** |
+| Людей (`catalog_person`) | **30** |
+| Миграций (`django_migrations`) | **53** |
+| `.env` | 1612 байт, права `664`, 24 ключа |
+
+Ключи в `.env` стейджа: `ALLOWED_HOSTS`, `CACHE_URL`, `CONN_MAX_AGE`,
+`CONTACT_EMAIL`, `CSRF_TRUSTED_ORIGINS`, `DATABASE_URL`, `DEBUG`,
+`DEFAULT_FROM_EMAIL`, `DJANGO_LANGUAGE_CODE`, `EMAIL_HOST`,
+`EMAIL_HOST_PASSWORD`, `EMAIL_HOST_USER`, `EMAIL_PORT`, `EMAIL_TIMEOUT`,
+`EMAIL_USE_SSL`, `LOG_LEVEL`, `NOINDEX_ALL`, `POSTGRES_DB`,
+`POSTGRES_PASSWORD`, `POSTGRES_USER`, `REDIS_URL`, `SECRET_KEY`,
+`SIGNUP_OPEN`, `USE_S3`. Блоков бэкапа и Telegram пока нет — их добавит
+владелец на шаге 7 по §4.5.
+
+**Что это значит для шага 3:** свободного места **1.9 ГБ**, а не 3.0 ГБ
+из планирования, и порог `BACKUP_MIN_FREE_MB=1024` оставляет запас
+около 0.9 ГБ. Дамп демо-базы — единицы мегабайт, семь локальных копий
+проблемы не создают; но при росте медиа диск кончится раньше бакета,
+поэтому порог в скрипте обязателен, а не «для порядка».
+
+**Git:** `master` = `197aea8` (план бэкапов), `origin/master` = `45bd310`
+(план ещё не запушен). Ветка `feature/backups` создана от `master`,
+дерево чистое.
+
 Файлы: —
 
-### 2. [ ] Переменные окружения и `.gitignore`
+### 2. [x] Переменные окружения и `.gitignore`
 
 1. `.env.example` — новый блок «Бэкапы» в конце файла. Только имена
    и объяснение, откуда значения:
@@ -367,7 +570,8 @@ BACKUP_ALLOW_RESTORE_CHECK=1
 # TELEGRAM_BOT_TOKEN=
 # TELEGRAM_CHAT_ID=
 # С прод-сервера api.telegram.org заблокирован ТСПУ: алерт идёт через
-# tinyproxy на стейдже, который уже разрешает прод-IP.
+# tinyproxy на стейдже, который уже разрешает прод-IP. Поэтому прокси
+# задаётся только на проде (§3.14).
 # TELEGRAM_PROXY=http://89.125.130.69:8888
 # Какой compose-файл считать источником БД: stage или prod.
 # BACKUP_COMPOSE_FILE=docker-compose.stage.yml
@@ -389,7 +593,7 @@ BACKUP_ALLOW_RESTORE_CHECK=1
 
 Файлы: `.env.example`, `.gitignore`
 
-### 3. [ ] `scripts/backup.sh`
+### 3. [x] `scripts/backup.sh`
 
 Скрипт-«один файл», POSIX-совместимый bash, `set -Eeuo pipefail`.
 Порядок шагов внутри — от самого дешёвого к самому дорогому, чтобы
@@ -401,6 +605,9 @@ BACKUP_ALLOW_RESTORE_CHECK=1
    как `deploy-stage.sh`.
 2. Чтение `.env` **без `source`** (§3.3): функция `env_get KEY DEFAULT`,
    `grep -E "^KEY=" | tail -1 | cut -d= -f2-`, снятие кавычек.
+   **Окружение проверяется первым** (`value="${!key-}"`), файл —
+   запасной источник (§3.10): иначе разовый запуск и `Environment=`
+   в юните systemd молча игнорируются.
    Переменная `BACKUP_ENV_FILE` (по умолчанию `.env`) — чтобы тесты
    подставляли свой файл.
 3. `--dry-run` (и `DRY_RUN=1`): печатает команды, ничего не выполняет,
@@ -461,8 +668,7 @@ docker compose -f "$BACKUP_COMPOSE_FILE" exec -T db \
 **Итог:** строка в `backups/backup.log` (дата, размер дампа, число
 объектов медиа, код) и на stdout. Журнал обрезается до 2000 строк.
 
-**Алерт** (§3.10): `alert()` собирает конфиг для `curl` из stdin:
-
+**Алерт** (§3.12): `alert()` собирает конфиг для `curl` из stdin:
 ```bash
 printf 'url = "https://api.telegram.org/bot%s/sendMessage"\nproxy = "%s"\n' \
   "$TOKEN" "$PROXY" | curl -sS -K - --max-time 15 --retry 2 \
@@ -480,7 +686,7 @@ printf 'url = "https://api.telegram.org/bot%s/sendMessage"\nproxy = "%s"\n' \
 
 Файлы: `scripts/backup.sh`
 
-### 4. [ ] Тесты скрипта бэкапа
+### 4. [x] Тесты скрипта бэкапа
 
 `tests/test_backup_script.py`, `subprocess` + `tmp_path`, без Docker,
 без сети, без `rclone`. Проверяется то, что ломается молча:
@@ -496,6 +702,9 @@ printf 'url = "https://api.telegram.org/bot%s/sendMessage"\nproxy = "%s"\n' \
 6. `.gitignore` содержит `/backups/`.
 7. `.env.example` содержит имена всех переменных, которые скрипт читает
    (список в тесте): новая переменная без строки в примере — красный тест.
+8. Переменная окружения важнее строки в `.env` (§3.10): тест подаёт
+   `RCLONE_BIN=/opt/custom/rclone` при пустом значении в файле и ждёт,
+   что в dry-run напечатается именно этот путь.
 
 Тест реального `pg_dump` не пишем: без Docker и PostgreSQL он
 не воспроизводим, а `restore-check` проверяется руками на стейдже
@@ -503,7 +712,7 @@ printf 'url = "https://api.telegram.org/bot%s/sendMessage"\nproxy = "%s"\n' \
 
 Файлы: `tests/test_backup_script.py`
 
-### 5. [ ] `scripts/restore-check.sh` и `scripts/restore.md`
+### 5. [x] `scripts/restore-check.sh` и `scripts/restore.md`
 
 **`restore-check.sh`** — воспроизводимая проверка, а не «на глаз»:
 
@@ -534,7 +743,7 @@ printf 'url = "https://api.telegram.org/bot%s/sendMessage"\nproxy = "%s"\n' \
 
 Файлы: `scripts/restore-check.sh`, `scripts/restore.md`
 
-### 6. [ ] systemd-юниты и цели `Makefile`
+### 6. [x] systemd-юниты и цели `Makefile`
 
 `scripts/systemd/sportmemo-backup.service`:
 
@@ -592,7 +801,9 @@ restore-check: ## Проверить восстановление из посл�
 Чек-лист приёмки (агент прогоняет и записывает вывод):
 
 1. `~/.local/bin/rclone version` → версия печатается.
-2. `rclone lsd cloudru:` → в списке `sportmemo-backup`.
+2. `rclone lsd cloudru:sportmemo-backup` → код 0 (пустой список
+   на новом бакете — это успех); `rclone lsd cloudru:` **не**
+   проверяется: с ролью на бакет он даёт 403 (§3.9).
 3. `curl` из §4.2 п. 5 → `{"ok":true}` и сообщение в чате SportMemo.
 4. `grep -c TELEGRAM .env` на стейдже → три строки (значения не читаем).
 5. `./scripts/backup.sh --dry-run` на стейдже → код 0, план команд
@@ -603,7 +814,7 @@ restore-check: ## Проверить восстановление из посл�
 
 Файлы: —
 
-### 8. [ ] Ворота: восстановление из бэкапа на стейдже
+### 8. [x] Ворота: восстановление из бэкапа на стейдже
 
 1. `./scripts/restore-check.sh --from-bucket` на стейдже → код 0,
    счётчики совпали с живой базой.
@@ -618,7 +829,36 @@ restore-check: ## Проверить восстановление из посл�
 
 Файлы: `.koda/plans/mobile-legal-deploy-5.4-backups.md`
 
-### 9. [ ] Документация
+**Результат 2026-11-24 (стейдж `taskman-stage`, 89.125.130.69).**
+
+| Показатель | Значение |
+|---|---|
+| Дамп | `sportmemo_20261124_154200.dump`, 273 568 байт (268 КиБ) |
+| Прогон бэкапа | 6.4 с, `OK: dump=268K media=168 exit=0` |
+| Фото в живой БД / в восстановленной | 42 / 42 |
+| Команд / людей / миграций | 5 / 30 / 53 — совпали все |
+| Медиа в бакете | 168 объектов, 11.713 MiB (локально 168 файлов) |
+| Время восстановления | 7.9 с от скачивания дампа до сверки (сам `pg_restore` ≈ 5 с) |
+| Временная БД после прогона | удалена (`pg_database` → 0 строк `%restore_check%`) |
+| Алерт | `{"ok":true}` в чат SportMemo, код бэкапа 1 при неверном бакете |
+| Таймер | `enabled`, `NEXT` = 2026-11-25 03:33 UTC |
+
+Текст алерта — `SportMemo: бэкап не выполнен — dump upload`; путей,
+имён файлов и сообщений БД в нём нет.
+
+**Два дефекта, найденных воротами (исправлены здесь же):**
+
+1. **`pg_restore` без `-U` (§3.13).** Проверка восстановления падала
+   на исправном дампе: `docker compose exec` запускает команду от
+   `root`, libpq брал роль `root`. Исправлено в `scripts/restore-check.sh`,
+   добавлен тест `test_restore_check_passes_user_to_postgres_tools`.
+2. **`TELEGRAM_PROXY` на стейдже (§3.14).** Алерт не доходил: tinyproxy
+   разрешает один прод-IP и отвечает стейджу `403` на `CONNECT`, хотя
+   `api.telegram.org` со стейджа доступен напрямую (`302`). Строка
+   закомментирована в `.env` стейджа (копия — `.env.bak-20261124`),
+   пояснение в `.env.example` и README.
+
+### 9. [x] Документация
 
 1. `README.md` — раздел **«Бэкапы»** после «Стейдж»:
    - схема (что куда, почему второй провайдер);
@@ -674,15 +914,15 @@ restore-check: ## Проверить восстановление из посл�
 
 | # | Шаг | Статус |
 |---|---|---|
-| 1 | Ветка и замеры исходного состояния | [ ] |
-| 2 | Переменные окружения и `.gitignore` | [ ] |
-| 3 | `scripts/backup.sh` | [ ] |
-| 4 | Тесты скрипта бэкапа | [ ] |
-| 5 | `restore-check.sh` и `restore.md` | [ ] |
-| 6 | systemd-юниты и цели `Makefile` | [ ] |
-| 7 | Действия владельца | [ ] |
-| 8 | Ворота: восстановление на стейдже | [ ] |
-| 9 | Документация | [ ] |
+| 1 | Ветка и замеры исходного состояния | [x] |
+| 2 | Переменные окружения и `.gitignore` | [x] |
+| 3 | `scripts/backup.sh` | [x] |
+| 4 | Тесты скрипта бэкапа | [x] |
+| 5 | `restore-check.sh` и `restore.md` | [x] |
+| 6 | systemd-юниты и цели `Makefile` | [x] |
+| 7 | Действия владельца | [x] |
+| 8 | Ворота: восстановление на стейдже | [x] |
+| 9 | Документация | [x] |
 | 10 | Финальная проверка и вливание | [ ] |
 
 ---
