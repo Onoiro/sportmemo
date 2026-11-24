@@ -346,6 +346,14 @@ chmod +x ~/.local/bin/rclone
 Если `~/.local/bin` не в `PATH` — в юните systemd путь задаётся явно
 (§5.6), а скрипт ищет бинарник через `RCLONE_BIN` с дефолтом `rclone`.
 
+**Го́тча, найденная 2026-11-24 на стейдже.** `~/.local/bin` попадает
+в `PATH` только в интерактивном шелле (через `~/.profile`), а
+неинтерактивная ssh-сессия его не видит. Поэтому `./scripts/backup.sh`
+руками пишет `rclone is not installed` при установленном rclone.
+Через systemd это не проявляется (юнит задаёт `PATH` явно), но человек
+прогонит скрипт руками, получит ложную ошибку и будет искать причину
+не там. Лечится строкой в `.env` (§4.5): `RCLONE_BIN=/home/abo/.local/bin/rclone`.
+
 ### 4.4 Конфиг `rclone` на сервере
 
 Файл `~/.config/rclone/rclone.conf`, права `600`. Два remote:
@@ -388,6 +396,10 @@ BACKUP_COMPOSE_FILE=docker-compose.stage.yml
 BACKUP_RCLONE_REMOTE=cloudru
 BACKUP_BUCKET=sportmemo-backup
 BACKUP_ALLOW_RESTORE_CHECK=1
+# Обязательно: неинтерактивная ssh-сессия не видит ~/.local/bin,
+# и без этой строки ручной запуск скрипта даёт ложное
+# «rclone is not installed» (§4.3).
+RCLONE_BIN=/home/abo/.local/bin/rclone
 ```
 
 `BACKUP_ALLOW_RESTORE_CHECK=1` — **только на стейдже**: этим флагом
@@ -395,10 +407,38 @@ BACKUP_ALLOW_RESTORE_CHECK=1
 
 ### 4.6 Установка таймера
 
-См. §5.6 и README. Кратко: `systemctl --user` не годится (нужен запуск
-без входа), поэтому системный юнит с `User=abo`, установка через
+`systemctl --user` не годится: таймер должен срабатывать и без входа
+человека на сервер. Поэтому системный юнит с `User=abo`, установка через
 `sudo cp` + `sudo systemctl enable --now sportmemo-backup.timer`.
 На стейдже sudo спросит пароль — это делает владелец.
+
+**Порядок команд** (на стейдже, из `~/sportmemo`, ветка `feature/backups`):
+
+```bash
+# 1. Добавить RCLONE_BIN в .env (§4.5), иначе ручной прогон даст
+#    ложное «rclone is not installed».
+echo 'RCLONE_BIN=/home/abo/.local/bin/rclone' >> .env
+
+# 2. Проверить конфигурацию без запуска.
+./scripts/backup.sh --dry-run
+
+# 3. Поставить юнит и таймер.
+sudo cp scripts/systemd/sportmemo-backup.service /etc/systemd/system/
+sudo cp scripts/systemd/sportmemo-backup.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now sportmemo-backup.timer
+
+# 4. Убедиться, что таймер запланирован.
+systemctl list-timers sportmemo-backup.timer
+
+# 5. Прогнать один раз руками и посмотреть журнал.
+sudo systemctl start sportmemo-backup.service
+journalctl -u sportmemo-backup -n 30 --no-pager
+rclone lsf cloudru:sportmemo-backup/db/
+```
+
+`systemctl list-timers` показывает `NEXT` (когда сработает в следующий
+раз) и `LAST` (когда сработал). Если `NEXT` пуст — таймер не включён.
 
 ---
 
