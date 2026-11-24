@@ -102,14 +102,22 @@ def fake_bin(tmp_path):
     return bindir, markers
 
 
-def _run(env_file, *args, path=None):
+def _run(env_file, *args, path=None, env_extra=None):
     env = os.environ.copy()
     env["DRY_RUN"] = "0"
     env["BACKUP_ENV_FILE"] = str(env_file)
+    # Скрипт доверяет окружению больше, чем файлу (так работают разовый
+    # запуск и `Environment=` в юните systemd). Но `config/settings.py`
+    # кладёт значения `.env` в `os.environ` при импорте Django, и без
+    # очистки тест проверял бы не свой файл, а локальный `.env`.
+    for name in SCRIPT_VARIABLES:
+        env.pop(name, None)
     if path is not None:
         # Заглушки идут первыми, системный PATH остаётся: без него
         # скрипт не найдёт bash, awk, df.
         env["PATH"] = f"{path}:/usr/local/bin:/usr/bin:/bin"
+    if env_extra:
+        env.update(env_extra)
     return subprocess.run(
         ["bash", str(SCRIPT), *args],
         capture_output=True,
@@ -219,3 +227,33 @@ def test_env_example_lists_every_script_variable():
     for name in SCRIPT_VARIABLES:
         assert f"env_get {name}" in script_text, name
         assert re.search(rf"^#?\s*{name}=", text, re.MULTILINE), name
+
+
+def test_environment_overrides_env_file(backup_env, fake_bin, repo_media):
+    """Явно заданная переменная важнее строки в `.env`.
+
+    Так работает разовый запуск (`RCLONE_BIN=... ./scripts/backup.sh`)
+    и `Environment=` в юните systemd. Без этого явное значение молча
+    игнорировалось бы, и на стейдже скрипт писал «rclone is not
+    installed» при установленном rclone: каталог `~/.local/bin`
+    не попадает в PATH неинтерактивной ssh-сессии.
+    """
+    bindir, _ = fake_bin
+    # В файле значение не задано вовсе — берётся только окружение.
+    text = backup_env.read_text()
+    backup_env.write_text(
+        "\n".join(
+            line for line in text.splitlines() if not line.startswith("RCLONE_BIN=")
+        )
+        + "\n"
+    )
+
+    result = _run(
+        backup_env,
+        "--dry-run",
+        path=bindir,
+        env_extra={"RCLONE_BIN": "/opt/custom/rclone"},
+    )
+
+    assert result.returncode == 0, _output(result)
+    assert "/opt/custom/rclone" in _output(result)

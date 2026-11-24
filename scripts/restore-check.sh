@@ -41,7 +41,10 @@ BACKUP_ENV_FILE="${BACKUP_ENV_FILE:-.env}"
 # ввода для bash, и остаток файла молча теряется.
 env_get() {
   local key="$1" fallback="${2-}" value=""
-  if [ -f "$BACKUP_ENV_FILE" ]; then
+  # Окружение важнее файла: разовый запуск и `Environment=` в юните
+  # systemd должны работать так же, как строка в `.env`.
+  value="${!key-}"
+  if [ -z "$value" ] && [ -f "$BACKUP_ENV_FILE" ]; then
     value=$(grep -E "^${key}=" "$BACKUP_ENV_FILE" \
       | tail -n 1 | cut -d= -f2- || true)
   fi
