@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SportMemo\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-17 18:46+0300\n"
+"POT-Creation-Date: 2026-11-26 18:46+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -49,19 +49,19 @@ msgstr "виды спорта"
 msgid "все"
 msgstr "все"
 
-#: apps/accounts/forms.py:22 apps/accounts/forms.py:63
+#: apps/accounts/forms.py:22 apps/accounts/forms.py:72
 msgid "Как к вам обращаться"
 msgstr "Как к вам обращаться"
 
-#: apps/accounts/forms.py:68
+#: apps/accounts/forms.py:77
 msgid "Я принимаю пользовательское соглашение"
 msgstr "Я принимаю пользовательское соглашение"
 
-#: apps/accounts/forms.py:72
+#: apps/accounts/forms.py:81
 msgid "Я принимаю политику конфиденциальности"
 msgstr "Я принимаю политику конфиденциальности"
 
-#: apps/accounts/forms.py:76
+#: apps/accounts/forms.py:85
 msgid "Я согласен на обработку персональных данных"
 msgstr "Я согласен на обработку персональных данных"
 
@@ -152,8 +152,8 @@ msgstr "Профиль обновлён"
 #: apps/catalog/views.py:388 apps/catalog/views.py:460
 #: apps/catalog/views.py:524 apps/catalog/views.py:566
 #: apps/catalog/views.py:597 apps/catalog/views.py:661
-#: apps/catalog/views.py:703 apps/catalog/views.py:730 apps/core/views.py:114
-#: apps/core/views.py:144 apps/core/views.py:192 apps/moderation/views.py:142
+#: apps/catalog/views.py:703 apps/catalog/views.py:730 apps/core/views.py:123
+#: apps/core/views.py:154 apps/core/views.py:203 apps/moderation/views.py:142
 #: apps/moderation/views.py:189 apps/moderation/views.py:346
 #: apps/moderation/views.py:475 apps/photos/views.py:171
 #: apps/photos/views.py:245 apps/photos/views.py:378 apps/photos/views.py:423
@@ -1109,13 +1109,13 @@ msgstr "Публичный архив спортивных фотографий:
 msgid "архив спортивных фотографий"
 msgstr "архив спортивных фотографий"
 
-#: apps/core/views.py:107 apps/core/views.py:115
+#: apps/core/views.py:116 apps/core/views.py:124
 #: templates/account/signup_closed.html:15 templates/core/rules.html:11
 #: templates/partials/footer.html:22
 msgid "Правила сервиса"
 msgstr "Правила сервиса"
 
-#: apps/core/views.py:109
+#: apps/core/views.py:118
 msgid ""
 "Что публикует SportMemo, чего в архиве не будет и как сообщить об ошибке или "
 "нарушении прав."
@@ -1123,24 +1123,24 @@ msgstr ""
 "Что публикует SportMemo, чего в архиве не будет и как сообщить об ошибке или "
 "нарушении прав."
 
-#: apps/core/views.py:138 apps/core/views.py:145 apps/core/views.py:193
+#: apps/core/views.py:148 apps/core/views.py:155 apps/core/views.py:204
 #: apps/photos/views.py:517 templates/core/home.html:61
 #: templates/core/year_list.html:11 templates/partials/footer.html:14
 #: templates/partials/navbar.html:20
 msgid "Годы"
 msgstr "Годы"
 
-#: apps/core/views.py:140
+#: apps/core/views.py:150
 msgid "Хронология архива SportMemo: годы и фотографии каждого года."
 msgstr "Хронология архива SportMemo: годы и фотографии каждого года."
 
-#: apps/core/views.py:187 apps/core/views.py:194 apps/photos/views.py:520
+#: apps/core/views.py:198 apps/core/views.py:205 apps/photos/views.py:520
 #: templates/core/year_detail.html:12
 #, python-format
 msgid "%(year)s год"
 msgstr "%(year)s год"
 
-#: apps/core/views.py:188
+#: apps/core/views.py:199
 #, python-format
 msgid "Фотографии %(year)s года в архиве SportMemo."
 msgstr "Фотографии %(year)s года в архиве SportMemo."
@@ -2367,7 +2367,7 @@ msgid "Сохранить пароль"
 msgstr "Сохранить пароль"
 
 #: templates/account/password_reset_from_key.html:34
-#: templates/admin/core/merge_form.html:47
+#: templates/admin/core/merge_form.html:48
 #: templates/admin/moderation/reject_form.html:47
 #: templates/admin/moderation/report_decide.html:52
 #: templates/catalog/event_form.html:101 templates/catalog/team_form.html:102
@@ -2526,15 +2526,19 @@ msgstr "Ничего не выбрано"
 msgid "Целевой объект"
 msgstr "Целевой объект"
 
-#: templates/admin/core/merge_form.html:38
+#: templates/admin/core/merge_form.html:37
+msgid "Объект, в который слить"
+msgstr "Объект, в который слить"
+
+#: templates/admin/core/merge_form.html:39
 msgid "— выберите —"
 msgstr "— выберите —"
 
-#: templates/admin/core/merge_form.html:46
+#: templates/admin/core/merge_form.html:47
 msgid "Слить"
 msgstr "Слить"
 
-#: templates/admin/core/merge_form.html:51
+#: templates/admin/core/merge_form.html:56
 msgid "Нет подходящих объектов"
 msgstr "Нет подходящих объектов"
 

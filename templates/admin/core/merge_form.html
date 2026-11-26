@@ -34,7 +34,8 @@
     <h2>{% translate "Целевой объект" %}</h2>
     {% if candidates %}
     <p>
-        <select name="target" required>
+        <label for="merge-target">{% translate "Объект, в который слить" %}</label>
+        <select name="target" id="merge-target" required>
             <option value="">{% translate "— выберите —" %}</option>
             {% for candidate in candidates %}
             <option value="{{ candidate.pk }}">{{ candidate }} (#{{ candidate.pk }})</option>
@@ -47,7 +48,10 @@
         <a href="../" class="button cancel-link">{% translate "Отмена" %}</a>
     </div>
     {% else %}
-    {# Пустой список целей — не пустой <select>: модератору нужно сказать, почему сливать некуда. #}
+    {% comment %}
+    Пустой список целей — не пустой select: модератору нужно сказать,
+    почему сливать некуда.
+    {% endcomment %}
     <p class="help">{% translate "Нет подходящих объектов" %}</p>
     {% endif %}
 </form>

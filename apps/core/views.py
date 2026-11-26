@@ -78,6 +78,7 @@ def robots_txt(request):
     )
 
 
+@require_GET
 def home(request):
     """Главная страница: поиск, статистика и последние фото."""
     context = {
@@ -100,6 +101,7 @@ def home(request):
     return render(request, "core/home.html", context)
 
 
+@require_GET
 def rules(request):
     """Правила сервиса: короткий текст, на который ссылается загрузка фото.
 
@@ -125,6 +127,7 @@ def rules(request):
     return render(request, "core/rules.html", context)
 
 
+@require_GET
 def year_list(request):
     """Годы архива: только те, в которых есть видимые фото.
 
@@ -155,6 +158,7 @@ def year_list(request):
     return render(request, "core/year_list.html", context)
 
 
+@require_GET
 def year_detail(request, year):
     """Фотографии одного года и события этого года.
 

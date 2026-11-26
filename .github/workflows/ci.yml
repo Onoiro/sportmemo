@@ -23,10 +23,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Установить uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
         with:
           enable-cache: true
 
@@ -34,13 +34,13 @@ jobs:
         run: uv sync --frozen
 
       - name: Проверить код
-        run: uv run ruff check .
+        run: uv run --frozen ruff check .
 
       - name: Проверить форматирование
-        run: uv run ruff format --check .
+        run: uv run --frozen ruff format --check .
 
       - name: Проверить миграции (нет неприменённых изменений)
-        run: uv run python manage.py makemigrations --check --dry-run
+        run: uv run --frozen python manage.py makemigrations --check --dry-run
 
   test:
     name: Тесты (Python ${{ matrix.python-version }})
@@ -67,10 +67,10 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Установить uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
         with:
           enable-cache: true
 
@@ -81,10 +81,10 @@ jobs:
         run: uv sync --frozen --python ${{ matrix.python-version }}
 
       - name: Проверить конфигурацию Django
-        run: uv run --python ${{ matrix.python-version }} python manage.py check
+        run: uv run --frozen --python ${{ matrix.python-version }} python manage.py check
 
       - name: Применить миграции
-        run: uv run --python ${{ matrix.python-version }} python manage.py migrate
+        run: uv run --frozen --python ${{ matrix.python-version }} python manage.py migrate
 
       - name: Запустить тесты
-        run: uv run --python ${{ matrix.python-version }} pytest -q
+        run: uv run --frozen --python ${{ matrix.python-version }} pytest -q
